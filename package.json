@@ -1,0 +1,35 @@
+{
+  "name": "@friendsofredaxo/installer-action",
+  "version": "0.0.0",
+  "description": "MyREDAXO for GitHub Actions",
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "tsc",
+    "release": "ncc build -o dist src/index.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FriendsOfREDAXO/installer-action.git"
+  },
+  "keywords": [
+    "redaxo",
+    "actions",
+    "install",
+    "FriendsOfREDAXO"
+  ],
+  "author": "FriendsOfREDAXO",
+  "license": "MIT",
+  "dependencies": {
+    "@actions/core": "^1.4.0",
+    "archiver": "^5.3.0",
+    "axios": "^0.21.1",
+    "form-data": "^4.0.0",
+    "yaml": "^1.10.2"
+  },
+  "devDependencies": {
+    "@types/archiver": "^5.1.1",
+    "@types/node": "^16.4.13",
+    "@vercel/ncc": "^0.29.0",
+    "typescript": "^4.3.5"
+  }
+}

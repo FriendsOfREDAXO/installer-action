@@ -1,0 +1,21 @@
+  name: 'MyREDAXO Installer Action'
+  author: FriendsOfREDAXO
+  description: 'GitHub Action for MyREDAXO Installer'
+  inputs:
+      myredaxo-username:
+          description: 'MyREDAXO username.'
+          required: true
+      myredaxo-api-key:
+          description: 'MyREDAXO API Key.'
+          required: true
+      description:
+          description: 'Package release version description.'
+          default: ''
+          required: false
+      cwd:
+          description: 'Working directory where the package is located.'
+          default: '.'
+          required: false
+  runs:
+    using: 'node12'
+    main: 'dist/index.js'
