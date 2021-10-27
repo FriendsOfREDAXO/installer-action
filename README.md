@@ -7,7 +7,7 @@ A GithubAction to upload github releases automatically into the REDAXO installer
 
 ## 1st step: Adding Secrets
 
-> This step is not required for FOR add-ons. Jump directly to the 2nd step 
+> This step is not required for FriendsOfREDAXO add-ons. Jump directly to the 2nd step 
 
 Add your MyREDAXO credentials to your repository secrets. ([GitHub Docs](https://docs.github.com/en/actions/reference/encrypted-secrets#creating-encrypted-secrets-for-a-repository)).
 
