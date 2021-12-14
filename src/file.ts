@@ -26,10 +26,11 @@ export async function zip(cacheFile: string, addonDir: string, addonName: string
 
     archive.pipe(output);
 
-    ignoreList.push('.git/**');
-
     Core.info(`Creating archive in ${cacheFile}`);
     Core.info(`Using installer_ignore ${JSON.stringify(ignoreList)}`);
+
+    // ignore .git by default, because it's created by GitHub action
+    ignoreList.push('.git/**');
 
     archive.on('entry', entry => {
         Core.info(`Adding to zip: ${entry.name}`);

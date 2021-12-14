@@ -40328,9 +40328,9 @@ async function zip(cacheFile, addonDir, addonName, ignoreList) {
         throw err;
     });
     archive.pipe(output);
-    ignoreList.push('.git/**');
     core.info(`Creating archive in ${cacheFile}`);
     core.info(`Using installer_ignore ${JSON.stringify(ignoreList)}`);
+    ignoreList.push('.git/**');
     archive.on('entry', entry => {
         core.info(`Adding to zip: ${entry.name}`);
     });
