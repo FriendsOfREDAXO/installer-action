@@ -40334,7 +40334,7 @@ async function zip(cacheFile, addonDir, addonName, ignoreList) {
     archive.on('entry', entry => {
         core.info(`Adding to zip: ${entry.name}`);
     });
-    archive.glob('**', { cwd: addonDir, skip: ignoreList, ignore: ignoreList }, { prefix: addonName });
+    archive.glob('**', { cwd: addonDir, skip: ignoreList, ignore: ignoreList, dot: true }, { prefix: addonName });
     await archive.finalize();
 }
 function cacheFile() {
