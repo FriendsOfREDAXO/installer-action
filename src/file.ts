@@ -34,7 +34,7 @@ export async function zip(cacheFile: string, addonDir: string, addonName: string
     });
 
     // @ts-ignore
-    archive.glob('**', {cwd: addonDir, skip: ignoreList, ignore: ignoreList}, {prefix: addonName})
+    archive.glob('**', {cwd: addonDir, skip: ignoreList, ignore: ignoreList, dot: true}, {prefix: addonName})
 
     await archive.finalize();
 }
