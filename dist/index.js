@@ -40330,6 +40330,7 @@ async function zip(cacheFile, addonDir, addonName, ignoreList) {
     archive.pipe(output);
     core.info(`Creating archive in ${cacheFile}`);
     core.info(`Using installer_ignore ${JSON.stringify(ignoreList)}`);
+    ignoreList.push('.git/*');
     archive.on('entry', entry => {
         core.info(`Adding to zip: ${entry.name}`);
     });
