@@ -12,7 +12,7 @@ const archiveFilePath = cacheFile();
         const packageYml = await readPackageYml(packageDir);
         const packageVersion = packageYml.version;
         const packageName = packageYml.package;
-        const packageInstallerIgnore = packageYml.installer_ignore;
+        const packageInstallerIgnore = packageYml.installer_ignore || [];
 
         await zip(archiveFilePath, packageDir, packageName, packageInstallerIgnore);
         const archiveMd5 = await md5_file(archiveFilePath);

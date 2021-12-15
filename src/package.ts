@@ -8,7 +8,7 @@ import crypto from "crypto";
 interface PackageYml {
     package: string;
     version: string;
-    installer_ignore: string[];
+    installer_ignore: string[]|null;
 }
 
 export async function readPackageYml(addonDir: string): Promise<PackageYml> {
