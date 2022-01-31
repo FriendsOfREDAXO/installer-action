@@ -26,7 +26,9 @@ export async function uploadArchive(addonKey: string, redaxoLogin: string, redax
     const response = await axios.post(`https://www.redaxo.org/de/ws/packages/?package=${addonKey}&file_id=0&api_login=${redaxoLogin}&api_key=${redaxoApiKey}`, formData, {
         headers: formData.getHeaders({
             'Content-Length': contentLength
-        })
+        }),
+        maxBodyLength: Infinity,
+        maxContentLength: Infinity,
     });
 
     // if upload success we receive an empty response
