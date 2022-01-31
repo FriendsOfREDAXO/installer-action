@@ -30,7 +30,7 @@ const archiveFilePath = cacheFile();
         );
 
     } catch (error) {
-        Core.setFailed(error)
+        Core.setFailed(error as string)
         throw error;
     }
 })();
