@@ -41692,7 +41692,26 @@ async function readPackageYml(addonDir) {
     const packageYmlPath = external_path_default().join(addonDir, '/', 'package.yml');
     core.info(`Parsing yaml from ${packageYmlPath}`);
     const packageYmlString = external_fs_default().readFileSync(packageYmlPath, { encoding: 'utf8' });
-    return yaml_default().parse(packageYmlString);
+    try {
+        return yaml_default().parse(packageYmlString, {
+            prettyErrors: true,
+        });
+    }
+    catch (originalError) {
+        core.error(`Failed to parse yaml from ${packageYmlPath}. Try to fix it automatically.`);
+        const fixedPackageYmlString = packageYmlString.replace(/(perm:[.\s\n\r\t]*)([a-z0-9_]+\[[a-z0-9_]+\])/ig, `$1'$2'`);
+        try {
+            const parsedYaml = yaml_default().parse(fixedPackageYmlString, {
+                prettyErrors: true,
+            });
+            core.info(`Successfully parsed yaml with fixed values.`);
+            return parsedYaml;
+        }
+        catch (_) {
+            core.error(`Automatically fixed yaml failed. Please fix it manually.`);
+            throw originalError;
+        }
+    }
 }
 function md5_file(file) {
     return new Promise((resolve, reject) => {
