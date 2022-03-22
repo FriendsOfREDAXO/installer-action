@@ -15,7 +15,7 @@ An action for GitHub to upload your REDAXO AddOn automatically into the REDAXO i
 
 ## 1: Adding Secrets
 
-> This step is not required for REDAXO AddOns within the FriendsOfREDAXO-GitHub-Organisation. Continue with step 2. 
+> This step is not required for REDAXO AddOns within the FriendsOfREDAXO GitHub organization. Continue with step 2. 
 
 Add your MyREDAXO credentials to your organization secrets or repository secrets, e.g. `https://github.com/YOUR_GITHUB_NAME/YOUR_REPOSITORY/settings/secrets/actions` ([GitHub Docs](https://docs.github.com/en/actions/reference/encrypted-secrets#creating-encrypted-secrets-for-a-repository)).
 
