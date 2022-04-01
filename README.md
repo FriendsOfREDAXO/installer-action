@@ -86,4 +86,4 @@ Changelog: https://www.example.org/
 
 You can monitor the status of the workflow under https://github.com/YOUR_GITHUB_NAME/YOUR_REPOSITORY/actions. Once completed, the result is your REDAXO AddOn published through MyREDAXO and live in ever REDAXO 5 installer.
 
-![page=install_packages_update(iPad Mini)](https://user-images.githubusercontent.com/3855487/158785553-03e61470-48ef-4893-9a45-7c644f49710b.png)
+![image](https://user-images.githubusercontent.com/3855487/161302304-176fa2d0-5101-45cb-aabe-328aef2f10c7.png)
