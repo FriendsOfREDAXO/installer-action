@@ -156,7 +156,7 @@ module.exports = {
   testMatch: [
   //   "**/__tests__/**/*.[jt]s?(x)",
   //   "**/?(*.)+(spec|test).[tj]s?(x)"
-    "**/tests/**/*.test.js"
+    "**/__tests__/**/*.test.js"
   ],
 
   // An array of regexp pattern strings that are matched against all test paths, matched tests are skipped
