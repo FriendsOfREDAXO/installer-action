@@ -1,0 +1,45 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+
+env:
+  node-version: 16
+
+jobs:
+  build-tsc:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: github.event.pull_request.draft == false
+
+    name: Build for node ${{ env.node-version }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.node-version }}
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run build
+
+  build-action:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: github.event.pull_request.draft == false
+
+    name: Build for node ${{ env.node-version }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.node-version }}
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run release
