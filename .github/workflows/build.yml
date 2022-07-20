@@ -11,7 +11,7 @@ permissions:
   contents: read
 
 env:
-  node-version: 16
+  NODE_VERSION: 16
 
 jobs:
   build-tsc:
@@ -19,12 +19,12 @@ jobs:
     timeout-minutes: 10
     if: github.event.pull_request.draft == false
 
-    name: Build for node ${{ env.node-version }}
+    name: Build for node ${{ env.NODE_VERSION }}
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v3
         with:
-          node-version: ${{ env.node-version }}
+          node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
       - run: npm ci
       - run: npm run build
@@ -34,12 +34,12 @@ jobs:
     timeout-minutes: 10
     if: github.event.pull_request.draft == false
 
-    name: Build for node ${{ env.node-version }}
+    name: Release Build for node ${{ env.NODE_VERSION }}
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v3
         with:
-          node-version: ${{ env.node-version }}
+          node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
       - run: npm ci
       - run: npm run release
