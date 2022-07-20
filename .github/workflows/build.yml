@@ -10,21 +10,18 @@ on:
 permissions:
   contents: read
 
-env:
-  NODE_VERSION: 16
-
 jobs:
   build-tsc:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     if: github.event.pull_request.draft == false
 
-    name: Build for node ${{ env.NODE_VERSION }}
+    name: Build for node 16
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v3
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version: 16
           cache: 'npm'
       - run: npm ci
       - run: npm run build
@@ -34,12 +31,12 @@ jobs:
     timeout-minutes: 10
     if: github.event.pull_request.draft == false
 
-    name: Release Build for node ${{ env.NODE_VERSION }}
+    name: Release Build for node 16
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v3
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version: 16
           cache: 'npm'
       - run: npm ci
       - run: npm run release
