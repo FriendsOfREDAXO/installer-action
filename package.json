@@ -5,7 +5,8 @@
   "main": "lib/index.js",
   "scripts": {
     "build": "tsc",
-    "release": "ncc build -o dist src/index.ts"
+    "release": "ncc build -o dist src/index.ts",
+    "test": "jest"
   },
   "repository": {
     "type": "git",
@@ -21,6 +22,7 @@
   "license": "MIT",
   "dependencies": {
     "@actions/core": "^1.4.0",
+    "@types/jest": "^28.1.6",
     "archiver": "^5.3.0",
     "axios": "^0.21.1",
     "form-data": "^4.0.0",
@@ -30,6 +32,8 @@
     "@types/archiver": "^5.1.1",
     "@types/node": "^16.4.13",
     "@vercel/ncc": "^0.34.0",
+    "jest": "^28.1.3",
+    "ts-jest": "^28.0.7",
     "typescript": "^4.3.5"
   }
 }

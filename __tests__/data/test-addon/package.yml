@@ -1,0 +1,12 @@
+package: test_addon
+version: 1.0.5
+author: bloep
+
+requires:
+  redaxo: '^5.8.0'
+  php:
+    version: '^7.1'
+
+# installer_ignore:
+#  - node_modules
+#  - package-lock.json
