@@ -29,7 +29,7 @@
   "devDependencies": {
     "@types/archiver": "^5.1.1",
     "@types/node": "^16.4.13",
-    "@vercel/ncc": "^0.29.0",
+    "@vercel/ncc": "^0.34.0",
     "typescript": "^4.3.5"
   }
 }
