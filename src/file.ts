@@ -26,8 +26,7 @@ export async function zip(cacheFile: string, addonDir: string, addonName: string
     Core.info(`Creating archive in ${cacheFile}`);
     Core.info(`Using installer_ignore ${JSON.stringify(ignoreList)}`);
 
-    // ignore .git by default, because it's created by GitHub action
-    ignoreList.push('.git/**');
+    ignoreList = appendDefaultRedaxoIgnoreList(ignoreList);
 
     archive.on('entry', entry => {
         Core.info(`Adding to zip: ${entry.name}`);
@@ -45,6 +44,33 @@ export async function zip(cacheFile: string, addonDir: string, addonName: string
             resolve();
         });
     });
+}
+
+function appendDefaultRedaxoIgnoreList(ignoreList: string[]) {
+    // ignore .git by default, because it's created by GitHub action
+    ignoreList.push('.git/**');
+
+    // keep in sync with rex_finder https://github.com/redaxo/redaxo/blob/992b3dbca9409935f3bb3ee22f17f1988f0932e0/redaxo/src/core/lib/util/finder.php#L243
+    ignoreList.push('.DS_Store');
+    ignoreList.push('Thumbs.db');
+    ignoreList.push('desktop.ini');
+    ignoreList.push('.svn');
+    ignoreList.push('_svn');
+    ignoreList.push('CVS');
+    ignoreList.push('_darcs');
+    ignoreList.push('.arch-params');
+    ignoreList.push('.monotone');
+    ignoreList.push('.bzr');
+    ignoreList.push('.hg');
+
+    // keep in sync with rex install https://github.com/redaxo/redaxo/blob/992b3dbca9409935f3bb3ee22f17f1988f0932e0/redaxo/src/addons/install/lib/api/api_package_upload.php#L33-L39
+    ignoreList.push('.gitattributes');
+    ignoreList.push('.github');
+    ignoreList.push('.gitignore');
+    ignoreList.push('.idea');
+    ignoreList.push('.vscode');
+
+    return ignoreList;
 }
 
 export function cacheFile(): string {
