@@ -39,7 +39,6 @@ describe('file', () => {
         expect.arrayContaining<string>(filesList);
 
         expect(filesList).toEqual([
-            'test_addon/.gitignore',
             'test_addon/assets/test_addon.js',
             'test_addon/package-lock.json',
             'test_addon/package.json',
