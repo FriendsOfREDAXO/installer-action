@@ -31,7 +31,7 @@ jobs:
 
         # validate committed release
       - name: Diff fresh build with committed bundle
-        run: git diff --exit-code
+        run: git diff --exit-code --name-status
 
       - name: Draft Release
         uses: softprops/action-gh-release@v1
