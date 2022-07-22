@@ -7,9 +7,6 @@ export async function zip(cacheFile: string, addonDir: string, addonName: string
     const output = fs.createWriteStream(cacheFile);
     const archive = archiver('zip', {});
 
-    output.on('close', function() {
-        Core.info(`Archive created with ${archive.pointer()} total bytes`);
-    });
     archive.on('warning', function(err) {
         if (err.code === 'ENOENT') {
             Core.warning(err);
@@ -39,7 +36,15 @@ export async function zip(cacheFile: string, addonDir: string, addonName: string
     // @ts-ignore
     archive.glob('**', {cwd: addonDir, skip: ignoreList, ignore: ignoreList, dot: true}, {prefix: addonName})
 
-    await archive.finalize();
+    // we need to manually check if the zip archive is finalized
+    // see https://github.com/archiverjs/node-archiver/blob/b5cc14cc97cc64bdca32c0cbe9d660b5b979be7c/lib/core.js#L760-L769
+    return await new Promise(async (resolve, reject) => {
+        await archive.finalize();
+        output.on('close', function() {
+            Core.info(`Archive created with ${archive.pointer()} total bytes`);
+            resolve();
+        });
+    });
 }
 
 export function cacheFile(): string {
