@@ -1,4 +1,4 @@
-name: Release new action version
+name: Re-tag major version
 on:
   release:
     types: [released]
