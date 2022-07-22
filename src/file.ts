@@ -50,9 +50,6 @@ export async function zip(cacheFile: string, addonDir: string, addonName: string
 }
 
 function getDefaultRedaxoIgnoreList(): Array<string> {
-    // ignore .git by default, because it's created by GitHub action
-    const ignoreList = ['.git/**'];
-
     // keep in sync with rex_finder https://github.com/redaxo/redaxo/blob/992b3dbca9409935f3bb3ee22f17f1988f0932e0/redaxo/src/core/lib/util/finder.php#L243
     const rexFinderIgnoreList = [
         '.DS_Store',
@@ -78,7 +75,7 @@ function getDefaultRedaxoIgnoreList(): Array<string> {
         '.vscode',
     ];
 
-    return [...ignoreList, ...rexFinderIgnoreList, ...rexInstallIgnoreList];
+    return [...rexFinderIgnoreList, ...rexInstallIgnoreList];
 }
 
 export function cacheFile(): string {
