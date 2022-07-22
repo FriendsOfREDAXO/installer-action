@@ -32,7 +32,7 @@ jobs:
         id: major-version
         run: |
           MAJOR_VERSION=`cut -d '.' -f 1 <<< "${{ env.TAG_NAME }}"`
-          echo '::set-output name=VERSION::v$MAJOR_VERSION'
+          echo "::set-output name=VERSION::v$MAJOR_VERSION"
 
       - name: Retag major version
         run: |
