@@ -26,14 +26,17 @@ export async function zip(cacheFile: string, addonDir: string, addonName: string
     Core.info(`Creating archive in ${cacheFile}`);
     Core.info(`Using installer_ignore ${JSON.stringify(ignoreList)}`);
 
-    ignoreList = appendDefaultRedaxoIgnoreList(ignoreList);
+    const rexIgnoreList = getDefaultRedaxoIgnoreList();
+    Core.info(`Using REDAXOs default ignore list ${JSON.stringify(rexIgnoreList)}`);
+
+    const combinedIgnoreList = [...ignoreList, ...rexIgnoreList];
 
     archive.on('entry', entry => {
         Core.info(`Adding to zip: ${entry.name}`);
     });
 
     // @ts-ignore
-    archive.glob('**', {cwd: addonDir, skip: ignoreList, ignore: ignoreList, dot: true}, {prefix: addonName})
+    archive.glob('**', {cwd: addonDir, skip: combinedIgnoreList, ignore: combinedIgnoreList, dot: true}, {prefix: addonName})
 
     // we need to manually check if the zip archive is finalized
     // see https://github.com/archiverjs/node-archiver/blob/b5cc14cc97cc64bdca32c0cbe9d660b5b979be7c/lib/core.js#L760-L769
@@ -46,31 +49,36 @@ export async function zip(cacheFile: string, addonDir: string, addonName: string
     });
 }
 
-function appendDefaultRedaxoIgnoreList(ignoreList: string[]) {
+function getDefaultRedaxoIgnoreList(): Array<string> {
     // ignore .git by default, because it's created by GitHub action
-    ignoreList.push('.git/**');
+    const ignoreList = ['.git/**'];
 
     // keep in sync with rex_finder https://github.com/redaxo/redaxo/blob/992b3dbca9409935f3bb3ee22f17f1988f0932e0/redaxo/src/core/lib/util/finder.php#L243
-    ignoreList.push('.DS_Store');
-    ignoreList.push('Thumbs.db');
-    ignoreList.push('desktop.ini');
-    ignoreList.push('.svn');
-    ignoreList.push('_svn');
-    ignoreList.push('CVS');
-    ignoreList.push('_darcs');
-    ignoreList.push('.arch-params');
-    ignoreList.push('.monotone');
-    ignoreList.push('.bzr');
-    ignoreList.push('.hg');
+    const rexFinderIgnoreList = [
+        '.DS_Store',
+        'Thumbs.db',
+        'desktop.ini',
+        '.svn',
+        '_svn',
+        'CVS',
+        '_darcs',
+        '.arch-params',
+        '.monotone',
+        '.bzr',
+        '.git',
+        '.hg',
+    ];
 
     // keep in sync with rex install https://github.com/redaxo/redaxo/blob/992b3dbca9409935f3bb3ee22f17f1988f0932e0/redaxo/src/addons/install/lib/api/api_package_upload.php#L33-L39
-    ignoreList.push('.gitattributes');
-    ignoreList.push('.github');
-    ignoreList.push('.gitignore');
-    ignoreList.push('.idea');
-    ignoreList.push('.vscode');
+    const rexInstallIgnoreList = [
+        '.gitattributes',
+        '.github',
+        '.gitignore',
+        '.idea',
+        '.vscode',
+    ];
 
-    return ignoreList;
+    return [...ignoreList, ...rexFinderIgnoreList, ...rexInstallIgnoreList];
 }
 
 export function cacheFile(): string {
