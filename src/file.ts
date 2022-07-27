@@ -5,7 +5,9 @@ import * as Core from "@actions/core";
 
 export async function zip(cacheFile: string, addonDir: string, addonName: string, ignoreList: string[]): Promise<void> {
     const output = fs.createWriteStream(cacheFile);
-    const archive = archiver('zip', {});
+    const archive = archiver('zip', {
+        zlib: { level: 9 },
+    });
 
     archive.on('warning', function(err) {
         if (err.code === 'ENOENT') {
