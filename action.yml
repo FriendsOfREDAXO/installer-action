@@ -1,8 +1,9 @@
   name: 'MyREDAXO Installer Action'
   author: FriendsOfREDAXO
   description: 'GitHub Action for MyREDAXO Installer'
-  icon: upload-cloud
-  color: blue
+  branding:
+    icon: upload-cloud
+    color: blue
   inputs:
       myredaxo-username:
           description: 'MyREDAXO username.'
