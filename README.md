@@ -19,10 +19,10 @@ An action for GitHub to upload your REDAXO AddOn automatically into the REDAXO i
 
 Add your MyREDAXO credentials to your organization secrets or repository secrets, e.g. `https://github.com/YOUR_GITHUB_NAME/YOUR_REPOSITORY/settings/secrets/actions` ([GitHub Docs](https://docs.github.com/en/actions/reference/encrypted-secrets#creating-encrypted-secrets-for-a-repository)).
 
-key                 | value
---------------------------------------------
-`MYREDAXO_USERNAME` | Your REDAXO login user
-`MYREDAXO_API_KEY`  | Your MyREDAXO API key
+|key|value|
+| --- | ----------- |
+|`MYREDAXO_USERNAME` | Your REDAXO login user|
+|`MYREDAXO_API_KEY`  | Your MyREDAXO API key|
 
 ## 2: Create a new GitHub action workflow 
 
