@@ -54,3 +54,7 @@ export function md5_file(file: string): Promise<string> {
         }
     });
 }
+
+export function validatePackageVersion(packageYmlVersion: string, releaseVersion: string): boolean {
+    return packageYmlVersion === releaseVersion;
+}
