@@ -13,7 +13,7 @@
           required: true
       description:
           description: 'Package release version description.'
-          default: ''
+          default: ${{ github.event.release.body }}
           required: false
       cwd:
           description: 'Working directory where the package is located.'
