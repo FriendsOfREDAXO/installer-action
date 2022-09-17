@@ -53,6 +53,7 @@ jobs:
         myredaxo-username: ${{ secrets.MYREDAXO_USERNAME }}
         myredaxo-api-key: ${{ secrets.MYREDAXO_API_KEY }}
         description: ${{ github.event.release.body }}
+        version: ${{ github.event.release.tag_name }}
         
 ```
 
