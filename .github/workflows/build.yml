@@ -34,7 +34,7 @@ jobs:
   build-action:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    if: github.event.pull_request.draft == false && env.writable == 1
+    if: ${{ github.event.pull_request.draft == false && env.writable == 1 }}
     permissions:
       contents: write  # for stefanzweifel/git-auto-commit-action to push code in repo
 
