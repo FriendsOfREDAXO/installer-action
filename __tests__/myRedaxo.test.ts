@@ -4,10 +4,10 @@ const testMyRedaxoPackage = require('./data/myRedaxoPackage.json');
 
 describe('myRedaxo', () => {
     describe('fetchAddon',  () => {
-        test('should error with 404', () => {
-            expect(async () => {
-                await fetchAddonPackageYml('not_existing_addon_key')
-            }).resolves.toBe(null);
+        test('should error with 404', async () => {
+            const packageYml = await fetchAddonPackageYml('non_existing_addon');
+
+            expect(packageYml).toBe(null);
         });
         test('should return addon data', async () => {
             const packageYml = await fetchAddonPackageYml('yform');
