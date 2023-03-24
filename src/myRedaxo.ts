@@ -52,12 +52,13 @@ export async function uploadArchive(addonKey: string, redaxoLogin: string, redax
     return response.data.error;
 }
 
-export async function fetchAddonPackageYml(addonKey: string, redaxoLogin?: string, redaxoApiKey?: string): Promise<MyRedaxoPackage> {
+export async function fetchAddonPackageYml(addonKey: string, redaxoLogin?: string, redaxoApiKey?: string): Promise<MyRedaxoPackage|null> {
     try {
         const response = await axios.get(`https://www.redaxo.org/de/ws/packages/${addonKey}/` + ((redaxoLogin && redaxoApiKey ? `api_login=${redaxoLogin}&api_key=${redaxoApiKey}` : '')));
         return response.data;
     } catch(e) {
-        throw new Error(`Could not fetch addon ${addonKey}`);
+        console.error(Error(`Could not fetch addon ${addonKey}`));
+        return null;
     }
 }
 
