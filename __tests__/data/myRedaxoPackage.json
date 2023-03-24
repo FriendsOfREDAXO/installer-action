@@ -1,0 +1,1066 @@
+{
+  "name": "YForm - Formularbuilder und Tabellenmanager",
+  "author": "Jan Kristinus",
+  "shortdescription": "YForm hilft beim Erstellen von Formularen sowohl im Frontend als auch im Backend.\r\n\r\nIm REDAXO-Backend kann man mit dem Formular-Manager von YForm beliebige Datenbank-Verwaltungen erstellen; hierzu stehen eine Vielzahl verschiedener Felder und Feldtypen bereit. Die Tabellen können auch verknüpft werden, und dank zahlreicher Validierungen lassen sich die Eingaben vielfältig überprüfen.\r\n\r\nDie Felder und Validierungen stehen auch im Frontend zur Verfügung – hier kann man sowohl eine durch Querstriche getrennte Pipe-Notation als auch die etwas flexiblere PHP-Schreibweise nutzen. Mittels Aktionen lassen sich die im Formular eingebenen Daten zum Beispiel per Mail versenden, in die Datenbank schreiben oder existierende Daten verändern. Die HTML-Code für das Frontend ist in Templates organisiert, so dass man flexibel eigene Templates für das Formular anlegen kann.",
+  "description": "",
+  "website": "https://github.com/yakamara/redaxo_yform/",
+  "created": "2015-12-14 10:45:05",
+  "updated": "2018-11-06 15:30:52",
+  "files": {
+    "4888": {
+      "version": "4.1.0",
+      "description": "Version 4.1.0 - 16.03.2023\r\n--------------------------\r\n### Neu\r\n\r\n* PHP >= 8.1 und REDAXO mindestens 5.15\r\n* Date/Datetime-Feld Default-Modifikationen eingebaut\r\n* Tools-Plugin angepasst und Dateiauswahl um Today.. erweitert\r\n* Felder: postSave Functions, damit sich Felder direkt an die Speicherung dranhängen können\r\n* BE Ansicht: Umbau auf Fragment und Tablelayoutoption. Man kann man die Ausgaben/Layouts der BE Tabellen/Formulare anpassen\r\n* dataset save - add history enable/disable feature ergänzt\r\n* BE Tabellen: Klonen von Datensätzen nun möglich\r\n* Dokumentation, Tippfehler\r\n* index-Feld mit salt ergänzt, hashvalue nun dadurch deprecated und ersetzbar\r\n* neue Methode um eine Url zum Datensatz zu erhalten\r\n* Felder: date/datetime/time/datestamp Anzeigeformat um Notice ergänzt\r\n* CodeStyle verbessert\r\n* Manager: in den Backendliste sind nun mehr CSS Classen verfügbar um die Darstellung gezielter beeinflussen zu können\r\n* Relationsfelder sind nun optimiert, sodass eine Frontend verwendung einfacher wird.\r\n* Performance verbessert. Besonders beim Import und bei der Generierung von Tabellen\r\n* be_link search added in backend\r\n* manager: search in backend bei texten um ! (nicht) Suchen ergänzt\r\n* NONCE Felder ergänzt, da REDAXO 5.15 nun NONCE Felder unterstützt\r\n* manager: Liste der Datensätz: AktionsButton umgebaut. Waren nicht sinnvoll erweiterbar\r\n\r\n### Korrekturen\r\n\r\n* Upload in HistoryView war fehlerhaft\r\n* checkbox: Ausgabewerte wurden im Table Manager in der Listenansicht nicht berücksichtigt\r\n* Relations-Felder wurden nicht immer richtig übernommen.\r\n* fieldset-Feld: Keys der Optionen fehlten\r\n* In Whooops Pfad zum E-Mail-Template klickbar gemacht\r\n* YTemplate Checkbox angepasst - Leerzeichen entfernt\r\n* rex_yform_manager_collection: Methode current existiert in PHP 8 nicht mehr\r\n* REST API mit REDAXO im Unterordner korrigiert\r\n* REST API mit ähnlichen Endpointbezeichnungen gehen wieder.\r\n* Textähnliche Felder werden in der Ausgabe nun auf 100 begrenzt. Doku wurde ergänzt mit Beschreibung wie man das individuell anpassen kann\r\n* Nicht vorhandene REX_YFORM_DATA Felder erzeugen nun keine Notices mehr\r\n* Uploadfeld war fehlerhaft. Konfiguration verbessert.\r\n* Fehler bei Errormeldungen wenn Objekte nicht vorhanden sind behoben\r\n* Signiature Feld funktionierte bei Touch devices nicht richtig\r\n* historie: Speichern von 0 Werten korrigiert\r\n\r\n\r\n### Sicherheit\r\n\r\n* YORM. Das Escapen von Identifieren ist nun eingebaut. Wurde vorher nicht darauf geachtet, wären SQL Injections möglich gewesen.\r\n\r\nDanke Thomas Blum, Gregor Harlan, Christoph Boecker, Alexander Walther, Daniel Weitenauer, Michael Rainer, jganthaler, Jelle Schutter, Gerald Urbas, Robert Rupf, cukabeka, Daniel Bagel, Norbert Micheel\r\n",
+      "path": "https://redaxo.org/download/addon/yform/4.1.0.zip",
+      "package_yml": {
+        "package": "yform",
+        "version": "4.1.0",
+        "author": "Jan Kristinus, Gregor Harlan",
+        "supportpage": "https://github.com/yakamara/redaxo_yform/issues",
+        "compile": 0,
+        "page": {
+          "title": "translate:yform",
+          "pjax": false,
+          "icon": "rex-icon rex-icon-module",
+          "subpages": {
+            "setup": {
+              "title": "translate:setup",
+              "perm": "admin"
+            },
+            "docs": {
+              "title": "translate:docs",
+              "perm": "admin[]",
+              "pjax": false,
+              "itemclass": "pull-right",
+              "icon": "rex-icon fa-info-circle"
+            }
+          }
+        },
+        "stylesheets": [
+          "yform.css",
+          "popup.css"
+        ],
+        "requires": {
+          "redaxo": "^5.15.0",
+          "php": {
+            "version": "^8.1"
+          }
+        },
+        "system_plugins": [
+          "manager",
+          "email"
+        ],
+        "installer_ignore": [
+          ".tools"
+        ]
+      },
+      "checksum": "16d6deb4ce52693bad5128c4793914b3",
+      "created": "2023-03-16 12:47:11",
+      "updated": "2023-03-16 12:47:11"
+    },
+    "4876": {
+      "version": "4.1.0-beta1",
+      "description": "Version 4.1.0 - x.03.2023\r\n--------------------------\r\n### Neu\r\n\r\n* PHP >= 8.1 und REDAXO mindestens 5.15\r\n* Date/Datetime-Feld Default-Modifikationen eingebaut\r\n* Tools-Plugin angepasst und Dateiauswahl um Today.. erweitert\r\n* Felder: postSave Functions, damit sich Felder direkt an die Speicherung dranhängen können\r\n* BE Ansicht: Umbau auf Fragment und Tablelayoutoption. Man kann man die Ausgaben/Layouts der BE Tabellen/Formulare anpassen\r\n* dataset save - add history enable/disable feature ergänzt\r\n* BE Tabellen: Klonen von Datensätzen nun möglich\r\n* Dokumentation, Tippfehler\r\n* index-Feld mit salt ergänzt, hashvalue nun dadurch deprecated und ersetzbar\r\n* neue Methode um eine Url zum Datensatz zu erhalten\r\n* Felder: date/datetime/time/datestamp Anzeigeformat um Notice ergänzt\r\n* CodeStyle verbessert\r\n* Manager: in den Backendliste sind nun mehr CSS Classen verfügbar um die Darstellung gezielter beeinflussen zu können\r\n* Relationsfelder sind nun optimiert, sodass eine Frontend verwendung einfacher wird.\r\n* Performance verbessert. Besonders beim Import und bei der Generierung von Tabellen\r\n* be_link search added in backend\r\n* manager: search in backend bei texten um ! (nicht) Suchen ergänzt\r\n* NONCE Felder ergänzt, da REDAXO 5.15 nun NONCE Felder unterstützt\r\n* manager: Liste der Datensätz: AktionsButton umgebaut. Waren nicht sinnvoll erweiterbar\r\n\r\n### Korrekturen\r\n\r\n* Upload in HistoryView war fehlerhaft\r\n* checkbox: Ausgabewerte wurden im Table Manager in der Listenansicht nicht berücksichtigt\r\n* Relations-Felder wurden nicht immer richtig übernommen.\r\n* fieldset-Feld: Keys der Optionen fehlten\r\n* In Whooops Pfad zum E-Mail-Template klickbar gemacht\r\n* YTemplate Checkbox angepasst - Leerzeichen entfernt\r\n* rex_yform_manager_collection: Methode current existiert in PHP 8 nicht mehr\r\n* REST API mit REDAXO im Unterordner korrigiert\r\n* REST API mit ähnlichen Endpointbezeichnungen gehen wieder.\r\n* Textähnliche Felder werden in der Ausgabe nun auf 100 begrenzt. Doku wurde ergänzt mit Beschreibung wie man das individuell anpassen kann\r\n* Nicht vorhandene REX_YFORM_DATA Felder erzeugen nun keine Notices mehr\r\n* Uploadfeld war fehlerhaft. Konfiguration verbessert.\r\n* Fehler bei Errormeldungen wenn Objekte nicht vorhanden sind behoben\r\n* Signiature Feld funktionierte bei Touch devices nicht richtig\r\n* historie: Speichern von 0 Werten korrigiert\r\n\r\n\r\n### Sicherheit\r\n\r\n* YORM. Das Escapen von Identifieren ist nun eingebaut. Wurde vorher nicht darauf geachtet, wären SQL Injections möglich gewesen.\r\n\r\nDanke Thomas Blum, Gregor Harlan, Christoph Boecker, Alexander Walther, Daniel Weitenauer, Michael Rainer, jganthaler, Jelle Schutter, Gerald Urbas, Robert Rupf, cukabeka, Daniel Bagel, Norbert Micheel\r\n",
+      "path": "https://redaxo.org/download/addon/yform/4.1.0-beta1.zip",
+      "package_yml": {
+        "package": "yform",
+        "version": "4.1.0-beta1",
+        "author": "Jan Kristinus, Gregor Harlan",
+        "supportpage": "https://github.com/yakamara/redaxo_yform/issues",
+        "compile": 0,
+        "page": {
+          "title": "translate:yform",
+          "pjax": false,
+          "icon": "rex-icon rex-icon-module",
+          "subpages": {
+            "setup": {
+              "title": "translate:setup",
+              "perm": "admin"
+            },
+            "docs": {
+              "title": "translate:docs",
+              "perm": "admin[]",
+              "pjax": false,
+              "itemclass": "pull-right",
+              "icon": "rex-icon fa-info-circle"
+            }
+          }
+        },
+        "stylesheets": [
+          "yform.css",
+          "popup.css"
+        ],
+        "requires": {
+          "redaxo": "^5.15.0",
+          "php": {
+            "version": "^8.1"
+          }
+        },
+        "system_plugins": [
+          "manager",
+          "email"
+        ],
+        "installer_ignore": [
+          ".tools"
+        ]
+      },
+      "checksum": "3f8352989bcfd5c0eafaf778527691b3",
+      "created": "2023-03-09 16:35:51",
+      "updated": "2023-03-09 16:35:51"
+    },
+    "4547": {
+      "version": "4.0.4",
+      "description": "Version 4.0.4 - 07.10.2022\r\n--------------------------\r\n\r\n### Korrekturen/Ergänzungen\r\n* PHP Versionsabfrage war falsch. package angepasst.\r\n* PHP >= 7.4",
+      "path": "https://redaxo.org/download/addon/yform/4.0.4.zip",
+      "package_yml": {
+        "package": "yform",
+        "version": "4.0.4",
+        "author": "Jan Kristinus, Gregor Harlan",
+        "supportpage": "https://github.com/yakamara/redaxo_yform/issues",
+        "compile": 0,
+        "page": {
+          "title": "translate:yform",
+          "pjax": false,
+          "icon": "rex-icon rex-icon-module",
+          "subpages": {
+            "setup": {
+              "title": "translate:setup",
+              "perm": "admin"
+            },
+            "docs": {
+              "title": "translate:docs",
+              "perm": "admin[]",
+              "pjax": false,
+              "itemclass": "pull-right",
+              "icon": "rex-icon fa-info-circle"
+            }
+          }
+        },
+        "stylesheets": [
+          "yform.css",
+          "popup.css"
+        ],
+        "requires": {
+          "redaxo": "^5.13.0",
+          "php": {
+            "version": ">=7.4, <9"
+          }
+        },
+        "system_plugins": [
+          "manager",
+          "email"
+        ],
+        "installer_ignore": [
+          ".tools"
+        ]
+      },
+      "checksum": "8c70668832ab3818e92a2bf8f66e1691",
+      "created": "2022-10-07 16:37:32",
+      "updated": "2022-10-07 16:37:32"
+    },
+    "4535": {
+      "version": "4.0.3",
+      "description": "Version 4.0.3 - 30.09.2022\r\n--------------------------\r\n\r\n### Korrekturen/Ergänzungen\r\n* be_relation\r\n  * be_relation_view ytemplate eingeführt\r\n  * be_manager suche verbessert \r\n* EMail Attachments werden an die E-Mail beim Versand nun angehängt (Danke Marco Hanke)\r\n* History\r\n  * In der Viewansicht wurden falsche Choice-Werte angezeigt.\r\n  * Suche eingebaut nach ID, User, Datum und Aktion\r\n* date/datetime Picker angepasst\r\n* form hidden Feld Ausgabe flexibler\r\n* EP `YFORM_EXECUTE_FIELDS` ergänzt\r\n* Datenexport angepasst. Filter wurden nicht verarbeitet\r\n* Type-Fixes, Textkorrekturen, generate_key: \"no_db\" ( Danke Norbert Micheel)\r\n* google_geocode Texte verbesser (Danke Alex Walther und Thoomas Blum)\r\n* PHP8.1 Anpassungen (Danke Christoph Boecker)\r\n* Composer Korrekturen\r\n* Query::findId um Alias ergänzt (Danke Christoph Boecker)\r\n* Upload Feld erweitert um json Config und callback (für z.B. Virenscanner)\r\n* Doku ergänzt (Danke Alex Walther und Netzproductions)\r\n* Korrektur Formversand/Article ID (Danke Thomas Skerbis)\r\n* Verbessertes Tracking (Danke Markus Staab)\r\n* REST API Filter wieder zum laufen gebracht\r\n* Codestyle und PHP 8.1 Optimierungen. Danke an Markus Staab für REXSTAN\r\n* Datestamp wird nun im Frontend im Formular ausgeblendet\r\n* E-Mail Validierung verbessert (Danke Wolfgang Bund)\r\n* EP YFORM_DATA_LIST_LINKS wird nun auch bei table edit UND view ausgeführt#1262\r\n* Choice Group in Table View Ansicht hatte Fehler geworfen\r\n",
+      "path": "https://redaxo.org/download/addon/yform/4.0.3.zip",
+      "package_yml": {
+        "package": "yform",
+        "version": "4.0.3",
+        "author": "Jan Kristinus, Gregor Harlan",
+        "supportpage": "https://github.com/yakamara/redaxo_yform/issues",
+        "compile": 0,
+        "page": {
+          "title": "translate:yform",
+          "pjax": false,
+          "icon": "rex-icon rex-icon-module",
+          "subpages": {
+            "setup": {
+              "title": "translate:setup",
+              "perm": "admin"
+            },
+            "docs": {
+              "title": "translate:docs",
+              "perm": "admin[]",
+              "pjax": false,
+              "itemclass": "pull-right",
+              "icon": "rex-icon fa-info-circle"
+            }
+          }
+        },
+        "stylesheets": [
+          "yform.css",
+          "popup.css"
+        ],
+        "requires": {
+          "redaxo": "^5.13.0",
+          "php": {
+            "version": ">=7, <9"
+          }
+        },
+        "system_plugins": [
+          "manager",
+          "email"
+        ],
+        "installer_ignore": [
+          ".tools"
+        ]
+      },
+      "checksum": "3f86c79f7a78bc829495a9fe8154b94c",
+      "created": "2022-09-30 15:08:01",
+      "updated": "2022-09-30 15:08:01"
+    },
+    "4091": {
+      "version": "4.0.2",
+      "description": "Version 4.0.2 - 09.03.2022\r\n--------------------------\r\n\r\n### Korrekturen/Ergänzungen\r\n* Fehlerhafte Auswertung und Darstellung der be_relation Werte",
+      "path": "https://redaxo.org/download/addon/yform/4.0.2.zip",
+      "package_yml": {
+        "package": "yform",
+        "version": "4.0.2",
+        "author": "Jan Kristinus, Gregor Harlan",
+        "supportpage": "https://github.com/yakamara/redaxo_yform/issues",
+        "compile": 0,
+        "page": {
+          "title": "translate:yform",
+          "pjax": false,
+          "icon": "rex-icon rex-icon-module",
+          "subpages": {
+            "setup": {
+              "title": "translate:setup",
+              "perm": "admin"
+            },
+            "docs": {
+              "title": "translate:docs",
+              "perm": "admin[]",
+              "pjax": false,
+              "itemclass": "pull-right",
+              "icon": "rex-icon fa-info-circle"
+            }
+          }
+        },
+        "stylesheets": [
+          "yform.css",
+          "popup.css"
+        ],
+        "requires": {
+          "redaxo": "^5.13.0",
+          "php": {
+            "version": ">=7, <9"
+          }
+        },
+        "system_plugins": [
+          "manager",
+          "email"
+        ]
+      },
+      "checksum": "bb778f3d786641895851303e1455ec35",
+      "created": "2022-03-09 15:38:05",
+      "updated": "2022-03-09 15:38:05"
+    },
+    "4090": {
+      "version": "4.0.1",
+      "description": "Version 4.0.1 - 09.03.2022\r\n--------------------------\r\n\r\n### Korrekturen/Ergänzungen\r\n* SQL Debugmeldungen beim Install/Update entfernt\r\n* DOCs korrigiert. \r\n* PSALM ergönzt. in .tools -> `./vendor/vimeo/psalm/psalm`\r\n* Erste phpunit Tests, CS korrigiert. in redaxo -> `phpunit  -c redaxo/src/addons/yform/.tools/phpunit.xml.dist`\r\n  * Erster YForm Test. Anlegen, Löschen, Relations \r\n* be_media Fehler und multiple Nutzung korrigiert\r\n* selectpicker funktioniere bei Choice nicht\r\n* darkmode sortable korrigiert\r\n* Altlasten - Schriften entfernt\r\n* Warnung bei Massenbearbeitung ergänzt\r\n* Relation mit Relationstabellen und Speicher, Ausgabe, YForm korrigiert\r\n* Warning in uuid entfernt\r\n* Falsche YForm Navigation wenn nur yform[email] ohne Admin korrigiert\r\n\r\nVersion 4.0.0 – 28.12.2021\r\n--------------------------\r\n\r\n### wichtige Änderungen\r\n* Der Manager ist technisch stark umgebaut worden. Bitte unbedingt Info dazu lesen\r\n* Viele deprecated Felder sind entfernt worden. Bitte genau durchlesen und beachten\r\n* Wenn eigene Values und abgeleitete Methoden z.B. für z.B. getDefinitions genutzt werden, müssen jetzt die return types übergeben werden\r\n* Die Links im Table-Manager sind jetzt mit CSRF-Schutz versehen. Weitere Infos dazu in der Doku. \r\n\r\n\r\n### deprecated / entfernt\r\n* Validierung nach email entfernt. Bitte mit type und email ersetzen\r\n* Felder captcha, captcha_calc,recaptcha(_v3) sind entfernt worden und werden auch bei der Installation direkt aus den Datenbanken entfernt, bitte stattdessen das addon yform_spam_protection verwenden\r\n* Feld float entfernt, Bitte stattdessen das number Feld verwenden. Im Table-Manager wird es bei installation/Update automatisch zu number umgewandelt\r\n* Felder checkbox_sql, radio, radio_sql, select_sql, select entfernt. Die Felder werden im Table-Manager bei Installation/Update zu choice umgewandelt. Bitte stattdessen das choice Feld verwenden\r\n* Feld password entfernt. Wird automatisch mit text ersetzt und sollte mit ycom und ycom_password ersetzt werden\r\n* Feld generate_password entfernt. Bitte stattdessen generate_key verwenden.\r\n* classic ytemplates entfernt, da diese nicht und nie vollständig waren und fehler produzierten. wurde wohl auch nie genutzt\r\n* E-Mail Templates *** ### Ersetzungen entfernt\r\n* Doppelten EP YFORM_MANAGER_DATA_PAGE\r\n* remembervalues Feld entfernt\r\n* mediafile entfernt\r\n* be_media_category und be_select_category entfernt\r\n* Tools: select2 entfernt, Ersatz kommt durch REDAXO Core, ist in der YForm Dokumentation beschrieben\r\n\r\n### Neu\r\n* läuft nun auch auf PHP 8\r\n* ❤️ Neue Rechtestruktur. Es gibt nun Ansichtsrechte und/oder Editierrechte für Rollen\r\n* Viewansicht ergänzt. Automatische Viewansicht bei Relationstabellen.\r\n* UUID Feld ergönzt\r\n* Migration von Tabellen ohne Änderungen der Tabelle möglich\r\n* Manager: Umbau der Suchen, Exporte etc. von eigenen SQL Einbindungen zu Yorm. EPs laufen hier nun anders.\r\n* rex_yform_list ergänzt. Ersetzt rex_list und YORM Queries entgegennehmen\r\n* EP: YFORM_DATA_LIST_QUERY statt YFORM_DATA_LIST_SQL (nun entfernt)\r\n* EP: YFORM_LIST_GET statt REX_LIST_GET (aus der rex list)\r\n* YFORM_DATA_TABLE_EXPORT nun mit anderen Parametern ($query als Subject)\r\n* Manager: fragment layout nun relevanter für BE Ausgaben. Tiefere Änderungen möglich. \r\n* First View ist nun Manager Page wenn vorhanden\r\n* Signature Feld ergänzt\r\n* Manager: Liste von Datensätzen mit Actionbuttons angepasst, besserer Überblick und Erweiterbarkeit \r\n* Darkmode optimiert\r\n\r\n### Korrekturen, Anpassungen, Bugs\r\n* Export Tabellen und Felder optimiert. Danke @christophboecker\r\n* Tablesetexport ist nun auf die nötigsten Felder beschränkt, kein Overhead mehr\r\n* Dokuansicht korrigiert, ergänzt und optisch verbessert\r\n* E-Mail Templateansicht erweitert\r\n* E-Mail Versand, plain message Striptags entfernt\r\n* E-Mail Template werden nun nach key validiert\r\n* Manager: Datesuche korrigiert\r\n* Manager: Tabellenansicht verbessert\r\n* Fehlermeldungen bei nicht speicherbaren Formularen sind nun klarer\r\n* Codestyling\r\n* REST-API: include bei URL Params ergänzt und Felder einschränken zu können, die man gerne hätte\r\n* REST-API: Eigene Header nun möglich\r\n* Relation Typansicht/reihenfolge geändert\r\n* be_relations verbessert. Suchen gingen nicht richtig wenn eigene Relationstabellen verwendet wurden.\r\n* be_table Bugs behoben, date felder gingen nicht\r\n* time-Feld: notices bei ergänzt\r\n* number-Feld: Attributes ergänzt und nun auch als type number möglich\r\n* date-feld umd typ HTML-date ergänzt\r\n* empty name nun auch in der Suche\r\n* Int Feld um BigInt erweitert\r\n* Choice. Callback bei Labels nun möglich\r\n* choice-Feld: Attributes ergänzt\r\n* date/datetime/datestamp angepasst und angeglichen, flexiblere Angaben möglich, Nur noch Standard-ISO Eingaben möglich\r\n* time angepasst. Stundenraster/Minutenraster entfern\r\n* validate type - time Überprüfung verbesser\r\n* datestamp hat nun auch eine Suche und Aktualierungen werden dem Redakteur deutlicher dargestellt\r\n* upload Feld angepasst um System Fehlermeldungen und einen Reset Button\r\n* Übersetzung der Tabellen bei den Benuterrechten geht wieder\r\n* Suchen mit Relationen mit Relationstabellen sind korrigiert\r\n* Tools Bibliotheken aktualisiert\r\n* viele statische Codetests wurde durchgeführt.\r\n\r\nDanke Christoph Boecker, Alexander Walther, Norbert Micheel, Thomas Blum, Dirk Schürjohann, Robert Rupf, Markus Staab, Thomas Skerbis, Tobias Krais, Wolfgang Bund, Jelle Schutter, Marco Hanke, Wolfgang Bund\r\n",
+      "path": "https://redaxo.org/download/addon/yform/4.0.1.zip",
+      "package_yml": {
+        "package": "yform",
+        "version": "4.0.1",
+        "author": "Jan Kristinus, Gregor Harlan",
+        "supportpage": "https://github.com/yakamara/redaxo_yform/issues",
+        "compile": 0,
+        "page": {
+          "title": "translate:yform",
+          "pjax": false,
+          "icon": "rex-icon rex-icon-module",
+          "subpages": {
+            "setup": {
+              "title": "translate:setup",
+              "perm": "admin"
+            },
+            "docs": {
+              "title": "translate:docs",
+              "perm": "admin[]",
+              "pjax": false,
+              "itemclass": "pull-right",
+              "icon": "rex-icon fa-info-circle"
+            }
+          }
+        },
+        "stylesheets": [
+          "yform.css",
+          "popup.css"
+        ],
+        "requires": {
+          "redaxo": "^5.13.0",
+          "php": {
+            "version": ">=7, <9"
+          }
+        },
+        "system_plugins": [
+          "manager",
+          "email"
+        ]
+      },
+      "checksum": "d00fa1932c8e2eb84f361e5f256ec4b9",
+      "created": "2022-03-09 12:42:13",
+      "updated": "2022-03-09 12:42:13"
+    },
+    "3990": {
+      "version": "4.0.0",
+      "description": "Version 4.0.0 – 28.12.2021\r\n--------------------------\r\n\r\n### wichtige Änderungen\r\n* Der Manager ist technisch stark umgebaut worden. Bitte unbedingt Info dazu lesen\r\n* Viele deprecated Felder sind entfernt worden. Bitte genau durchlesen und beachten\r\n* Wenn eigene Values und abgeleitete Methoden z.B. für z.B. getDefinitions genutzt werden, müssen jetzt die return types übergeben werden\r\n* Die Links im Table-Manager sind jetzt mit CSRF-Schutz versehen. Weitere Infos dazu in der Doku. \r\n\r\n\r\n### deprecated / entfernt\r\n* Validierung nach email entfernt. Bitte mit type und email ersetzen\r\n* Felder captcha, captcha_calc,recaptcha(_v3) sind entfernt worden und werden auch bei der Installation direkt aus den Datenbanken entfernt, bitte stattdessen das addon yform_spam_protection verwenden\r\n* Feld float entfernt, Bitte stattdessen das number Feld verwenden. Im Table-Manager wird es bei installation/Update automatisch zu number umgewandelt\r\n* Felder checkbox_sql, radio, radio_sql, select_sql, select entfernt. Die Felder werden im Table-Manager bei Installation/Update zu choice umgewandelt. Bitte stattdessen das choice Feld verwenden\r\n* Feld password entfernt. Wird automatisch mit text ersetzt und sollte mit ycom und ycom_password ersetzt werden\r\n* Feld generate_password entfernt. Bitte stattdessen generate_key verwenden.\r\n* classic ytemplates entfernt, da diese nicht und nie vollständig waren und fehler produzierten. wurde wohl auch nie genutzt\r\n* E-Mail Templates *** ### Ersetzungen entfernt\r\n* Doppelten EP YFORM_MANAGER_DATA_PAGE\r\n* remembervalues Feld entfernt\r\n* mediafile entfernt\r\n* be_media_category und be_select_category entfernt\r\n* Tools: select2 entfernt, Ersatz kommt durch REDAXO Core, ist in der YForm Dokumentation beschrieben\r\n\r\n### Neu\r\n* läuft nun auch auf PHP 8\r\n* ❤️ Neue Rechtestruktur. Es gibt nun Ansichtsrechte und/oder Editierrechte für Rollen\r\n* Viewansicht ergänzt. Automatische Viewansicht bei Relationstabellen.\r\n* UUID Feld ergönzt\r\n* Migration von Tabellen ohne Änderungen der Tabelle möglich\r\n* Manager: Umbau der Suchen, Exporte etc. von eigenen SQL Einbindungen zu Yorm. EPs laufen hier nun anders.\r\n* rex_yform_list ergänzt. Ersetzt rex_list und YORM Queries entgegennehmen\r\n* EP: YFORM_DATA_LIST_QUERY statt YFORM_DATA_LIST_SQL (nun entfernt)\r\n* EP: YFORM_LIST_GET statt REX_LIST_GET (aus der rex list)\r\n* YFORM_DATA_TABLE_EXPORT nun mit anderen Parametern ($query als Subject)\r\n* Manager: fragment layout nun relevanter für BE Ausgaben. Tiefere Änderungen möglich. \r\n* First View ist nun Manager Page wenn vorhanden\r\n* Signature Feld ergänzt\r\n* Manager: Liste von Datensätzen mit Actionbuttons angepasst, besserer Überblick und Erweiterbarkeit \r\n* Darkmode optimiert\r\n\r\n### Korrekturen, Anpassungen, Bugs\r\n* Export Tabellen und Felder optimiert. Danke @christophboecker\r\n* Tablesetexport ist nun auf die nötigsten Felder beschränkt, kein Overhead mehr\r\n* Dokuansicht korrigiert, ergänzt und optisch verbessert\r\n* E-Mail Templateansicht erweitert\r\n* E-Mail Versand, plain message Striptags entfernt\r\n* E-Mail Template werden nun nach key validiert\r\n* Manager: Datesuche korrigiert\r\n* Manager: Tabellenansicht verbessert\r\n* Fehlermeldungen bei nicht speicherbaren Formularen sind nun klarer\r\n* Codestyling\r\n* REST-API: include bei URL Params ergänzt und Felder einschränken zu können, die man gerne hätte\r\n* REST-API: Eigene Header nun möglich\r\n* Relation Typansicht/reihenfolge geändert\r\n* be_relations verbessert. Suchen gingen nicht richtig wenn eigene Relationstabellen verwendet wurden.\r\n* be_table Bugs behoben, date felder gingen nicht\r\n* time-Feld: notices bei ergänzt\r\n* number-Feld: Attributes ergänzt und nun auch als type number möglich\r\n* date-feld umd typ HTML-date ergänzt\r\n* empty name nun auch in der Suche\r\n* Int Feld um BigInt erweitert\r\n* Choice. Callback bei Labels nun möglich\r\n* choice-Feld: Attributes ergänzt\r\n* date/datetime/datestamp angepasst und angeglichen, flexiblere Angaben möglich, Nur noch Standard-ISO Eingaben möglich\r\n* time angepasst. Stundenraster/Minutenraster entfern\r\n* validate type - time Überprüfung verbesser\r\n* datestamp hat nun auch eine Suche und Aktualierungen werden dem Redakteur deutlicher dargestellt\r\n* upload Feld angepasst um System Fehlermeldungen und einen Reset Button\r\n* Übersetzung der Tabellen bei den Benuterrechten geht wieder\r\n* Suchen mit Relationen mit Relationstabellen sind korrigiert\r\n* Tools Bibliotheken aktualisiert\r\n* viele statische Codetests wurde durchgeführt.\r\n\r\nDanke Christoph Boecker, Alexander Walther, Norbert Micheel, Thomas Blum, Dirk Schürjohann, Robert Rupf, Markus Staab, Thomas Skerbis, Tobias Krais, Wolfgang Bund, Jelle Schutter, Marco Hanke, Wolfgang Bund",
+      "path": "https://redaxo.org/download/addon/yform/4.0.0.zip",
+      "package_yml": {
+        "package": "yform",
+        "version": "4.0.0",
+        "author": "Jan Kristinus, Gregor Harlan",
+        "supportpage": "https://github.com/yakamara/redaxo_yform/issues",
+        "compile": 0,
+        "page": {
+          "title": "translate:yform",
+          "pjax": false,
+          "icon": "rex-icon rex-icon-module",
+          "subpages": {
+            "setup": {
+              "title": "translate:setup",
+              "perm": "admin"
+            },
+            "docs": {
+              "title": "translate:docs",
+              "perm": "admin[]",
+              "pjax": false,
+              "itemclass": "pull-right",
+              "icon": "rex-icon fa-info-circle"
+            }
+          }
+        },
+        "stylesheets": [
+          "yform.css",
+          "popup.css"
+        ],
+        "requires": {
+          "redaxo": "^5.13.0",
+          "php": {
+            "version": ">=7, <9"
+          }
+        },
+        "system_plugins": [
+          "manager",
+          "email"
+        ]
+      },
+      "checksum": "9d5f1981899cf5cdb2af3d297ee02cdc",
+      "created": "2021-12-28 10:52:05",
+      "updated": "2021-12-28 10:52:05"
+    },
+    "3693": {
+      "version": "3.4.2",
+      "description": "Version 3.4.2 – 21.06.2021\r\n--------------------------\r\n\r\n### Korrekturen, Anpassungen, Bugs\r\n\r\n* Media-Widgets: Kompatibilität zu REDAXO 5.12.1",
+      "path": "https://redaxo.org/download/addon/yform/3.4.2.zip",
+      "package_yml": {
+        "package": "yform",
+        "version": "3.4.2",
+        "author": "Jan Kristinus, Gregor Harlan",
+        "supportpage": "https://github.com/yakamara/redaxo_yform/issues",
+        "page": {
+          "title": "translate:yform",
+          "pjax": false,
+          "icon": "rex-icon rex-icon-module",
+          "subpages": {
+            "overview": {
+              "title": "translate:overview",
+              "perm": "admin"
+            },
+            "docs": {
+              "title": "Hilfe",
+              "perm": "admin[]",
+              "pjax": false,
+              "itemclass": "pull-right",
+              "subpages": {
+                "intro": {
+                  "title": "translate:yform_docs_intro",
+                  "perm": "admin[]",
+                  "pjax": false,
+                  "subPath": "docs/intro.md"
+                },
+                "table_manager": {
+                  "title": "translate:yform_docs_table_manager",
+                  "perm": "admin[]",
+                  "pjax": false,
+                  "subPath": "docs/table_manager.md"
+                },
+                "formbuilder": {
+                  "title": "translate:yform_docs_formbuilder",
+                  "perm": "admin[]",
+                  "pjax": false,
+                  "subPath": "docs/formbuilder.md"
+                },
+                "demos": {
+                  "title": "translate:yform_docs_demos",
+                  "perm": "admin[]",
+                  "pjax": false,
+                  "subPath": "docs/demos.md"
+                },
+                "yorm": {
+                  "title": "translate:yform_docs_yorm",
+                  "perm": "admin[]",
+                  "pjax": false,
+                  "subPath": "docs/yorm.md"
+                },
+                "plugins": {
+                  "title": "translate:yform_docs_plugins",
+                  "perm": "admin[]",
+                  "pjax": false,
+                  "subPath": "docs/plugins.md"
+                }
+              }
+            }
+          }
+        },
+        "stylesheets": [
+          "yform.css",
+          "popup.css"
+        ],
+        "requires": {
+          "packages": {
+            "phpmailer": "^2.0.0"
+          },
+          "redaxo": "^5.8.0",
+          "php": {
+            "version": "^7.0"
+          }
+        },
+        "system_plugins": [
+          "manager",
+          "email"
+        ]
+      },
+      "checksum": "375a247928b5a50717cfa5ecbcebe888",
+      "created": "2021-06-21 15:02:42",
+      "updated": "2021-06-21 15:02:42"
+    },
+    "3352": {
+      "version": "3.4.1",
+      "description": "Version 3.4.1 – 03.08.2020\r\n--------------------------\r\n\r\n### Korrekturen, Anpassungen, Bugs\r\n\r\n* Sprachersetzungen ergänzt\r\n* Doku angepasst\r\n* Inline relations: Original verlor die eigenen Relation-Ids, Fehler beseitigt : Inline relation in inline relation\r\n* Copy Objekt erstellt\r\n* be_relation: Cache löschen nach Anlegen neuer Datensätze\r\n* query: neue Methode whereListContains()\r\n* manager: field identifier in manager rex_list had conflicts with Label\r\n* be_select_category - permission check was wrong\r\n* validate: compare_value type select wasnt working\r\n* multiple related popups wasnt working. id management.\r\n\r\nDanke an: Fernando Averanga, Jürgen Weiss, Yves Torres",
+      "path": "https://redaxo.org/download/addon/yform/3.4.1.zip",
+      "package_yml": {
+        "package": "yform",
+        "version": "3.4.1",
+        "author": "Jan Kristinus, Gregor Harlan",
+        "supportpage": "https://github.com/yakamara/redaxo_yform/issues",
+        "page": {
+          "title": "translate:yform",
+          "pjax": false,
+          "icon": "rex-icon rex-icon-module",
+          "subpages": {
+            "overview": {
+              "title": "translate:overview",
+              "perm": "admin"
+            },
+            "docs": {
+              "title": "Hilfe",
+              "perm": "admin[]",
+              "pjax": false,
+              "itemclass": "pull-right",
+              "subpages": {
+                "intro": {
+                  "title": "translate:yform_docs_intro",
+                  "perm": "admin[]",
+                  "pjax": false,
+                  "subPath": "docs/intro.md"
+                },
+                "table_manager": {
+                  "title": "translate:yform_docs_table_manager",
+                  "perm": "admin[]",
+                  "pjax": false,
+                  "subPath": "docs/table_manager.md"
+                },
+                "formbuilder": {
+                  "title": "translate:yform_docs_formbuilder",
+                  "perm": "admin[]",
+                  "pjax": false,
+                  "subPath": "docs/formbuilder.md"
+                },
+                "demos": {
+                  "title": "translate:yform_docs_demos",
+                  "perm": "admin[]",
+                  "pjax": false,
+                  "subPath": "docs/demos.md"
+                },
+                "yorm": {
+                  "title": "translate:yform_docs_yorm",
+                  "perm": "admin[]",
+                  "pjax": false,
+                  "subPath": "docs/yorm.md"
+                },
+                "plugins": {
+                  "title": "translate:yform_docs_plugins",
+                  "perm": "admin[]",
+                  "pjax": false,
+                  "subPath": "docs/plugins.md"
+                }
+              }
+            }
+          }
+        },
+        "stylesheets": [
+          "yform.css",
+          "popup.css"
+        ],
+        "requires": {
+          "packages": {
+            "phpmailer": "^2.0.0"
+          },
+          "redaxo": "^5.8.0",
+          "php": {
+            "version": "^7.0"
+          }
+        },
+        "system_plugins": [
+          "manager",
+          "email"
+        ]
+      },
+      "checksum": "09e217e0b3105a3f44e80d5b08c38369",
+      "created": "2020-08-03 19:33:57",
+      "updated": "2021-06-21 15:01:42"
+    },
+    "3279": {
+      "version": "3.4",
+      "description": "Version 3.4 – 12.06.2020\r\n--------------------------\r\n\r\n### Korrekturen, Anpassungen, Bugs\r\n\r\n* fields: be_media, mediafile, be_link: Medien und Artikel sind nun nicht mehr löschbar wenn in YForm vorhanden\r\n* EP YFORM_MANAGER_DATA_PAGE_HEADER ergänzt, um sich in den Titel einer Tabelle zu hängen\r\n* action: Email2tpl umgebau: E-Mail oder Label nun als 3. Feldparameter erlaubt\r\n* date Field: Suche im Manager nun komfortabler und toleranter\r\n* field: upload: diverse Korrekturen in speziellen konstellationen, session handling verbessert\r\n* showvalue nun auch durchsuchbar im Manager\r\n* manager: dataliste - rex_list cursor angepasst. seite bleibt nun erhalten bei edit, delete, add und übernehmen\r\n* manager: be_relation with relation table - Werte wurden in der Liste falsch ausgegeben\r\n* manager: be_media/list inline relations funktionierten in bestimmten konstellationen nicht richtig\r\n* manager: suchergebnisse - tablenamen mit in Tabelle als class aufnehmen\r\n* field: html und php werden nun mit codemirror gefütter wenn aktiviert\r\n* field:mediafile width und height wird nun gespeichert wenn vorhanden\r\n* field: prio: Attribute - Ermöglicht u.a. die Aktivierung der Live-Suche mittels\r\n* Action: PHP Action ergänzt\r\n* Diverse Übersetzungen ergänzt und korrigiert.\r\n* validate: type: iban validierung ergänzt\r\n* email template um updatedate ergänzt\r\n* Page Parameter auf aktuelle Seite (#836) Die Verwendung von `rex_be_controller::getCurrentPage()` erlaubt das direkte Einbinden der data_edit Ansicht in einem eigenen Addon, bzw. weiterhin wie gewohnt in YForm.\r\n* name-Attribut der Felder von Feld-ID zu Feld-Name geändert, um Yform-Inline-Tabellen zu unterstützen.\r\n* Umbau der docs auf neuen REDAXO Standard (ist zwar im Moment noch hässlicher, aber das wird noch)\r\n* Bei Popup Fenstern keine Beschreibung mehr. NImmt zuviel Platz ein.\r\n* Optimierung hidden Field.\r\n* datetime: negatives year offset nun möglich\r\n* Massenlöschung in be_manager_relation Popup nun möglich\r\n* Manager: Relationtabellen können nun im Nachhinein geändert werden.\r\n* checkbox Ausgabewert für List nun einstellbar\r\n* field:number -> decimal default werte werden gesetzt\r\n* field: checkbox - suche - Texte nun sprachabhängig\r\n* be_table: Diverse Anpassungen. Importproblem behoben, REX_LINK ermöglicht\r\n* Diverse dumps, notices entfernt, Fehlermeldung optimiert ..\r\n* action: redirect - wenn Fehler - dann wird kein redirect ausgeführt\r\n* Bug: plugin: tools: in neueeren REDAXO Version gingen die Tools wegen eines Fehlers nicht mehr. rex:ready\r\n* Bug: Transaction bei YForm DataImport korrigiert.\r\n* Bug: Negativer Uniquekey für unter anderen bei InlineRelationen zu Fehlern\r\n* Bug: manager: Fehler beim Umgang mit Zwischentabellen behoben\r\n\r\nDanke an: xong, jelleschutter, NGWNGW, alexplusde, nandes2062, interweave-media, pschuchmann, DanielWeitenauer, dpf-dd, christophboecker, Geri2017, crydotsnake, engel4u, staabm, tskerbis",
+      "path": "https://redaxo.org/download/addon/yform/3.4.zip",
+      "package_yml": {
+        "package": "yform",
+        "version": "3.4",
+        "author": "Jan Kristinus, Gregor Harlan",
+        "supportpage": "https://github.com/yakamara/redaxo_yform/issues",
+        "page": {
+          "title": "translate:yform",
+          "pjax": false,
+          "icon": "rex-icon rex-icon-module",
+          "subpages": {
+            "overview": {
+              "title": "translate:overview",
+              "perm": "admin"
+            },
+            "docs": {
+              "title": "Hilfe",
+              "perm": "admin[]",
+              "pjax": false,
+              "itemclass": "pull-right",
+              "subpages": {
+                "intro": {
+                  "title": "translate:yform_docs_intro",
+                  "perm": "admin[]",
+                  "pjax": false,
+                  "subPath": "docs/intro.md"
+                },
+                "table_manager": {
+                  "title": "translate:yform_docs_table_manager",
+                  "perm": "admin[]",
+                  "pjax": false,
+                  "subPath": "docs/table_manager.md"
+                },
+                "formbuilder": {
+                  "title": "translate:yform_docs_formbuilder",
+                  "perm": "admin[]",
+                  "pjax": false,
+                  "subPath": "docs/formbuilder.md"
+                },
+                "demos": {
+                  "title": "translate:yform_docs_demos",
+                  "perm": "admin[]",
+                  "pjax": false,
+                  "subPath": "docs/demos.md"
+                },
+                "yorm": {
+                  "title": "translate:yform_docs_yorm",
+                  "perm": "admin[]",
+                  "pjax": false,
+                  "subPath": "docs/yorm.md"
+                },
+                "plugins": {
+                  "title": "translate:yform_docs_plugins",
+                  "perm": "admin[]",
+                  "pjax": false,
+                  "subPath": "docs/plugins.md"
+                }
+              }
+            }
+          }
+        },
+        "stylesheets": [
+          "yform.css",
+          "popup.css"
+        ],
+        "requires": {
+          "packages": {
+            "phpmailer": "^2.0.0"
+          },
+          "redaxo": "^5.8.0",
+          "php": {
+            "version": "^7.0"
+          }
+        },
+        "system_plugins": [
+          "manager",
+          "email"
+        ]
+      },
+      "checksum": "de0fd9513fa2055776b320a9bce72da9",
+      "created": "2020-06-12 12:38:42",
+      "updated": "2020-06-12 13:08:59"
+    },
+    "2988": {
+      "version": "3.3.1",
+      "description": "Version 3.3.1 – 30.10.2019\r\n--------------------------\r\n\r\n* Bug mit Relationsansichten korrigiert. z.B. Selectpicker ging nicht.",
+      "path": "https://redaxo.org/download/addon/yform/3.3.1.zip",
+      "package_yml": {
+        "package": "yform",
+        "version": "3.3.1",
+        "author": "Jan Kristinus, Gregor Harlan",
+        "supportpage": "https://github.com/yakamara/redaxo_yform/issues",
+        "page": {
+          "title": "translate:yform",
+          "pjax": false,
+          "icon": "rex-icon rex-icon-module",
+          "subpages": {
+            "overview": {
+              "title": "translate:overview",
+              "perm": "admin"
+            }
+          }
+        },
+        "stylesheets": [
+          "yform.css",
+          "popup.css"
+        ],
+        "requires": {
+          "packages": {
+            "phpmailer": "^2.0.0"
+          },
+          "redaxo": "^5.6.0",
+          "php": {
+            "version": "^7.0"
+          }
+        },
+        "system_plugins": [
+          "docs",
+          "manager",
+          "email"
+        ]
+      },
+      "checksum": "e19e704375df2e908fdc1c5b68ef0262",
+      "created": "2019-10-30 11:19:19",
+      "updated": "2019-10-30 11:19:19"
+    },
+    "2982": {
+      "version": "3.3",
+      "description": "Version 3.3 – 25.10.2019\r\n--------------------------\r\n\r\n### Korrekturen, Anpassungen\r\n\r\n* Be-Relation-Feld: Fehler bei inline Relationen korrigiert\r\n* Diverse Debugausgaben entfernt\r\n* time, date, datetime vereinheitlicht\r\n* Rest Token wird nun angeboten\r\n* Uploadfeld optimiert. Downloadfähig im Datensatz selber\r\n* Be-Relation-Feld: Multiple Wert Ausgaben in den Listen korrigiert\r\n* Datestamp Multiedit korrigiert. Wert wurde fälschlicherweise neu gesetzt\r\n* Action redirect optimiert. Exit wird nach dem Formular (postactions) durchgeführt",
+      "path": "https://redaxo.org/download/addon/yform/3.3.zip",
+      "package_yml": {
+        "package": "yform",
+        "version": "3.3",
+        "author": "Jan Kristinus, Gregor Harlan",
+        "supportpage": "https://github.com/yakamara/redaxo_yform/issues",
+        "page": {
+          "title": "translate:yform",
+          "pjax": false,
+          "icon": "rex-icon rex-icon-module",
+          "subpages": {
+            "overview": {
+              "title": "translate:overview",
+              "perm": "admin"
+            }
+          }
+        },
+        "stylesheets": [
+          "yform.css",
+          "popup.css"
+        ],
+        "requires": {
+          "packages": {
+            "phpmailer": "^2.0.0"
+          },
+          "redaxo": "^5.6.0",
+          "php": {
+            "version": "^7.0"
+          }
+        },
+        "system_plugins": [
+          "docs",
+          "manager",
+          "email"
+        ]
+      },
+      "checksum": "e4ab2ba3909cffad7404ab5ad0deb8d8",
+      "created": "2019-10-25 10:45:13",
+      "updated": "2019-10-25 10:45:13"
+    },
+    "2923": {
+      "version": "3.2",
+      "description": "Beschreibung\r\n-------\r\nYForm hilft beim Erstellen von Formularen sowohl im Frontend als auch im Backend.\r\n\r\nIm REDAXO-Backend kann man mit dem Formular-Manager von YForm beliebige Datenbank-Verwaltungen erstellen; hierzu stehen eine Vielzahl verschiedener Felder und Feldtypen bereit. Die Tabellen können auch verknüpft werden, und dank zahlreicher Validierungen lassen sich die Eingaben vielfältig überprüfen.\r\n\r\nDie Felder und Validierungen stehen auch im Frontend zur Verfügung – hier kann man sowohl eine durch Querstriche getrennte Pipe-Notation als auch die etwas flexiblere PHP-Schreibweise nutzen. Mittels Aktionen lassen sich die im Formular eingegebenen Daten zum Beispiel per Mail versenden, in die Datenbank schreiben oder existierende Daten verändern. Die HTML-Code für das Frontend ist in Templates organisiert, so dass man flexibel eigene Templates für das Formular anlegen kann.\r\n\r\nVersion 3.2 – 19.09.2019\r\n--------------------------\r\n\r\n### Korrekturen, Anpassungen\r\n\r\n* Diverse Beschreibungen und fehlende Texte ergänzt, Übersetzungen nachgezogen\r\n* YForm: EP YFORM_INIT ergänzt, um allgemeine Einstellungen einbinden zu können\r\n* YForm: als factory trait nun möglich\r\n* Docs Update\r\n* Anpassungen Javascript um besser auf Objekte zugreifen zu können\r\n* pipe Notation verbessert: Tabs werden am Anfang ignoriert. Zeilen die keine validate,action oder value Feld sind werden als html interpretiert (bessere Übersicht)\r\n* Choice-Feld: Platzhalter wurden fälschlicherweise als Json erkannt, IDs werden nun angezeigt, Placeholder wird nun übersetzt\r\n* Datetime-Feld: Manager - Nun auch durchsuchbar\r\n* Validate-empty: Mehrfach Validierung als ODER nun möglich\r\n* index-Feld: Funktionsaufruf optimiert. Parameter nun optional\r\n* hidden-Feld: um SESSION, GET, und POST erweitert\r\n* textarea-Feld: nun auch Defaultwert möglich\r\n* time-Feld: Format nur noch für die Ausgabe und mit voreingestellten Varianten\r\n* Tools: daterangepicker aktualisiert. v3.0.5\r\n* Tools: Daterangepickeraufrufe optimiert\r\n* Manager: Nach Datensatzlöschung wird Instanz nun direkt auch gelöscht\r\n* Manager: Grid in Fragmente gelegt und somit überschreibbar gemacht, für eigene Layoutlösungen\r\n* Manager: Collection-Edit nun als Transaktion\r\n* Be-Relation-Feld: m:n Werte werden nun in der Listenübersicht angezeigt.\r\n* Be-Relation-Feld: Popup wurde z.T. fehlerhaft angezeigt\r\n* E-Mail: Template anlegen, nun ohne übernehmen, da dies nicht funktionierte\r\n* REST: Pathangaben in der JSON-Antwort waren z.T. falsch\r\n* REST: Tokenfreigabe können nun auf Endpoints beschränkt werden\r\n* REST: Zugriffsübersicht zeigte falschen Tokennamen an.",
+      "path": "https://redaxo.org/download/addon/yform/3.2.zip",
+      "package_yml": {
+        "package": "yform",
+        "version": "3.2",
+        "author": "Jan Kristinus, Gregor Harlan",
+        "supportpage": "https://github.com/yakamara/redaxo_yform/issues",
+        "page": {
+          "title": "translate:yform",
+          "pjax": false,
+          "icon": "rex-icon rex-icon-module",
+          "subpages": {
+            "overview": {
+              "title": "translate:overview",
+              "perm": "admin"
+            }
+          }
+        },
+        "stylesheets": [
+          "yform.css",
+          "popup.css"
+        ],
+        "requires": {
+          "packages": {
+            "phpmailer": "^2.0.0"
+          },
+          "redaxo": "^5.6.0",
+          "php": {
+            "version": "^7.0"
+          }
+        },
+        "system_plugins": [
+          "docs",
+          "manager",
+          "email"
+        ]
+      },
+      "checksum": "074d63a7f4c47e46669d1cd0494187c1",
+      "created": "2019-09-19 09:39:58",
+      "updated": "2019-09-19 09:39:58"
+    },
+    "2785": {
+      "version": "3.1.1",
+      "description": "Beschreibung\r\n-------\r\nYForm hilft beim Erstellen von Formularen sowohl im Frontend als auch im Backend.\r\n\r\nIm REDAXO-Backend kann man mit dem Formular-Manager von YForm beliebige Datenbank-Verwaltungen erstellen; hierzu stehen eine Vielzahl verschiedener Felder und Feldtypen bereit. Die Tabellen können auch verknüpft werden, und dank zahlreicher Validierungen lassen sich die Eingaben vielfältig überprüfen.\r\n\r\nDie Felder und Validierungen stehen auch im Frontend zur Verfügung – hier kann man sowohl eine durch Querstriche getrennte Pipe-Notation als auch die etwas flexiblere PHP-Schreibweise nutzen. Mittels Aktionen lassen sich die im Formular eingegebenen Daten zum Beispiel per Mail versenden, in die Datenbank schreiben oder existierende Daten verändern. Die HTML-Code für das Frontend ist in Templates organisiert, so dass man flexibel eigene Templates für das Formular anlegen kann.\r\n\r\nVersion 3.1.1 – 24.04.2019\r\n--------------------------\r\n\r\n### Korrekturen\r\n\r\n* mediafile Template war fehlerhaft und nicht nutzbar\r\n* Email: mail_reply_to/mail_reply_to_name aus Liste entfernt\r\n* Tools: Datepickerdefault Einstellungen geändert. Damit die Suche im manager wieder geht\r\n* REST API: Feldererkennung war fehlerhaft.\r\n* REST API: Notice entfernt bei Relations\r\n* REST API: Selfrelations gehen nun\r\n* REST API: Path geht nun auch mit oder ohne / in URL",
+      "path": "https://redaxo.org/download/addon/yform/3.1.1.zip",
+      "package_yml": {
+        "package": "yform",
+        "version": "3.1.1",
+        "author": "Jan Kristinus, Gregor Harlan",
+        "supportpage": "https://github.com/yakamara/redaxo_yform/issues",
+        "page": {
+          "title": "translate:yform",
+          "pjax": false,
+          "icon": "rex-icon rex-icon-module",
+          "subpages": {
+            "overview": {
+              "title": "translate:overview",
+              "perm": "admin"
+            }
+          }
+        },
+        "stylesheets": [
+          "yform.css",
+          "popup.css"
+        ],
+        "requires": {
+          "packages": {
+            "phpmailer": "^2.0.0"
+          },
+          "redaxo": "^5.6.0",
+          "php": {
+            "version": "^7.0"
+          }
+        },
+        "system_plugins": [
+          "docs",
+          "manager",
+          "email"
+        ]
+      },
+      "checksum": "3908c0bf8f9dfe0bc7d599780d43f1dc",
+      "created": "2019-04-24 17:13:35",
+      "updated": "2019-04-24 17:13:35"
+    },
+    "2776": {
+      "version": "3.1",
+      "description": "Version 3.1 – 04.04.2019\r\n--------------------------\r\n\r\n### Neue Features, bitte beachten\r\n\r\n* REST Plugin: Authentifizierung kann nun eingeschränkt und getrackt werden\r\n* REST Plugin: POST und DELETE ergänzt\r\n* YOrm: collection. Methoden ergänzt: first, last, filter, slice, shuffle, sort, map, split, chunk\r\n* Feld: upload: Upload-Dialogfeld per Filter auf gewählte Filetypes begrenzen\r\n* validate: password_policy: Wenn keine Fehlermeldung dann redaxo default\r\n* YForm: objparams: Answertext entfernt\r\n* manager: Filter und Sets umgebaut und vereinheitlicht\r\n* manager: fixdata. Nicht veränderbare Daten sind setz- und erzwingbar. Attribute disabled wird erzwungen.\r\n* EPs: YFORM_MANAGER_DATA_EDIT_FILTER und YFORM_MANAGER_DATA_EDIT_SET um im manager Aufrufe einschränken zu können.\r\n* manager: Import: Wird nun als Transaktion durchgeführt. Bei Fehlern wird ein Rollback ausgeführt\r\n* manager: Verlinkung bei table edit, Feld Edit, und Datensätze jeweils ergänzt.\r\n\r\n### Änderungen und Korrekturen\r\n\r\n* Feld: index um Typ `TEXT`\r\n* Feld: emptyname um Typ `MEDIUMTEXT` ergänzt\r\n* Feld: be_manager_relation um Typ `INT` ergänzt, be_manager_relation inline werte in email value pool übergeben\r\n* Feld: validate: custom function liefert nun an die passenden Felder die Fehlermeldungen, func aufruf flexibler und yform_value klasse\r\n* Feld: Datetime seconds hinzugefügt da notice. str_pad left für Anzeige bei select\r\n* Feld: action: callback angepasst\r\n* Feld: date/datetime: Deutsches Datums-Format hinzugefügt, Notices entfernt, yearEnd angepasst\r\n* Vendor update inputmask\r\n* Vendor update daterangepicker\r\n* Update tools.js\r\n* E-Mail-PlugIn: template Tabelle in utf8mb4_unicode_ci konvertiert\r\n* Template: checkbox classic template korrigiert\r\n* Template: value.choice.select.tpl.php für classic-Template erstellt\r\n* Diverse Übersetzungen und DOCs\r\n* YForm-Table-Cache löschen nach Installation oder Update\r\n* manager: dataset: isValid()\r\n* Massenbearbeitung korrigiert.\r\n* send parameter dynamisch setzen geht wieder\r\n* Email: reply_to angepasst und richtig eingesetzt\r\n* manager:migrate Table mit tinyint geht wieder \r\n* Icons der Subpages entfernt\r\n* Feld: be_table geht nun wieder.\r\n* Email: update funktionierte nicht richtig.\r\n\r\nDanke: Yves Torres, Tobias Krais, Gregor Harlan, 8i11y, Alexander Walther",
+      "path": "https://redaxo.org/download/addon/yform/3.1.zip",
+      "package_yml": {
+        "package": "yform",
+        "version": "3.1",
+        "author": "Jan Kristinus, Gregor Harlan",
+        "supportpage": "https://github.com/yakamara/redaxo_yform/issues",
+        "page": {
+          "title": "translate:yform",
+          "pjax": false,
+          "icon": "rex-icon rex-icon-module",
+          "subpages": {
+            "overview": {
+              "title": "translate:overview",
+              "perm": "admin"
+            }
+          }
+        },
+        "stylesheets": [
+          "yform.css",
+          "popup.css"
+        ],
+        "requires": {
+          "packages": {
+            "phpmailer": "^2.0.0"
+          },
+          "redaxo": "^5.6.0",
+          "php": {
+            "version": "^7.0"
+          }
+        },
+        "system_plugins": [
+          "docs",
+          "manager",
+          "email"
+        ]
+      },
+      "checksum": "96961247cd58117d658ce1adbceb2bd6",
+      "created": "2019-04-04 11:06:18",
+      "updated": "2019-04-04 11:06:18"
+    },
+    "2695": {
+      "version": "3.0",
+      "description": "Changelog\r\n=========\r\n\r\nVersion 3.0 – 01.02.2019\r\n--------------------------\r\n\r\n#### Warnung - Bitte nicht von 2.x auf 3.x updaten, ohne sich genau informiert zu haben. Bei Updates der Hauptversion sollte zuvor ein Datenbank-Backup durchgeführt werden. Bitte auch die Bemerkungen bei deprecated und bei den Umbenennungen/Löschungen beachten\r\n\r\n### Neue Features\r\n\r\n* be_relations: 1-n Verknüpfungen nun über inline Modul möglich, inkl. Sortierung und überprüfung der verknüpften Formulare\r\n  * inline relations verschachtelbar\r\n  * entsprechend Felder wie be_media angepasst\r\n* type: URL-Filter\r\n* choice Feld ergänzt: ersetzt radio, radio_sql, select, select_sql, checkbox_sql.\r\n* Warnmeldungen ohne Inhalt werden nun um technische Infos ergänzt.\r\n* ! Felder geben nun den Datenbankfeldtyp fest vor. Felder werden auch nachträglich an das Datenbankfeld angepasst. Nun auch optional\r\n* integer: um Maßeinheit ergänzt\r\n* number: Neues Feld, mit Maßeinheit und richtigem DB Feldtyp\r\n* ! datestamp: wird nun als datetime gespeichert. format nun für Anzeige, nicht mehr als Speicherformat.\r\n* validate: type um json erweitert\r\n* checkbox nun auch mit Attributen\r\n* ! utf8mb4 ist nun standard und wird erzwungen, wie auch von Varchar(255) -> varchar(191). Möglicher Datenverlust bei zu langen Feldinhalten!\r\n* REST API als Plugin\r\n\r\n### Änderungen und Korrekturen\r\n\r\n* ReCaptcha umgebaut. Nur noch ValueObjekt nötig.\r\n* ! Formbuilder textile entfernt (pschuchmann)\r\n* Umbau des Feldnamenmanagements\r\n* sql-Injection des Prio-Felds behoben\r\n* Unnötige \"Send\"-Abfragen in den Validierungsklassen entfernt\r\n* Feldwertermittlung korrigiert. Bei \"0\" waren Ergebnisse fehlerhaft\r\n* internalForms (YORM) führte zu Problemen weil CSRF mit ausgeführt wurden und Sessions erstellt wurden.\r\n* Snapshots über Console korrigiert, User wird nun auch richtig gesetzt\r\n* Tablesetimport verbessert\r\n* Dataimport verbessert und bessere Fehlermeldungen, Normalisierung der Feldnamen\r\n* E-Mail YFORM_DATA output korrigiert auf html und plain\r\n* MIT-Lizenz ergänzt\r\n* Popupfenster schliesst nun bei Mehrfachselect nicht mehr direkt\r\n* Templates überarbeitet: Grid entfernt, diverse Anpassungen class und bootstrap\r\n* Diverse technische Optimierungen\r\n* checkbox: keine eigenen Werte mehr. Ausschliesslich 0,1. DB-Type: tinyint. Deswegen unbedingt die Formulare entsprechend anpassen\r\n* time: korrigiert (Norbert Micheel)\r\n* captcha: korrekturen\r\n* date: korrekturen (RexDude)\r\n* be_table: korrekturen (Alex Platter)\r\n* html: Infotext angepasst\r\n* index: Fehler bei der Speicherung behoben, null wird nun vermieden\r\n* upload: diverse anpassungen.\r\n* emptyname: wird nun auch an YOrm übergeben, null wird nun vermieden\r\n* Doku wurde aktualisiert\r\n* Übersetzungen ergänzt\r\n* UNIX Timestamp in historie auf serverdate geändert\r\n* yform-element in ytemplates komplett entfernt\r\n* Tabellenübersicht optimiert\r\n* YTemplates: Grid überall entfernt, da nicht genutzt und nicht klar verständlich\r\n* CSV Import mit fehlenden Feldern geht wieder. Fehlende Felder werden als TEXT angelegt\r\n* README und CHANGELOG getrennt\r\n* value: date/datetime Standardformat auf YYYY-MM-DD und YYYY-MM-DD HH:ii:ss geändert\r\n* Bug: Mehrere YOrm Aufrufe konnten sich beeinflussen. REQUEST/YCom Problem\r\n* be_manager_relation nun auch mit zusätzlichen Feldtyp varchar(191) ergänzt\r\n* create_table, db: Mit %TABLE_PREFIX% im Tabellennamen kann man den Prefix der REDAXO Tabellen setzen.\r\n\r\nDanke auch an Fernando Averanga, christophboecker, Wolfgang Bund, Alex Platter, Yves Torres, Alexander Walther, Jürgen Weiss für Übersetzungen, kleinere Korrekturen, Doku, Anpassungen an Templates.\r\n\r\n#### deprecated\r\n\r\n* values\r\n    * radio Feld\r\n    * radio_select Feld\r\n    * select Feld\r\n    * select_sql Feld\r\n    * checkbox_sql Feld\r\n    * float Feld\r\n    * captcha\r\n    * captcha_calc\r\n    * generate_password\r\n    * password\r\n* actions\r\n    * createdb\r\n* validates\r\n    * email\r\n\r\n#### umbenannt und werden initial aus der YForm Definition entfernt\r\n\r\n* action: createdb -> create_table\r\n* labelexist -> in_names\r\n* existintable -> in_table\r\n* REX_YFORM_TABLE_DATA[table=\"tablename\" output=\"widget/widgetlist\"] -> REX_YFORM_TABLE_DATA[table=\"tablename\" widget=\"1\" multiple=\"1\"]\r\n\r\nVersion 2.3 – 26.01.2018\r\n--------------------------\r\n\r\n### Änderungen\r\n\r\n* Manager Upload: Feld speicherte bei YORM nicht richtig\r\n* Manager Upload: Fehlermeldung bei Typefehler erschien nicht\r\n* YFORM: Nested Wheres korrigiert\r\n* Tools: Timepicker angepasst\r\n* geo locations: fixed\r\n* Abhängigkeit ist nun REDAXO 5.5\r\n* Benennungen angepasst name, label .. \r\n* uniqueform entfernt\r\n* Umbau auf rex_sql_table\r\n* GEO Plugin gelöscht, google_geo feld verschoben und bleibt\r\n\r\n#### Neu\r\n\r\n* YFORM: populateRelation() für weniger Queries bei Relationen\r\n* be_media_category Feld ergänzt\r\n* email Feld ist nun durchsuchbar\r\n* notices können als HTML notiert werden\r\n* Falsche Queries werden bei den _sql Feldern abgefangen\r\n* Form Notation verfeinert\r\n* Geo Plugin: Map Zoom nun einstellbar (danke alexplusde)\r\n* Manager: Massenbearbeitung nun pro Tabelle setzbar\r\n* Manager: Fieldpage optimiert. 100 Einträge pro Seite, Label aufgenommen in Übersicht\r\n* Manager: Datensatz ID nun angezeigt\r\n* Manager: Historie nun für alle User verfügbar (die Rechte auf die Tabelle haben)\r\n* Docs aktualisiert\r\n* Schwedische Sprache ergänzt\r\n* Passwort Policy Field ergänzt. Durch REDAXO 5.4 Passwort Policy\r\n* Unique: Leerfeldoption ergänzt\r\n* be_table: kann nun auch REX Felder nutzen wie REX_MEDIA_WIDGET etc. (Danke Alex Platter)\r\n* Action: tpl2email kann nun auch Fehlermeldungen ausgeben, wenn Versand schief lief.\r\n* Manager: Suchmaske. Für die wichtigsten Felder wurden Infotexte ergänzt\r\n* CSRF Schutz durch Nonce Feld gesetzt. Ist nun default aktiv. Über objparams['csrf_protection'] deaktivierbar\r\n* select/_sql: Leerstrings werden bei der Suche ignoriert.\r\n\r\n#### Fehler\r\n\r\n* YORM: getRelatedDataset fixed. Verursachte Problem mit z.B. YCom Verknüpfungen\r\n* Bei Update aus älteren YForms wird nun auch das be_medialist und submits entfernt\r\n* select Feld: Falsche selected korrigiert, Defaultwert wird nun richtig übernommen\r\n* radio feld hat keinen Fehler ausgegeben.\r\n* Manager: CSV Import/Export optimiert. BOM gesetzt und entfernt. Unnötige Felder werden ignoriert, EnsureColumne bei AlterTable .. \r\n* redirect geht nun richtig mit REDAXO 5.4 Version\r\n* Manager: Historieeinträge konnten bei bestimmten Relationen nicht wieder zurückgesetzt werden\r\n* YOrm: Durch Nutzung von YORM, wurde immer der Send Status für alle Formulare gesetzt.\r\n* EMail-Versand: Es konnte passieren, dass der AltBody nicht richtig gesetzt wurde (Danke Andreas Eberhard)\r\n* Geokodierung war fehlerhaft (Danke Wolfgang)\r\n* Darstellung war im Popup zum Teil noch miz Hauptnavi und REX-Header\r\n* Upload Feld: min_error und max_error waren vertauscht\r\n* datestamp feld. Werte anzeigen, es wurde nicht die aktuellen Felder, sondern nur die neuen angezeigt\r\n* Manager: Exportdownload korrigiert\r\n* ytemplates, bootstrap: translate meldungen nun auch mit html\r\n* manager: popup bei relationen korrigiert\r\n* checkbox field überarbeitet und korrigiert\r\n\r\nVersion 2.2 – 21.04.2017\r\n--------------------------\r\n\r\n### Änderungen\r\n\r\n* DE/EN Inhalte vervollständigt\r\n* Extension Point YFORM_EMAIL_SEND ergänzt\r\n* bug bei submit und BC korrigiert\r\n* datestamp-Feld um Text-Ansicht ergänzt\r\n* generate_key um Text-Ansicht ergänzt\r\n* generate_key um Definitionen ergänzt\r\n* showvalue auch im Backend nutzbar\r\n* BUG: value.be_manager_relation.tpl.php l78 warning cause of array passed into htmlspecialchars()\r\n* preg_match auch im Backend nutzbar\r\n* checkbox: erlaubte attribute ergänzt\r\n* BUG: YForm: Exception vermeiden bei getRelatedDataset mit optionalem Relationsfeld\r\n* YOrm: Neue Methode getRelatedQuery()\r\n* YOrm: rex_yform_manager_table->table ergänzt\r\n* be_relation: bei popup single, war die ausgabe beim suchfeld falsch\r\n* Dataset-Cache: Klassen korrekt beachten\r\n* BUG: getRelatedQuery: Verwechslung bei Relationstypen\r\n* select_sql: Text Leeroption auf string casten\r\n* YORM: Bei Abfrage einer einzelnen ID, orderBy nicht setzen\r\n* YORM: weitere where-Methoden (whereNot, whereNull etc.)\r\n* YORM: Methoden zum direkten Abfragen einer einzelnen Column\r\n* notice: an verschiedenen Feldern sind notices übersetzbar\r\n* index-Feld: ID kann nun mit aufgenommen werden\r\n* be_manager_relation popup (single) warning entfernt\r\n\r\nVersion 2.1 – 26.01.2017\r\n--------------------------\r\n\r\n#### Achtung !! Bitte genau anschauen und vor dem Update anpassen !! BItte auch Hinweise der Version 2.0 beachten wenn ein Updaten von 1.x erfolgen soll\r\n\r\n#### Neu\r\n\r\n* classic view: Umgang mit Fehlern verbessert\r\n* manager/tools:daterangepicker nun ohne autoupdate\r\n* performance yorm verbessert. Nur Ausgabe wenn nötig.\r\n* html und php Felder erzeugen nun keine eigene Spalte mehr in der Tabelle\r\n* hiddenfields kann nun auch arrays\r\n* manager: relationsfelder werden nun gecacht.\r\n* massenoperatione: Performance stark verbessert\r\n* debugstatus wird an diversen stellen nun weitergegeben\r\n* Historiedarstellung: Bezeichnung wird geraten. Einzelinfoansicht eines Artikels. Einzelhistorie einseh- und löschbar.\r\n* index Feld kann nun auch Unterfelder aus Relationen mit aufnehmen.\r\n* diverse Textkorreturen\r\n* Erweiterung der Dokumentation\r\n* Email: Versand email und Versand-Email Name können nun auch ersetzt werden.\r\n* select: Werteüberprüfung verbessert. Initial und Defaults korrigiert.\r\n* upload: Diverse Fehler. Typabfrage, übernahme feld, textkorrekturen\r\n* radiofelder überarbeitet. Fehler behoben\r\n* datetime: formartierung angeglichen / listenansicht korrigiert\r\n* be_link um mehrfachauswahl ergänzt\r\n* Email: Templates: BC zu v1.0 .. Ersetzung wie ###key### gehen wieder ..\r\n* Formbuilder: CS und Showtext wird nun immer nur verwendet wenn Text eingegeben wurde\r\n* Captcha: Darstellung angepasst. Icon entfernt.\r\n* YFORM Data Widget ergänzt. Context: module. Bsp: REX_YFORM_TABLE_DATA[id=\"12\" table=\"address\" output=\"widget\" field=\"firstnam,' ',surname\"]\r\n* be_relation kann nun die gleiche ID mehrfach verwenden.\r\n* Famous Felder wieder aufgenommen.\r\n\r\n#### Bugs\r\n\r\n* import: Tableset Fehler behoben\r\n* validate type url: nun auch https\r\n* action: createdb funktionierte nicht richtig\r\n* massenoperationen: Problem mit date und datetime korrigiert\r\n* select template: grid classes korrigiert\r\n* manager dataset: mysql error getFields behoben\r\n* be_manager_relation: check for empty values Fehler behoben\r\n\r\nVersion 2.0 – 14.10.2016\r\n--------------------------\r\n\r\n#### Achtung !! Bitte genau anschauen und vor dem Update anpassen !!\r\n\r\n* Beim Update aus einer 1er Version werden veränderte Felder aus der Feldtabellendefinition gelöscht und müssen neu angelegt werden. Es werden keine echten Daten gelöscht.\r\n\r\n* submits entfernt, mit submit kann man nun auch mehrere felder anlegen\r\n* be_medialist entfernt und in be_media eingebaut.\r\n* Klasse datetime hat sich verändert. Stichwort: Layout/Format\r\n* Klasse date hat sich verändert. Stichwort: Layout/Format\r\n* Klasse time hat sich verändert. Stichwort: Layout/Format\r\n* REDAXO 5.2 ist mindestens nötig.\r\n* fulltext_value.php entfernt da über index_value.php möglich\r\n* action db_query.php umgebaut. Keine Fehlermeldung mehr und mehrere Labels zuweisbar und über ? im query setzbar\r\n* value readttable entfernt, da nie funktionierte und nicht verwendet wurde und unnötig, da readtable als action existiert\r\n* be_table wurde geändert. Speicherformat anders -> JSON, Kompatibilät zu R4 wird beachtet\r\n* text/textarea wurde verändert. css_class wurde entfernt.\r\n* uploadfeld: kein modus mehr - immer upload. Default Ordner data/addons/yform/plugins/manager/upload/[table]/[field]\r\n* datestamp hat nun ein Label\r\n* geocode verändert. geokoordinaten werden nun direkt kommasepariert im Feld gespeichert. Google-Api-Key kann nun gesetzt werden.\r\n* objparam: form_id entfernt. es wird nun ausschliesslich form_name verwendet\r\n* html/php Felder haben nun ein Label.\r\n* objparams form_skin -> form_ytemplate\r\n\r\n#### Neu\r\n\r\n* Massenbearbeitung eingeführt\r\n* History eingeführt, und die damit verbundenen Vereinheitlichungen. Zentrales anlegen,editieren und löschen. Kann über die Tabellenverwaltung aktiviert werden\r\n* Dokumentation eingeführt, Darstellung und URL Parsing gesetzt, Submodul eingebunden. (Danke Alex Walther, Peter Bickel und Peter Wolfrum)\r\n* ORM eingeführt. Erklärung - siehe Doku.\r\n* PlugIn Tools ergänzt für Datepicker und inputmask und select2 / Beispiel in attributes setzen: {\"data-yform-tools-datepicker2\":\"DD-MM-YYYY\", \"data-yform-tools-inputmask\":\"99-99-9999\"} oder {\"data-yform-tools-select2\":\"\"}\r\n* attributes Element ergänzt. Dadurch lassen sich z.b. in den input Feldern bei text/textarea die attribute setzen/ersetzt werden. Somit lassen sich nun endlich redactor und codemirror sinnvoll einsetzen\r\n* An vielen Stellen notices ergänzt. Z.B. bei Text, Textarea, Select\r\n* Manager: Fieldmanager / getDefinitions erweitert. Ist nicht mehr beschränkt auf bestimmte Felder\r\n* Manager: Darstellung der Suche nun neben der Datensätze und bleibt bei Editieransicht erhalten\r\n* Import wird nun validiert. D.h. Es können nur Datensätze importiert werden, welche erfolgreich durch die Validierung geht. -> Mehr Konsistens in den Tabellen\r\n* Massenlöschung kann nun in der Tabellenverwaltung deaktiviert werden.\r\n* Sprachunabhänigkeit bei den meisten Klassen eingebaut\r\n* radio_sql nun auch im Manager verfügbar\r\n* Diverse Codeverbesserungen und Vereinheitlichungen\r\n* Diverse Textanpassungen und Übersetzungnethoden gesetzt.\r\n* yform[] Recht entfernt. Nur für Admins freigegeben.\r\n* E-Mail Validierung nach FrontendBrowserValidierungsStandard gesetzt:\r\n* E-Mail Templates werden nun über Codemirror dargestellt, wenn REDAXO Core Customizer Plugin aktiviert ist.\r\n* Default error class auf \"has-error\" gesetzt.\r\n* Permissions bei Tabellen angepasst. Versteckte Tabellen können nun auch genutzt werden.\r\n* email: E-Mail Subjects können nun auch Ersetzungen verwenden\r\n* yform value pool um files ergänzt. Uploadfelder können nun per E-Mail verschickt werden.\r\n* identische Feldermeldung werden bei Ansicht über dem Formular nun zusammengefasst und dadurch nur einmal ausgegeben\r\n\r\n\r\n#### Bugs\r\n\r\n* be_select_category beachten nun die clangs richtig\r\n* redirect - urlparameter wurden falsch gesetzt\r\n* notationdarstellung - default auf bootstrap gesetzt. action von email auf tpl2email gesetzt.\r\n* be_relations - Diverse Fehler behoben\r\n* Extension Point YFORM_DATASET_IMPORT Benennung angepasst\r\n* Extension Point REX_YFORM_SAVED repariert\r\n* Wenn man als Nichtadmin Tabellenrechte bekommt, erscheint nun nicht mehr YFORM als Navigationspunkt, sondern nur die Tabelle\r\n* Googlemap aufruf bei Geo nun unabhängig vom Protokoll http:// -> //\r\n* Korrekturen an der mobilen Darstellung\r\n* action readtable wurde doppelt ausgeführt.\r\n* Value.tpl.php reagierte bei values nicht immer richtig. YCom Password Problem dadurch gelöst\r\n* geocode Höhen/Breite können nun vernünftig gesetzt werden.\r\n* problem mit captch behoben\r\n* Fehler bei hide_field_warning_messages behoben\r\n\r\nVersion 1.0 – 01.06.2016\r\n--------------------------\r\n\r\n* Formularbuilder um einfache bis komplexe Formulare zu bauen\r\n* Values definieren die Felder und Typen, Validierung definieren die Überprüfungen und Actions werden bei Erfolg ausgeführt\r\n* Erstellungen eigener Email Templates, bei welchen man Patzhalter der Einträge nutzen kann (z.B. REX_YFORM_DATA[field=\"label\"]). Weiterhin ist auch PHP möglich um spezifische Lösungen bauen zu können\r\n* Als Basis diente die XForm von REDAXO 4\r\n* Tablemanager: Verwaltung von selbst erstellen Tabellen mit den verschiednen Value und Validate Typen\r\n* Es können alle Felder ergänzt werden\r\n* Darstellungen können über die ytemplates gesteuert werden. Basis ist im Bootstrap - aber eigene Darstellung sind auch möglich\r\n* Das Geo-PlugIn erweitert die Felder um GoogleMap zuordnungen und Reverse Adresse Lookup Funktionen (Bitte Googlelizenz und Rechte beachten)",
+      "path": "https://redaxo.org/download/addon/yform/3.0.zip",
+      "package_yml": {
+        "package": "yform",
+        "version": "3.0",
+        "author": "Jan Kristinus, Gregor Harlan",
+        "supportpage": "https://github.com/yakamara/redaxo_yform/issues",
+        "page": {
+          "title": "translate:yform",
+          "pjax": false,
+          "icon": "rex-icon fa-hand-spock-o",
+          "subpages": {
+            "overview": {
+              "title": "translate:overview",
+              "perm": "admin"
+            }
+          }
+        },
+        "stylesheets": [
+          "yform.css",
+          "popup.css"
+        ],
+        "requires": {
+          "packages": {
+            "phpmailer": "^2.0.0"
+          },
+          "redaxo": "^5.6.0",
+          "php": {
+            "version": "^7.0"
+          }
+        },
+        "system_plugins": [
+          "docs",
+          "manager",
+          "email"
+        ]
+      },
+      "checksum": "063c370264344608f66b1f6c7eb7455f",
+      "created": "2019-02-01 12:49:51",
+      "updated": "2019-02-01 12:49:51"
+    },
+    "2258": {
+      "version": "2.3",
+      "description": "### Version 2.3 // 26.01.2018\r\n\r\n### Änderungen\r\n\r\n* Manager Upload: Feld speicherte bei YORM nicht richtig\r\n* Manager Upload: Fehlermeldung bei Typefehler erschien nicht\r\n* YFORM: Nested Wheres korrigiert\r\n* Tools: Timepicker angepasst\r\n* geo locations: fixed\r\n* Abhängigkeit ist nun REDAXO 5.5\r\n* Benennungen angepasst name, label .. \r\n* uniqueform entfernt\r\n* Umbau auf rex_sql_table\r\n* GEO Plugin gelöscht, google_geo feld verschoben und bleibt\r\n\r\n#### Neu\r\n\r\n* YFORM: populateRelation() für weniger Queries bei Relationen\r\n* be_media_category Feld ergänzt\r\n* email Feld ist nun durchsuchbar\r\n* notices können als HTML notiert werden\r\n* Falsche Queries werden bei den _sql Feldern abgefangen\r\n* Form Notation verfeinert\r\n* Geo Plugin: Map Zoom nun einstellbar (danke alexplusde)\r\n* Manager: Massenbearbeitung nun pro Tabelle setzbar\r\n* Manager: Fieldpage optimiert. 100 Einträge pro Seite, Label aufgenommen in Übersicht\r\n* Manager: Datensatz ID nun angezeigt\r\n* Manager: Historie nun für alle User verfügbar (die Rechte auf die Tabelle haben)\r\n* Docs aktualisiert\r\n* Schwedische Sprache ergänzt\r\n* Passwort Policy Field ergänzt. Durch REDAXO 5.4 Passwort Policy\r\n* Unique: Leerfeldoption ergänzt\r\n* be_table: kann nun auch REX Felder nutzen wie REX_MEDIA_WIDGET etc. (Danke Alex Platter)\r\n* Action: tpl2email kann nun auch Fehlermeldungen ausgeben, wenn Versand schief lief.\r\n* Manager: Suchmaske. Für die wichtigsten Felder wurden Infotexte ergänzt\r\n* CSRF Schutz durch Nonce Feld gesetzt. Ist nun default aktiv. Über objparams['csrf_protection'] deaktivierbar\r\n* select/_sql: Leerstrings werden bei der Suche ignoriert.\r\n\r\n#### Fehler\r\n\r\n* YORM: getRelatedDataset fixed. Verursachte Problem mit z.B. YCom Verknüpfungen\r\n* Bei Update aus älteren YForms wird nun auch das be_medialist und submits entfernt\r\n* select Feld: Falsche selected korrigiert, Defaultwert wird nun richtig übernommen\r\n* radio feld hat keinen Fehler ausgegeben.\r\n* Manager: CSV Import/Export optimiert. BOM gesetzt und entfernt. Unnötige Felder werden ignoriert, EnsureColumne bei AlterTable .. \r\n* redirect geht nun richtig mit REDAXO 5.4 Version\r\n* Manager: Historieeinträge konnten bei bestimmten Relationen nicht wieder zurückgesetzt werden\r\n* YOrm: Durch Nutzung von YORM, wurde immer der Send Status für alle Formulare gesetzt.\r\n* EMail-Versand: Es konnte passieren, dass der AltBody nicht richtig gesetzt wurde (Danke Andreas Eberhard)\r\n* Geokodierung war fehlerhaft (Danke Wolfgang)\r\n* Darstellung war im Popup zum Teil noch miz Hauptnavi und REX-Header\r\n* Upload Feld: min_error und max_error waren vertauscht\r\n* datestamp feld. Werte anzeigen, es wurde nicht die aktuellen Felder, sondern nur die neuen angezeigt\r\n* Manager: Exportdownload korrigiert\r\n* ytemplates, bootstrap: translate meldungen nun auch mit html\r\n* manager: popup bei relationen korrigiert\r\n* checkbox field überarbeitet und korrigiert",
+      "path": "https://redaxo.org/download/addon/yform/2.3.zip",
+      "package_yml": {
+        "package": "yform",
+        "version": "2.3",
+        "author": "Jan Kristinus, Gregor Harlan",
+        "supportpage": "https://github.com/yakamara/redaxo_yform/issues",
+        "page": {
+          "title": "translate:yform",
+          "pjax": false,
+          "icon": "rex-icon fa-hand-spock-o",
+          "subpages": {
+            "overview": {
+              "title": "translate:overview",
+              "perm": "admin"
+            }
+          }
+        },
+        "stylesheets": [
+          "yform.css",
+          "popup.css"
+        ],
+        "requires": {
+          "packages": {
+            "phpmailer": "^2.0.0"
+          },
+          "redaxo": "^5.5.0"
+        },
+        "system_plugins": [
+          "docs",
+          "manager",
+          "email"
+        ]
+      },
+      "checksum": "6bf889cb3cccae6593d919ec7e0bc423",
+      "created": "2018-01-26 11:13:39",
+      "updated": "2018-01-26 11:13:39"
+    },
+    "1986": {
+      "version": "2.2",
+      "description": "### Version 2.2 // 21.04.2017\r\n\r\n* DE/EN Inhalte vervollständigt\r\n* Extension Point YFORM_EMAIL_SEND ergänzt\r\n* bug bei submit und BC korrigiert\r\n* datestamp-Feld um Text-Ansicht ergänzt\r\n* generate_key um Text-Ansicht ergänzt\r\n* generate_key um Definitionen ergänzt\r\n* showvalue auch im Backend nutzbar\r\n* BUG: value.be_manager_relation.tpl.php l78 warning cause of array passed into htmlspecialchars()\r\n* preg_match auch im Backend nutzbar\r\n* checkbox: erlaubte attribute ergänzt\r\n* BUG: YForm: Exception vermeiden bei getRelatedDataset mit optionalem Relationsfeld\r\n* YOrm: Neue Methode getRelatedQuery()\r\n* YOrm: rex_yform_manager_table->table ergänzt\r\n* be_relation: bei popup single, war die ausgabe beim suchfeld falsch\r\n* Dataset-Cache: Klassen korrekt beachten\r\n* BUG: getRelatedQuery: Verwechslung bei Relationstypen\r\n* select_sql: Text Leeroption auf string casten\r\n* YORM: Bei Abfrage einer einzelnen ID, orderBy nicht setzen\r\n* YORM: weitere where-Methoden (whereNot, whereNull etc.)\r\n* YORM: Methoden zum direkten Abfragen einer einzelnen Column\r\n* notice: an verschiedenen Feldern sind notices übersetzbar\r\n* index-Feld: ID kann nun mit aufgenommen werden\r\n* be_manager_relation popup (single) warning entfernt\r\n\r\n### Version 2.1 // 26.01.2017\r\n\r\n#### Achtung !! Bitte genau anschauen und vor dem Update anpassen !! BItte auch Hinweise der Version 2.0 beachten wenn ein Updaten von 1.x erfolgen soll\r\n\r\n....",
+      "path": "https://redaxo.org/download/addon/yform/2.2.zip",
+      "package_yml": {
+        "package": "yform",
+        "version": "2.2",
+        "author": "Jan Kristinus, Gregor Harlan",
+        "supportpage": "www.redaxo.org/de/forum/",
+        "page": {
+          "title": "translate:yform",
+          "pjax": false,
+          "icon": "rex-icon fa-hand-spock-o",
+          "subpages": {
+            "overview": {
+              "title": "translate:overview",
+              "perm": "admin"
+            }
+          }
+        },
+        "stylesheets": [
+          "yform.css",
+          "popup.css"
+        ],
+        "requires": {
+          "packages": {
+            "phpmailer": "^2.0.0"
+          },
+          "redaxo": "^5.2.0"
+        },
+        "system_plugins": [
+          "docs",
+          "manager",
+          "email"
+        ]
+      },
+      "checksum": "7441f06d4e3c12e01b769a1e77416e75",
+      "created": "2017-04-21 18:28:25",
+      "updated": "2017-04-21 18:28:25"
+    },
+    "1847": {
+      "version": "2.1",
+      "description": "### Version 2.1 // 26.01.2017\r\n\r\n#### Achtung !! Bitte genau anschauen und vor dem Update anpassen !! BItte auch Hinweise der Version 2.0 beachten wenn ein Updaten von 1.x erfolgen soll\r\n\r\n#### Neu\r\n\r\n* classic view: Umgang mit Fehlern verbessert\r\n* manager/tools:daterangepicker nun ohne autoupdate\r\n* performance yorm verbessert. Nur Ausgabe wenn nötig.\r\n* html und php Felder erzeugen nun keine eigene Spalte mehr in der Tabelle\r\n* hiddenfields kann nun auch arrays\r\n* manager: relationsfelder werden nun gecacht.\r\n* massenoperatione: Performance stark verbessert\r\n* debugstatus wird an diversen stellen nun weitergegeben\r\n* Historiedarstellung: Bezeichnung wird geraten. Einzelinfoansicht eines Artikels. Einzelhistorie einseh- und löschbar.\r\n* index Feld kann nun auch Unterfelder aus Relationen mit aufnehmen.\r\n* diverse Textkorreturen\r\n* Erweiterung der Dokumentation\r\n* Email: Versand email und Versand-Email Name können nun auch ersetzt werden.\r\n* select: Werteüberprüfung verbessert. Initial und Defaults korrigiert.\r\n* upload: Diverse Fehler. Typabfrage, übernahme feld, textkorrekturen\r\n* radiofelder überarbeitet. Fehler behoben\r\n* datetime: formartierung angeglichen / listenansicht korrigiert\r\n* be_link um mehrfachauswahl ergänzt\r\n* Email: Templates: BC zu v1.0 .. Ersetzung wie ###key### gehen wieder ..\r\n* Formbuilder: CS und Showtext wird nun immer nur verwendet wenn Text eingegeben wurde\r\n* Captcha: Darstellung angepasst. Icon entfernt.\r\n* YFORM Data Widget ergänzt. Context: module. Bsp: REX_YFORM_TABLE_DATA[id=\"12\" table=\"address\" output=\"widget\" field=\"firstnam,' ',surname\"]\r\n* be_relation kann nun die gleiche ID mehrfach verwenden.\r\n* Famous Felder wieder aufgenommen.\r\n\r\n#### Bugs\r\n\r\n* import: Tableset Fehler behoben\r\n* validate type url: nun auch https\r\n* action: createdb funktionierte nicht richtig\r\n* massenoperationen: Problem mit date und datetime korrigiert\r\n* select template: grid classes korrigiert\r\n* manager dataset: mysql error getFields behoben\r\n* be_manager_relation: check for empty values Fehler behoben",
+      "path": "https://redaxo.org/download/addon/yform/2.1.zip",
+      "package_yml": {
+        "package": "yform",
+        "version": "2.1",
+        "author": "Jan Kristinus, Gregor Harlan",
+        "supportpage": "www.redaxo.org/de/forum/",
+        "page": {
+          "title": "translate:yform",
+          "pjax": false,
+          "icon": "rex-icon fa-hand-spock-o",
+          "subpages": {
+            "overview": {
+              "title": "translate:overview",
+              "perm": "admin"
+            }
+          }
+        },
+        "stylesheets": [
+          "yform.css",
+          "popup.css"
+        ],
+        "requires": {
+          "packages": {
+            "phpmailer": "^2.0.0"
+          },
+          "redaxo": "^5.2.0"
+        },
+        "system_plugins": [
+          "docs",
+          "manager",
+          "email"
+        ]
+      },
+      "checksum": "915dd550d66ed67b4ee0a48b87860ad4",
+      "created": "2017-01-26 01:13:25",
+      "updated": "2017-01-26 01:13:25"
+    },
+    "1769": {
+      "version": "2.0",
+      "description": "### Version 2.0 // 14.10.2016\r\n\r\n#### Achtung !! Bitte genau anschauen und vor dem Update anpassen !!\r\n\r\n* Beim Update aus einer 1.0er Version werden veränderte Felder aus der Feldtabellendefinition gelöscht und müssen neu angelegt werden. Es werden keine echten Daten gelöscht.\r\n\r\n* submits entfernt, mit submit kann man nun auch mehrere felder anlegen\r\n* be_medialist entfernt und in be_media eingebaut.\r\n* Klasse datetime hat sich verändert. Stichwort: Layout/Format\r\n* Klasse date hat sich verändert. Stichwort: Layout/Format\r\n* Klasse time hat sich verändert. Stichwort: Layout/Format\r\n* REDAXO 5.2 ist mindestens nötig.\r\n* fulltext_value.php entfernt da über index_value.php möglich\r\n* action db_query.php umgebaut. Keine Fehlermeldung mehr und mehrere Labels zuweisbar und über ? im query setzbar\r\n* value readttable entfernt, da nie funktionierte und nicht verwendet wurde und unnötig, da readtable als action existiert\r\n* be_table wurde geändert. Speicherformat anders -> JSON, Kompatibilät zu R4 wird beachtet\r\n* text/textarea wurde verändert. css_class wurde entfernt.\r\n* uploadfeld: kein modus mehr - immer upload. Default Ordner data/addons/yform/plugins/manager/upload/[table]/[field]\r\n* datestamp hat nun ein Label\r\n* geocode verändert. geokoordinaten werden nun direkt kommasepariert im Feld gespeichert. Google-Api-Key kann nun gesetzt werden.\r\n* objparam: form_id entfernt. es wird nun ausschliesslich form_name verwendet\r\n* html/php Felder haben nun ein Label.\r\n* objparams form_skin -> form_ytemplate\r\n\r\n#### Neu\r\n\r\n* Massenbearbeitung eingeführt\r\n* History eingeführt, und die damit verbundenen Vereinheitlichungen. Zentrales anlegen,editieren und löschen. Kann über die Tabellenverwaltung aktiviert werden\r\n* Dokumentation eingeführt, Darstellung und URL Parsing gesetzt, Submodul eingebunden. (Danke Alex Walther, Peter Bickel und Peter Wolfrum)\r\n* ORM eingeführt. Erklärung - siehe Doku.\r\n* PlugIn Tools ergänzt für Datepicker und inputmask und select2 / Beispiel in attributes setzen: {\"data-yform-tools-datepicker2\":\"DD-MM-YYYY\", \"data-yform-tools-inputmask\":\"99-99-9999\"} oder {\"data-yform-tools-select2\":\"\"}\r\n* attributes Element ergänzt. Dadurch lassen sich z.b. in den input Feldern bei text/textarea die attribute setzen/ersetzt werden. Somit lassen sich nun endlich redactor und codemirror sinnvoll einsetzen\r\n* An vielen Stellen notices ergänzt. Z.B. bei Text, Textarea, Select\r\n* Manager: Fieldmanager / getDefinitions erweitert. Ist nicht mehr beschränkt auf bestimmte Felder\r\n* Manager: Darstellung der Suche nun neben der Datensätze und bleibt bei Editieransicht erhalten\r\n* Import wird nun validiert. D.h. Es können nur Datensätze importiert werden, welche erfolgreich durch die Validierung geht. -> Mehr Konsistens in den Tabellen\r\n* Massenlöschung kann nun in der Tabellenverwaltung deaktiviert werden.\r\n* Sprachunabhänigkeit bei den meisten Klassen eingebaut\r\n* radio_sql nun auch im Manager verfügbar\r\n* Diverse Codeverbesserungen und Vereinheitlichungen\r\n* Diverse Textanpassungen und Übersetzungnethoden gesetzt.\r\n* yform[] Recht entfernt. Nur für Admins freigegeben.\r\n* E-Mail Validierung nach FrontendBrowserValidierungsStandard gesetzt:\r\n* E-Mail Templates werden nun über Codemirror dargestellt, wenn REDAXO Core Customizer Plugin aktiviert ist.\r\n* Default error class auf \"has-error\" gesetzt.\r\n* Permissions bei Tabellen angepasst. Versteckte Tabellen können nun auch genutzt werden.\r\n* email: E-Mail Subjects können nun auch Ersetzungen verwenden\r\n* yform value pool um files ergänzt. Uploadfelder können nun per E-Mail verschickt werden.\r\n* identische Feldermeldung werden bei Ansicht über dem Formular nun zusammengefasst und dadurch nur einmal ausgegeben\r\n\r\n\r\n#### Bugs\r\n\r\n* be_select_category beachten nun die clangs richtig\r\n* redirect - urlparameter wurden falsch gesetzt\r\n* notationdarstellung - default auf bootstrap gesetzt. action von email auf tpl2email gesetzt.\r\n* be_relations - Diverse Fehler behoben\r\n* Extension Point YFORM_DATASET_IMPORT Benennung angepasst\r\n* Extension Point REX_YFORM_SAVED repariert\r\n* Wenn man als Nichtadmin Tabellenrechte bekommt, erscheint nun nicht mehr YFORM als Navigationspunkt, sondern nur die Tabelle\r\n* Googlemap aufruf bei Geo nun unabhängig vom Protokoll http:// -> //\r\n* Korrekturen an der mobilen Darstellung\r\n* action readtable wurde doppelt ausgeführt.\r\n* Value.tpl.php reagierte bei values nicht immer richtig. YCom Password Problem dadurch gelöst\r\n* geocode Höhen/Breite können nun vernünftig gesetzt werden.\r\n* problem mit captch behoben\r\n* Fehler bei hide_field_warning_messages behoben",
+      "path": "https://redaxo.org/download/addon/yform/2.0.zip",
+      "package_yml": {
+        "package": "yform",
+        "version": "2.0",
+        "author": "Jan Kristinus, Gregor Harlan",
+        "supportpage": "www.redaxo.org/de/forum/",
+        "page": {
+          "title": "translate:yform",
+          "pjax": false,
+          "icon": "rex-icon fa-hand-spock-o",
+          "subpages": {
+            "overview": {
+              "title": "translate:overview",
+              "perm": "admin"
+            }
+          }
+        },
+        "stylesheets": [
+          "yform.css",
+          "popup.css"
+        ],
+        "requires": {
+          "packages": {
+            "phpmailer": "^2.0.0"
+          },
+          "redaxo": "^5.2.0"
+        },
+        "system_plugins": [
+          "manager",
+          "email"
+        ]
+      },
+      "checksum": "db8a6419b83d901b476b9dcdf243030a",
+      "created": "2016-10-14 18:59:24",
+      "updated": "2016-10-14 18:59:24"
+    },
+    "1586": {
+      "version": "1.0",
+      "description": "### Version 1.0 // 01.06.2016\r\n\r\n* Formularbuilder um einfache bis komplexe Formulare zu bauen\r\n* Values definieren die Felder und Typen, Validierung definieren die Überprüfungen und Actions werden bei Erfolg ausgeführt\r\n* Erstellungen eigener Email Templates, bei welchen man Patzhalter der Einträge nutzen kann (z.B. REX_YFORM_DATA[field=\"label\"]). Weiterhin ist auch PHP möglich um spezifische Lösungen bauen zu können\r\n* Als Basis diente die XForm von REDAXO 4\r\n* Tablemanager: Verwaltung von selbst erstellen Tabellen mit den verschiednen Value und Validate Typen\r\n* Es können alle Felder ergänzt werden\r\n* Darstellungen können über die ytemplates gesteuert werden. Basis ist im Bootstrap - aber eigene Darstellung sind auch möglich\r\n* Das Geo-PlugIn erweitert die Felder um GoogleMap zuordnungen und Reverse Adresse Lookup Funktionen (Bitte Googlelizenz und Rechte beachten)",
+      "path": "https://redaxo.org/download/addon/yform/1.0.zip",
+      "package_yml": {
+        "package": "yform",
+        "version": "1.0",
+        "author": "Jan Kristinus, Gregor Harlan",
+        "supportpage": "www.redaxo.org/de/forum/",
+        "page": {
+          "title": "translate:yform",
+          "perm": "yform[]",
+          "pjax": false,
+          "icon": "rex-icon fa-hand-spock-o",
+          "subpages": {
+            "overview": {
+              "title": "translate:overview"
+            }
+          }
+        },
+        "stylesheets": [
+          "yform.css",
+          "popup.css"
+        ],
+        "requires": {
+          "packages": {
+            "phpmailer": "^2.0.0"
+          },
+          "redaxo": ">=5.0.0"
+        },
+        "system_plugins": [
+          "manager",
+          "email"
+        ]
+      },
+      "checksum": "6528447ee6cd82a6eef6475b795331a5",
+      "created": "2016-06-01 13:42:21",
+      "updated": "2016-06-01 13:42:21"
+    }
+  }
+}
