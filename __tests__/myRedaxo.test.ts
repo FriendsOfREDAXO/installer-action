@@ -7,7 +7,7 @@ describe('myRedaxo', () => {
         test('should error with 404', () => {
             expect(async () => {
                 await fetchAddonPackageYml('not_existing_addon_key')
-            }).rejects.toThrow('Could not fetch addon not_existing_addon_key');
+            }).resolves.toBe(null);
         });
         test('should return addon data', async () => {
             const packageYml = await fetchAddonPackageYml('yform');
