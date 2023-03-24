@@ -54,7 +54,16 @@ export async function uploadArchive(addonKey: string, redaxoLogin: string, redax
 
 export async function fetchAddonPackageYml(addonKey: string, redaxoLogin?: string, redaxoApiKey?: string): Promise<MyRedaxoPackage|null> {
     try {
-        const response = await axios.get(`https://www.redaxo.org/de/ws/packages/${addonKey}/` + ((redaxoLogin && redaxoApiKey ? `api_login=${redaxoLogin}&api_key=${redaxoApiKey}` : '')));
+        Core.debug(`Fetch package.yml from redaxo.org for addon ${addonKey}`);
+        let queryString = '';
+        if (redaxoLogin && redaxoApiKey) {
+            queryString = `?api_login=${redaxoLogin}&api_key=${redaxoApiKey}`;
+            Core.debug(`Using login: ${redaxoLogin}`);
+        } else {
+            Core.debug(`No credentials provided, using anonymous access`);
+        }
+
+        const response = await axios.get(`https://www.redaxo.org/de/ws/packages/${addonKey}/${queryString}`);
         return response.data;
     } catch(e) {
         console.error(Error(`Could not fetch addon ${addonKey}`));
