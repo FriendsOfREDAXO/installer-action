@@ -36102,7 +36102,7 @@ const archiveFilePath = (0, file_1.cacheFile)();
             return;
         }
         if ((0, myRedaxo_1.versionExists)(existingPackageYml, packageVersion)) {
-            Core.setFailed(`Version ${packageVersion} already exists. Please update your package.yml version.`);
+            Core.setFailed(`Version ${packageVersion} already exists. Please check your package.yml and github release version.`);
             return;
         }
         await (0, file_1.zip)(archiveFilePath, packageDir, packageName, packageInstallerIgnore);

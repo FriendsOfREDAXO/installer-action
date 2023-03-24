@@ -30,7 +30,7 @@ const archiveFilePath = cacheFile();
         }
 
         if (versionExists(existingPackageYml, packageVersion)) {
-            Core.setFailed(`Version ${packageVersion} already exists. Please update your package.yml version.`);
+            Core.setFailed(`Version ${packageVersion} already exists. Please check your package.yml and github release version.`);
             return;
         }
 
