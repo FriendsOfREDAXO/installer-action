@@ -10,6 +10,10 @@ on:
 permissions:
   contents: read
 
+env:
+  writable: ${{ github.event_name != 'push' && github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]' && 1 || 0 }}
+
+
 jobs:
   build-tsc:
     runs-on: ubuntu-latest
@@ -30,11 +34,16 @@ jobs:
   build-action:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    if: github.event.pull_request.draft == false
+    if: github.event.pull_request.draft == false && env.writable == 1
+    permissions:
+      contents: write  # for stefanzweifel/git-auto-commit-action to push code in repo
 
     name: Release Build for node 16
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.head_ref }}
       - uses: actions/setup-node@v3
         with:
           node-version: 16
@@ -42,3 +51,10 @@ jobs:
           cache-dependency-path: 'package-lock.json'
       - run: npm ci
       - run: npm run release
+      - uses: stefanzweifel/git-auto-commit-action@v4
+        if: env.writable == 1
+        with:
+          commit_message: 'rebuild action'
+          file_pattern: 'dist/*'
+          commit_user_name: rex-bot
+          commit_user_email: rex-bot@users.noreply.github.com
