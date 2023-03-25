@@ -29,7 +29,7 @@ Add your MyREDAXO credentials to your organization secrets or repository secrets
 ![Secrets](https://user-images.githubusercontent.com/16903055/170964550-9ac8c80f-cd9f-4ead-956d-1c63e24df8ac.png)
 
 
-E.g. `MYREDAXO_API_KEY`:
+example value for `MYREDAXO_API_KEY` named secret:
 
 ![API-Key](https://user-images.githubusercontent.com/16903055/170967258-f53082cd-e827-4a86-bed6-1233f34dd4b9.png)
 
