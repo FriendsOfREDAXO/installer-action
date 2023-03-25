@@ -17,12 +17,19 @@ An action for GitHub to upload your REDAXO AddOn automatically into the REDAXO i
 
 > This step is not required for REDAXO AddOns within the FriendsOfREDAXO GitHub organization. Continue with step 2. 
 
-Add your MyREDAXO credentials to your organization secrets or repository secrets, e.g. `https://github.com/YOUR_GITHUB_NAME/YOUR_REPOSITORY/settings/secrets/actions` ([GitHub Docs](https://docs.github.com/en/actions/reference/encrypted-secrets#creating-encrypted-secrets-for-a-repository)).
+Add your MyREDAXO credentials to your organization secrets or repository secrets, e.g. via `https://github.com/YOUR_GITHUB_NAME/YOUR_REPOSITORY/settings/secrets/actions` ([GitHub Docs](https://docs.github.com/en/actions/reference/encrypted-secrets#creating-encrypted-secrets-for-a-repository)).
 
-|key|value|
-| --- | ----------- |
-|`MYREDAXO_USERNAME` | Your REDAXO login user|
-|`MYREDAXO_API_KEY`  | Your MyREDAXO API key|
+| secret name | value |
+| ----------- | ----------- |
+| `MYREDAXO_USERNAME` | Your REDAXO login user |
+| `MYREDAXO_API_KEY` | Your MyREDAXO API key |
+
+![Secrets](https://user-images.githubusercontent.com/16903055/170964550-9ac8c80f-cd9f-4ead-956d-1c63e24df8ac.png)
+
+
+example value for `MYREDAXO_API_KEY` named secret:
+
+![API-Key](https://user-images.githubusercontent.com/16903055/170967258-f53082cd-e827-4a86-bed6-1233f34dd4b9.png)
 
 ## 2: Create a new GitHub action workflow 
 
