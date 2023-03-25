@@ -3,6 +3,16 @@ import FormData from "form-data";
 import fs from "fs";
 import axios from "axios";
 
+// only used properties from myredaxo api
+type MyRedaxoPackage = {
+    package: string;
+    files: {
+        [fileId: string]: {
+            version: string;
+        }
+    }
+}
+
 export async function uploadArchive(addonKey: string, redaxoLogin: string, redaxoApiKey: string, version: string, description: string, md5Sum: string, archive: string): Promise<true|string> {
 
     const formData = new FormData();
@@ -40,4 +50,27 @@ export async function uploadArchive(addonKey: string, redaxoLogin: string, redax
     Core.setFailed(`Upload failed with error: ${response.data.error}`);
     // if an error occurred, return it
     return response.data.error;
+}
+
+export async function fetchAddonPackageYml(addonKey: string, redaxoLogin?: string, redaxoApiKey?: string): Promise<MyRedaxoPackage|null> {
+    try {
+        Core.info(`Fetch package.yml from redaxo.org for addon ${addonKey}`);
+        let queryString = '';
+        if (redaxoLogin && redaxoApiKey) {
+            queryString = `?api_login=${redaxoLogin}&api_key=${redaxoApiKey}`;
+            Core.info(`Using login: ${redaxoLogin}`);
+        } else {
+            Core.info(`No credentials provided, using anonymous access`);
+        }
+
+        const response = await axios.get(`https://www.redaxo.org/de/ws/packages/${addonKey}/${queryString}`);
+        return response.data;
+    } catch(e) {
+        console.error(Error(`Could not fetch addon ${addonKey}`));
+        return null;
+    }
+}
+
+export function versionExists(packageYml: MyRedaxoPackage, version: string) {
+    return Object.values(packageYml.files).some(file => file.version === version);
 }

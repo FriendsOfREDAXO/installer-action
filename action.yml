@@ -1,6 +1,9 @@
   name: 'MyREDAXO Installer Action'
   author: FriendsOfREDAXO
   description: 'GitHub Action for MyREDAXO Installer'
+  branding:
+    icon: upload-cloud
+    color: blue
   inputs:
       myredaxo-username:
           description: 'MyREDAXO username.'
@@ -10,12 +13,16 @@
           required: true
       description:
           description: 'Package release version description.'
-          default: ''
+          default: ${{ github.event.release.body }}
           required: false
       cwd:
           description: 'Working directory where the package is located.'
           default: '.'
           required: false
+      version:
+          description: 'Package release version.'
+          default: ${{ github.event.release.tag_name }}
+          required: false
   runs:
-    using: 'node12'
+    using: 'node16'
     main: 'dist/index.js'

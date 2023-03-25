@@ -19,12 +19,10 @@ An action for GitHub to upload your REDAXO AddOn automatically into the REDAXO i
 
 Add your MyREDAXO credentials to your organization secrets or repository secrets, e.g. via `https://github.com/YOUR_GITHUB_NAME/YOUR_REPOSITORY/settings/secrets/actions` ([GitHub Docs](https://docs.github.com/en/actions/reference/encrypted-secrets#creating-encrypted-secrets-for-a-repository)).
 
-
 | secret name | value |
 | ----------- | ----------- |
 | `MYREDAXO_USERNAME` | Your REDAXO login user |
 | `MYREDAXO_API_KEY` | Your MyREDAXO API key |
-
 
 ![Secrets](https://user-images.githubusercontent.com/16903055/170964550-9ac8c80f-cd9f-4ead-956d-1c63e24df8ac.png)
 
@@ -56,12 +54,13 @@ jobs:
   redaxo_publish:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - uses: FriendsOfREDAXO/installer-action@v1
       with:
         myredaxo-username: ${{ secrets.MYREDAXO_USERNAME }}
         myredaxo-api-key: ${{ secrets.MYREDAXO_API_KEY }}
         description: ${{ github.event.release.body }}
+        version: ${{ github.event.release.tag_name }}
         
 ```
 

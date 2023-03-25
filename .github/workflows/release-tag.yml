@@ -1,0 +1,42 @@
+name: Re-tag major version
+on:
+  release:
+    types: [released]
+  workflow_dispatch:
+    inputs:
+      TAG_NAME:
+        description: 'Tag name that the major tag will point to'
+        required: true
+
+env:
+  TAG_NAME: ${{ github.event.inputs.TAG_NAME || github.event.release.tag_name }}
+permissions:
+  contents: write
+
+jobs:
+  update_tag:
+    name: Update the major tag to include the ${{ github.event.inputs.TAG_NAME || github.event.release.tag_name }} changes
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Checkout release tag
+        run: |
+          git fetch --all
+          git ls-remote --tags
+          git checkout refs/tags/${{ env.TAG_NAME }}
+      - name: Determine major version
+        id: major-version
+        run: |
+          MAJOR_VERSION=`cut -d '.' -f 1 <<< "${{ env.TAG_NAME }}"`
+          echo "VERSION=v$MAJOR_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Retag major version
+        run: |
+          git tag -d ${{ steps.major-version.outputs.VERSION }}
+          git push origin :refs/tags/${{ steps.major-version.outputs.VERSION }}
+          git tag ${{ steps.major-version.outputs.VERSION }}
+          git push origin tag ${{ steps.major-version.outputs.VERSION }}
