@@ -1,16 +1,21 @@
-import {fetchAddonPackageYml, versionExists} from "../src/myRedaxo";
+import {fetchAddonPackageData, versionExists} from "../src/myRedaxo";
 
 const testMyRedaxoPackage = require('./data/myRedaxoPackage.json');
 
 describe('myRedaxo', () => {
     describe('fetchAddon',  () => {
         test('should error with 404', async () => {
-            const packageYml = await fetchAddonPackageYml('non_existing_addon');
+            const packageYml = await fetchAddonPackageData('non_existing_addon');
 
             expect(packageYml).toBe(null);
         });
         test('should return addon data', async () => {
-            const packageYml = await fetchAddonPackageYml('yform');
+            const packageYml = await fetchAddonPackageData('yform');
+
+            expect(packageYml).toHaveProperty('name');
+        });
+        test('should use fallback', async () => {
+            const packageYml = await fetchAddonPackageData('multinewsletter');
 
             expect(packageYml).toHaveProperty('name');
         });

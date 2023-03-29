@@ -52,21 +52,30 @@ export async function uploadArchive(addonKey: string, redaxoLogin: string, redax
     return response.data.error;
 }
 
-export async function fetchAddonPackageYml(addonKey: string, redaxoLogin?: string, redaxoApiKey?: string): Promise<MyRedaxoPackage|null> {
+export async function fetchAddonPackageData(addonKey: string, redaxoLogin?: string, redaxoApiKey?: string): Promise<MyRedaxoPackage|null> {
     try {
         Core.info(`Fetch package.yml from redaxo.org for addon ${addonKey}`);
-        let queryString = '';
+        let queryString = '?rex_version=5.x';
         if (redaxoLogin && redaxoApiKey) {
-            queryString = `?api_login=${redaxoLogin}&api_key=${redaxoApiKey}`;
+            queryString += `&api_login=${redaxoLogin}&api_key=${redaxoApiKey}`;
             Core.info(`Using login: ${redaxoLogin}`);
         } else {
             Core.info(`No credentials provided, using anonymous access`);
         }
 
-        const response = await axios.get(`https://www.redaxo.org/de/ws/packages/${addonKey}/${queryString}`);
-        return response.data;
+        const responsePackage = await axios.get(`https://www.redaxo.org/de/ws/packages/${addonKey}/${queryString}`);
+        if (!responsePackage.data.error) {
+            return responsePackage.data;
+        }
+
+        const responsePackages = await axios.get(`https://www.redaxo.org/de/ws/packages/${queryString}`);
+        if (responsePackages.data.error) {
+            Core.info(`Could not fetch addon ${addonKey}: ${responsePackages.data.error}`);
+            return null;
+        }
+        return responsePackages.data[addonKey] ?? null;
     } catch(e) {
-        console.error(Error(`Could not fetch addon ${addonKey}`));
+        Core.info(`Could not fetch addon ${addonKey}`);
         return null;
     }
 }
