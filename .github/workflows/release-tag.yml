@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -32,7 +32,7 @@ jobs:
         id: major-version
         run: |
           MAJOR_VERSION=`cut -d '.' -f 1 <<< "${{ env.TAG_NAME }}"`
-          echo "::set-output name=VERSION::v$MAJOR_VERSION"
+          echo "VERSION=v$MAJOR_VERSION" >> $GITHUB_OUTPUT
 
       - name: Retag major version
         run: |
