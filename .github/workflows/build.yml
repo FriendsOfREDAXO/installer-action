@@ -16,12 +16,12 @@ jobs:
     timeout-minutes: 10
     if: github.event.pull_request.draft == false
 
-    name: Build for node 16
+    name: Build for node 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: 20
           cache: 'npm'
           cache-dependency-path: 'package-lock.json'
       - run: npm ci
@@ -32,12 +32,12 @@ jobs:
     timeout-minutes: 10
     if: github.event.pull_request.draft == false
 
-    name: Release Build for node 16
+    name: Release Build for node 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: 20
           cache: 'npm'
           cache-dependency-path: 'package-lock.json'
       - run: npm ci
