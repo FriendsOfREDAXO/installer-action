@@ -29,7 +29,7 @@
     "yaml": "^2.3.2"
   },
   "devDependencies": {
-    "@types/adm-zip": "^0.5.3",
+    "@types/adm-zip": "^0.5.4",
     "@types/archiver": "^5.3.4",
     "@types/node": "^20.8.9",
     "@vercel/ncc": "^0.38.1",
