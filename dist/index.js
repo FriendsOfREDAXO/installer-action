@@ -1762,6 +1762,141 @@ exports.checkBypass = checkBypass;
 
 /***/ }),
 
+/***/ 1659:
+/***/ ((module, exports, __nccwpck_require__) => {
+
+"use strict";
+/**
+ * @author Toru Nagashima <https://github.com/mysticatea>
+ * See LICENSE file in root directory for full license.
+ */
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+
+var eventTargetShim = __nccwpck_require__(4697);
+
+/**
+ * The signal class.
+ * @see https://dom.spec.whatwg.org/#abortsignal
+ */
+class AbortSignal extends eventTargetShim.EventTarget {
+    /**
+     * AbortSignal cannot be constructed directly.
+     */
+    constructor() {
+        super();
+        throw new TypeError("AbortSignal cannot be constructed directly");
+    }
+    /**
+     * Returns `true` if this `AbortSignal`'s `AbortController` has signaled to abort, and `false` otherwise.
+     */
+    get aborted() {
+        const aborted = abortedFlags.get(this);
+        if (typeof aborted !== "boolean") {
+            throw new TypeError(`Expected 'this' to be an 'AbortSignal' object, but got ${this === null ? "null" : typeof this}`);
+        }
+        return aborted;
+    }
+}
+eventTargetShim.defineEventAttribute(AbortSignal.prototype, "abort");
+/**
+ * Create an AbortSignal object.
+ */
+function createAbortSignal() {
+    const signal = Object.create(AbortSignal.prototype);
+    eventTargetShim.EventTarget.call(signal);
+    abortedFlags.set(signal, false);
+    return signal;
+}
+/**
+ * Abort a given signal.
+ */
+function abortSignal(signal) {
+    if (abortedFlags.get(signal) !== false) {
+        return;
+    }
+    abortedFlags.set(signal, true);
+    signal.dispatchEvent({ type: "abort" });
+}
+/**
+ * Aborted flag for each instances.
+ */
+const abortedFlags = new WeakMap();
+// Properties should be enumerable.
+Object.defineProperties(AbortSignal.prototype, {
+    aborted: { enumerable: true },
+});
+// `toString()` should return `"[object AbortSignal]"`
+if (typeof Symbol === "function" && typeof Symbol.toStringTag === "symbol") {
+    Object.defineProperty(AbortSignal.prototype, Symbol.toStringTag, {
+        configurable: true,
+        value: "AbortSignal",
+    });
+}
+
+/**
+ * The AbortController.
+ * @see https://dom.spec.whatwg.org/#abortcontroller
+ */
+class AbortController {
+    /**
+     * Initialize this controller.
+     */
+    constructor() {
+        signals.set(this, createAbortSignal());
+    }
+    /**
+     * Returns the `AbortSignal` object associated with this object.
+     */
+    get signal() {
+        return getSignal(this);
+    }
+    /**
+     * Abort and signal to any observers that the associated activity is to be aborted.
+     */
+    abort() {
+        abortSignal(getSignal(this));
+    }
+}
+/**
+ * Associated signals.
+ */
+const signals = new WeakMap();
+/**
+ * Get the associated signal of a given controller.
+ */
+function getSignal(controller) {
+    const signal = signals.get(controller);
+    if (signal == null) {
+        throw new TypeError(`Expected 'this' to be an 'AbortController' object, but got ${controller === null ? "null" : typeof controller}`);
+    }
+    return signal;
+}
+// Properties should be enumerable.
+Object.defineProperties(AbortController.prototype, {
+    signal: { enumerable: true },
+    abort: { enumerable: true },
+});
+if (typeof Symbol === "function" && typeof Symbol.toStringTag === "symbol") {
+    Object.defineProperty(AbortController.prototype, Symbol.toStringTag, {
+        configurable: true,
+        value: "AbortController",
+    });
+}
+
+exports.AbortController = AbortController;
+exports.AbortSignal = AbortSignal;
+exports["default"] = AbortController;
+
+module.exports = AbortController
+module.exports.AbortController = module.exports["default"] = AbortController
+module.exports.AbortSignal = AbortSignal
+//# sourceMappingURL=abort-controller.js.map
+
+
+/***/ }),
+
 /***/ 1231:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
@@ -1780,7 +1915,7 @@ var difference = __nccwpck_require__(4031);
 var union = __nccwpck_require__(1620);
 var isPlainObject = __nccwpck_require__(6169);
 
-var glob = __nccwpck_require__(95);
+var glob = __nccwpck_require__(9834);
 
 var file = module.exports = {};
 
@@ -1990,12 +2125,13 @@ file.normalizeFilesArray = function(data) {
  */
 var fs = __nccwpck_require__(7758);
 var path = __nccwpck_require__(1017);
+var isStream = __nccwpck_require__(1554);
 var lazystream = __nccwpck_require__(2084);
 var normalizePath = __nccwpck_require__(5388);
 var defaults = __nccwpck_require__(3508);
 
 var Stream = (__nccwpck_require__(2781).Stream);
-var PassThrough = (__nccwpck_require__(1642).PassThrough);
+var PassThrough = (__nccwpck_require__(5193).PassThrough);
 
 var utils = module.exports = {};
 utils.file = __nccwpck_require__(1231);
@@ -2047,7 +2183,7 @@ utils.defaults = function(object, source, guard) {
 };
 
 utils.isStream = function(source) {
-  return source instanceof Stream;
+  return isStream(source);
 };
 
 utils.lazyReadStream = function(filepath) {
@@ -2349,2509 +2485,6 @@ function expand(str, isTop) {
 
 /***/ }),
 
-/***/ 4938:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-exports.setopts = setopts
-exports.ownProp = ownProp
-exports.makeAbs = makeAbs
-exports.finish = finish
-exports.mark = mark
-exports.isIgnored = isIgnored
-exports.childrenIgnored = childrenIgnored
-
-function ownProp (obj, field) {
-  return Object.prototype.hasOwnProperty.call(obj, field)
-}
-
-var fs = __nccwpck_require__(7147)
-var path = __nccwpck_require__(1017)
-var minimatch = __nccwpck_require__(8487)
-var isAbsolute = (__nccwpck_require__(1017).isAbsolute)
-var Minimatch = minimatch.Minimatch
-
-function alphasort (a, b) {
-  return a.localeCompare(b, 'en')
-}
-
-function setupIgnores (self, options) {
-  self.ignore = options.ignore || []
-
-  if (!Array.isArray(self.ignore))
-    self.ignore = [self.ignore]
-
-  if (self.ignore.length) {
-    self.ignore = self.ignore.map(ignoreMap)
-  }
-}
-
-// ignore patterns are always in dot:true mode.
-function ignoreMap (pattern) {
-  var gmatcher = null
-  if (pattern.slice(-3) === '/**') {
-    var gpattern = pattern.replace(/(\/\*\*)+$/, '')
-    gmatcher = new Minimatch(gpattern, { dot: true })
-  }
-
-  return {
-    matcher: new Minimatch(pattern, { dot: true }),
-    gmatcher: gmatcher
-  }
-}
-
-function setopts (self, pattern, options) {
-  if (!options)
-    options = {}
-
-  // base-matching: just use globstar for that.
-  if (options.matchBase && -1 === pattern.indexOf("/")) {
-    if (options.noglobstar) {
-      throw new Error("base matching requires globstar")
-    }
-    pattern = "**/" + pattern
-  }
-
-  self.windowsPathsNoEscape = !!options.windowsPathsNoEscape ||
-    options.allowWindowsEscape === false
-  if (self.windowsPathsNoEscape) {
-    pattern = pattern.replace(/\\/g, '/')
-  }
-
-  self.silent = !!options.silent
-  self.pattern = pattern
-  self.strict = options.strict !== false
-  self.realpath = !!options.realpath
-  self.realpathCache = options.realpathCache || Object.create(null)
-  self.follow = !!options.follow
-  self.dot = !!options.dot
-  self.mark = !!options.mark
-  self.nodir = !!options.nodir
-  if (self.nodir)
-    self.mark = true
-  self.sync = !!options.sync
-  self.nounique = !!options.nounique
-  self.nonull = !!options.nonull
-  self.nosort = !!options.nosort
-  self.nocase = !!options.nocase
-  self.stat = !!options.stat
-  self.noprocess = !!options.noprocess
-  self.absolute = !!options.absolute
-  self.fs = options.fs || fs
-
-  self.maxLength = options.maxLength || Infinity
-  self.cache = options.cache || Object.create(null)
-  self.statCache = options.statCache || Object.create(null)
-  self.symlinks = options.symlinks || Object.create(null)
-
-  setupIgnores(self, options)
-
-  self.changedCwd = false
-  var cwd = process.cwd()
-  if (!ownProp(options, "cwd"))
-    self.cwd = path.resolve(cwd)
-  else {
-    self.cwd = path.resolve(options.cwd)
-    self.changedCwd = self.cwd !== cwd
-  }
-
-  self.root = options.root || path.resolve(self.cwd, "/")
-  self.root = path.resolve(self.root)
-
-  // TODO: is an absolute `cwd` supposed to be resolved against `root`?
-  // e.g. { cwd: '/test', root: __dirname } === path.join(__dirname, '/test')
-  self.cwdAbs = isAbsolute(self.cwd) ? self.cwd : makeAbs(self, self.cwd)
-  self.nomount = !!options.nomount
-
-  if (process.platform === "win32") {
-    self.root = self.root.replace(/\\/g, "/")
-    self.cwd = self.cwd.replace(/\\/g, "/")
-    self.cwdAbs = self.cwdAbs.replace(/\\/g, "/")
-  }
-
-  // disable comments and negation in Minimatch.
-  // Note that they are not supported in Glob itself anyway.
-  options.nonegate = true
-  options.nocomment = true
-
-  self.minimatch = new Minimatch(pattern, options)
-  self.options = self.minimatch.options
-}
-
-function finish (self) {
-  var nou = self.nounique
-  var all = nou ? [] : Object.create(null)
-
-  for (var i = 0, l = self.matches.length; i < l; i ++) {
-    var matches = self.matches[i]
-    if (!matches || Object.keys(matches).length === 0) {
-      if (self.nonull) {
-        // do like the shell, and spit out the literal glob
-        var literal = self.minimatch.globSet[i]
-        if (nou)
-          all.push(literal)
-        else
-          all[literal] = true
-      }
-    } else {
-      // had matches
-      var m = Object.keys(matches)
-      if (nou)
-        all.push.apply(all, m)
-      else
-        m.forEach(function (m) {
-          all[m] = true
-        })
-    }
-  }
-
-  if (!nou)
-    all = Object.keys(all)
-
-  if (!self.nosort)
-    all = all.sort(alphasort)
-
-  // at *some* point we statted all of these
-  if (self.mark) {
-    for (var i = 0; i < all.length; i++) {
-      all[i] = self._mark(all[i])
-    }
-    if (self.nodir) {
-      all = all.filter(function (e) {
-        var notDir = !(/\/$/.test(e))
-        var c = self.cache[e] || self.cache[makeAbs(self, e)]
-        if (notDir && c)
-          notDir = c !== 'DIR' && !Array.isArray(c)
-        return notDir
-      })
-    }
-  }
-
-  if (self.ignore.length)
-    all = all.filter(function(m) {
-      return !isIgnored(self, m)
-    })
-
-  self.found = all
-}
-
-function mark (self, p) {
-  var abs = makeAbs(self, p)
-  var c = self.cache[abs]
-  var m = p
-  if (c) {
-    var isDir = c === 'DIR' || Array.isArray(c)
-    var slash = p.slice(-1) === '/'
-
-    if (isDir && !slash)
-      m += '/'
-    else if (!isDir && slash)
-      m = m.slice(0, -1)
-
-    if (m !== p) {
-      var mabs = makeAbs(self, m)
-      self.statCache[mabs] = self.statCache[abs]
-      self.cache[mabs] = self.cache[abs]
-    }
-  }
-
-  return m
-}
-
-// lotta situps...
-function makeAbs (self, f) {
-  var abs = f
-  if (f.charAt(0) === '/') {
-    abs = path.join(self.root, f)
-  } else if (isAbsolute(f) || f === '') {
-    abs = f
-  } else if (self.changedCwd) {
-    abs = path.resolve(self.cwd, f)
-  } else {
-    abs = path.resolve(f)
-  }
-
-  if (process.platform === 'win32')
-    abs = abs.replace(/\\/g, '/')
-
-  return abs
-}
-
-
-// Return true, if pattern ends with globstar '**', for the accompanying parent directory.
-// Ex:- If node_modules/** is the pattern, add 'node_modules' to ignore list along with it's contents
-function isIgnored (self, path) {
-  if (!self.ignore.length)
-    return false
-
-  return self.ignore.some(function(item) {
-    return item.matcher.match(path) || !!(item.gmatcher && item.gmatcher.match(path))
-  })
-}
-
-function childrenIgnored (self, path) {
-  if (!self.ignore.length)
-    return false
-
-  return self.ignore.some(function(item) {
-    return !!(item.gmatcher && item.gmatcher.match(path))
-  })
-}
-
-
-/***/ }),
-
-/***/ 95:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-// Approach:
-//
-// 1. Get the minimatch set
-// 2. For each pattern in the set, PROCESS(pattern, false)
-// 3. Store matches per-set, then uniq them
-//
-// PROCESS(pattern, inGlobStar)
-// Get the first [n] items from pattern that are all strings
-// Join these together.  This is PREFIX.
-//   If there is no more remaining, then stat(PREFIX) and
-//   add to matches if it succeeds.  END.
-//
-// If inGlobStar and PREFIX is symlink and points to dir
-//   set ENTRIES = []
-// else readdir(PREFIX) as ENTRIES
-//   If fail, END
-//
-// with ENTRIES
-//   If pattern[n] is GLOBSTAR
-//     // handle the case where the globstar match is empty
-//     // by pruning it out, and testing the resulting pattern
-//     PROCESS(pattern[0..n] + pattern[n+1 .. $], false)
-//     // handle other cases.
-//     for ENTRY in ENTRIES (not dotfiles)
-//       // attach globstar + tail onto the entry
-//       // Mark that this entry is a globstar match
-//       PROCESS(pattern[0..n] + ENTRY + pattern[n .. $], true)
-//
-//   else // not globstar
-//     for ENTRY in ENTRIES (not dotfiles, unless pattern[n] is dot)
-//       Test ENTRY against pattern[n]
-//       If fails, continue
-//       If passes, PROCESS(pattern[0..n] + item + pattern[n+1 .. $])
-//
-// Caveat:
-//   Cache all stats and readdirs results to minimize syscall.  Since all
-//   we ever care about is existence and directory-ness, we can just keep
-//   `true` for files, and [children,...] for directories, or `false` for
-//   things that don't exist.
-
-module.exports = glob
-
-var rp = __nccwpck_require__(6863)
-var minimatch = __nccwpck_require__(8487)
-var Minimatch = minimatch.Minimatch
-var inherits = __nccwpck_require__(4124)
-var EE = (__nccwpck_require__(2361).EventEmitter)
-var path = __nccwpck_require__(1017)
-var assert = __nccwpck_require__(9491)
-var isAbsolute = (__nccwpck_require__(1017).isAbsolute)
-var globSync = __nccwpck_require__(7388)
-var common = __nccwpck_require__(4938)
-var setopts = common.setopts
-var ownProp = common.ownProp
-var inflight = __nccwpck_require__(2492)
-var util = __nccwpck_require__(3837)
-var childrenIgnored = common.childrenIgnored
-var isIgnored = common.isIgnored
-
-var once = __nccwpck_require__(1223)
-
-function glob (pattern, options, cb) {
-  if (typeof options === 'function') cb = options, options = {}
-  if (!options) options = {}
-
-  if (options.sync) {
-    if (cb)
-      throw new TypeError('callback provided to sync glob')
-    return globSync(pattern, options)
-  }
-
-  return new Glob(pattern, options, cb)
-}
-
-glob.sync = globSync
-var GlobSync = glob.GlobSync = globSync.GlobSync
-
-// old api surface
-glob.glob = glob
-
-function extend (origin, add) {
-  if (add === null || typeof add !== 'object') {
-    return origin
-  }
-
-  var keys = Object.keys(add)
-  var i = keys.length
-  while (i--) {
-    origin[keys[i]] = add[keys[i]]
-  }
-  return origin
-}
-
-glob.hasMagic = function (pattern, options_) {
-  var options = extend({}, options_)
-  options.noprocess = true
-
-  var g = new Glob(pattern, options)
-  var set = g.minimatch.set
-
-  if (!pattern)
-    return false
-
-  if (set.length > 1)
-    return true
-
-  for (var j = 0; j < set[0].length; j++) {
-    if (typeof set[0][j] !== 'string')
-      return true
-  }
-
-  return false
-}
-
-glob.Glob = Glob
-inherits(Glob, EE)
-function Glob (pattern, options, cb) {
-  if (typeof options === 'function') {
-    cb = options
-    options = null
-  }
-
-  if (options && options.sync) {
-    if (cb)
-      throw new TypeError('callback provided to sync glob')
-    return new GlobSync(pattern, options)
-  }
-
-  if (!(this instanceof Glob))
-    return new Glob(pattern, options, cb)
-
-  setopts(this, pattern, options)
-  this._didRealPath = false
-
-  // process each pattern in the minimatch set
-  var n = this.minimatch.set.length
-
-  // The matches are stored as {<filename>: true,...} so that
-  // duplicates are automagically pruned.
-  // Later, we do an Object.keys() on these.
-  // Keep them as a list so we can fill in when nonull is set.
-  this.matches = new Array(n)
-
-  if (typeof cb === 'function') {
-    cb = once(cb)
-    this.on('error', cb)
-    this.on('end', function (matches) {
-      cb(null, matches)
-    })
-  }
-
-  var self = this
-  this._processing = 0
-
-  this._emitQueue = []
-  this._processQueue = []
-  this.paused = false
-
-  if (this.noprocess)
-    return this
-
-  if (n === 0)
-    return done()
-
-  var sync = true
-  for (var i = 0; i < n; i ++) {
-    this._process(this.minimatch.set[i], i, false, done)
-  }
-  sync = false
-
-  function done () {
-    --self._processing
-    if (self._processing <= 0) {
-      if (sync) {
-        process.nextTick(function () {
-          self._finish()
-        })
-      } else {
-        self._finish()
-      }
-    }
-  }
-}
-
-Glob.prototype._finish = function () {
-  assert(this instanceof Glob)
-  if (this.aborted)
-    return
-
-  if (this.realpath && !this._didRealpath)
-    return this._realpath()
-
-  common.finish(this)
-  this.emit('end', this.found)
-}
-
-Glob.prototype._realpath = function () {
-  if (this._didRealpath)
-    return
-
-  this._didRealpath = true
-
-  var n = this.matches.length
-  if (n === 0)
-    return this._finish()
-
-  var self = this
-  for (var i = 0; i < this.matches.length; i++)
-    this._realpathSet(i, next)
-
-  function next () {
-    if (--n === 0)
-      self._finish()
-  }
-}
-
-Glob.prototype._realpathSet = function (index, cb) {
-  var matchset = this.matches[index]
-  if (!matchset)
-    return cb()
-
-  var found = Object.keys(matchset)
-  var self = this
-  var n = found.length
-
-  if (n === 0)
-    return cb()
-
-  var set = this.matches[index] = Object.create(null)
-  found.forEach(function (p, i) {
-    // If there's a problem with the stat, then it means that
-    // one or more of the links in the realpath couldn't be
-    // resolved.  just return the abs value in that case.
-    p = self._makeAbs(p)
-    rp.realpath(p, self.realpathCache, function (er, real) {
-      if (!er)
-        set[real] = true
-      else if (er.syscall === 'stat')
-        set[p] = true
-      else
-        self.emit('error', er) // srsly wtf right here
-
-      if (--n === 0) {
-        self.matches[index] = set
-        cb()
-      }
-    })
-  })
-}
-
-Glob.prototype._mark = function (p) {
-  return common.mark(this, p)
-}
-
-Glob.prototype._makeAbs = function (f) {
-  return common.makeAbs(this, f)
-}
-
-Glob.prototype.abort = function () {
-  this.aborted = true
-  this.emit('abort')
-}
-
-Glob.prototype.pause = function () {
-  if (!this.paused) {
-    this.paused = true
-    this.emit('pause')
-  }
-}
-
-Glob.prototype.resume = function () {
-  if (this.paused) {
-    this.emit('resume')
-    this.paused = false
-    if (this._emitQueue.length) {
-      var eq = this._emitQueue.slice(0)
-      this._emitQueue.length = 0
-      for (var i = 0; i < eq.length; i ++) {
-        var e = eq[i]
-        this._emitMatch(e[0], e[1])
-      }
-    }
-    if (this._processQueue.length) {
-      var pq = this._processQueue.slice(0)
-      this._processQueue.length = 0
-      for (var i = 0; i < pq.length; i ++) {
-        var p = pq[i]
-        this._processing--
-        this._process(p[0], p[1], p[2], p[3])
-      }
-    }
-  }
-}
-
-Glob.prototype._process = function (pattern, index, inGlobStar, cb) {
-  assert(this instanceof Glob)
-  assert(typeof cb === 'function')
-
-  if (this.aborted)
-    return
-
-  this._processing++
-  if (this.paused) {
-    this._processQueue.push([pattern, index, inGlobStar, cb])
-    return
-  }
-
-  //console.error('PROCESS %d', this._processing, pattern)
-
-  // Get the first [n] parts of pattern that are all strings.
-  var n = 0
-  while (typeof pattern[n] === 'string') {
-    n ++
-  }
-  // now n is the index of the first one that is *not* a string.
-
-  // see if there's anything else
-  var prefix
-  switch (n) {
-    // if not, then this is rather simple
-    case pattern.length:
-      this._processSimple(pattern.join('/'), index, cb)
-      return
-
-    case 0:
-      // pattern *starts* with some non-trivial item.
-      // going to readdir(cwd), but not include the prefix in matches.
-      prefix = null
-      break
-
-    default:
-      // pattern has some string bits in the front.
-      // whatever it starts with, whether that's 'absolute' like /foo/bar,
-      // or 'relative' like '../baz'
-      prefix = pattern.slice(0, n).join('/')
-      break
-  }
-
-  var remain = pattern.slice(n)
-
-  // get the list of entries.
-  var read
-  if (prefix === null)
-    read = '.'
-  else if (isAbsolute(prefix) ||
-      isAbsolute(pattern.map(function (p) {
-        return typeof p === 'string' ? p : '[*]'
-      }).join('/'))) {
-    if (!prefix || !isAbsolute(prefix))
-      prefix = '/' + prefix
-    read = prefix
-  } else
-    read = prefix
-
-  var abs = this._makeAbs(read)
-
-  //if ignored, skip _processing
-  if (childrenIgnored(this, read))
-    return cb()
-
-  var isGlobStar = remain[0] === minimatch.GLOBSTAR
-  if (isGlobStar)
-    this._processGlobStar(prefix, read, abs, remain, index, inGlobStar, cb)
-  else
-    this._processReaddir(prefix, read, abs, remain, index, inGlobStar, cb)
-}
-
-Glob.prototype._processReaddir = function (prefix, read, abs, remain, index, inGlobStar, cb) {
-  var self = this
-  this._readdir(abs, inGlobStar, function (er, entries) {
-    return self._processReaddir2(prefix, read, abs, remain, index, inGlobStar, entries, cb)
-  })
-}
-
-Glob.prototype._processReaddir2 = function (prefix, read, abs, remain, index, inGlobStar, entries, cb) {
-
-  // if the abs isn't a dir, then nothing can match!
-  if (!entries)
-    return cb()
-
-  // It will only match dot entries if it starts with a dot, or if
-  // dot is set.  Stuff like @(.foo|.bar) isn't allowed.
-  var pn = remain[0]
-  var negate = !!this.minimatch.negate
-  var rawGlob = pn._glob
-  var dotOk = this.dot || rawGlob.charAt(0) === '.'
-
-  var matchedEntries = []
-  for (var i = 0; i < entries.length; i++) {
-    var e = entries[i]
-    if (e.charAt(0) !== '.' || dotOk) {
-      var m
-      if (negate && !prefix) {
-        m = !e.match(pn)
-      } else {
-        m = e.match(pn)
-      }
-      if (m)
-        matchedEntries.push(e)
-    }
-  }
-
-  //console.error('prd2', prefix, entries, remain[0]._glob, matchedEntries)
-
-  var len = matchedEntries.length
-  // If there are no matched entries, then nothing matches.
-  if (len === 0)
-    return cb()
-
-  // if this is the last remaining pattern bit, then no need for
-  // an additional stat *unless* the user has specified mark or
-  // stat explicitly.  We know they exist, since readdir returned
-  // them.
-
-  if (remain.length === 1 && !this.mark && !this.stat) {
-    if (!this.matches[index])
-      this.matches[index] = Object.create(null)
-
-    for (var i = 0; i < len; i ++) {
-      var e = matchedEntries[i]
-      if (prefix) {
-        if (prefix !== '/')
-          e = prefix + '/' + e
-        else
-          e = prefix + e
-      }
-
-      if (e.charAt(0) === '/' && !this.nomount) {
-        e = path.join(this.root, e)
-      }
-      this._emitMatch(index, e)
-    }
-    // This was the last one, and no stats were needed
-    return cb()
-  }
-
-  // now test all matched entries as stand-ins for that part
-  // of the pattern.
-  remain.shift()
-  for (var i = 0; i < len; i ++) {
-    var e = matchedEntries[i]
-    var newPattern
-    if (prefix) {
-      if (prefix !== '/')
-        e = prefix + '/' + e
-      else
-        e = prefix + e
-    }
-    this._process([e].concat(remain), index, inGlobStar, cb)
-  }
-  cb()
-}
-
-Glob.prototype._emitMatch = function (index, e) {
-  if (this.aborted)
-    return
-
-  if (isIgnored(this, e))
-    return
-
-  if (this.paused) {
-    this._emitQueue.push([index, e])
-    return
-  }
-
-  var abs = isAbsolute(e) ? e : this._makeAbs(e)
-
-  if (this.mark)
-    e = this._mark(e)
-
-  if (this.absolute)
-    e = abs
-
-  if (this.matches[index][e])
-    return
-
-  if (this.nodir) {
-    var c = this.cache[abs]
-    if (c === 'DIR' || Array.isArray(c))
-      return
-  }
-
-  this.matches[index][e] = true
-
-  var st = this.statCache[abs]
-  if (st)
-    this.emit('stat', e, st)
-
-  this.emit('match', e)
-}
-
-Glob.prototype._readdirInGlobStar = function (abs, cb) {
-  if (this.aborted)
-    return
-
-  // follow all symlinked directories forever
-  // just proceed as if this is a non-globstar situation
-  if (this.follow)
-    return this._readdir(abs, false, cb)
-
-  var lstatkey = 'lstat\0' + abs
-  var self = this
-  var lstatcb = inflight(lstatkey, lstatcb_)
-
-  if (lstatcb)
-    self.fs.lstat(abs, lstatcb)
-
-  function lstatcb_ (er, lstat) {
-    if (er && er.code === 'ENOENT')
-      return cb()
-
-    var isSym = lstat && lstat.isSymbolicLink()
-    self.symlinks[abs] = isSym
-
-    // If it's not a symlink or a dir, then it's definitely a regular file.
-    // don't bother doing a readdir in that case.
-    if (!isSym && lstat && !lstat.isDirectory()) {
-      self.cache[abs] = 'FILE'
-      cb()
-    } else
-      self._readdir(abs, false, cb)
-  }
-}
-
-Glob.prototype._readdir = function (abs, inGlobStar, cb) {
-  if (this.aborted)
-    return
-
-  cb = inflight('readdir\0'+abs+'\0'+inGlobStar, cb)
-  if (!cb)
-    return
-
-  //console.error('RD %j %j', +inGlobStar, abs)
-  if (inGlobStar && !ownProp(this.symlinks, abs))
-    return this._readdirInGlobStar(abs, cb)
-
-  if (ownProp(this.cache, abs)) {
-    var c = this.cache[abs]
-    if (!c || c === 'FILE')
-      return cb()
-
-    if (Array.isArray(c))
-      return cb(null, c)
-  }
-
-  var self = this
-  self.fs.readdir(abs, readdirCb(this, abs, cb))
-}
-
-function readdirCb (self, abs, cb) {
-  return function (er, entries) {
-    if (er)
-      self._readdirError(abs, er, cb)
-    else
-      self._readdirEntries(abs, entries, cb)
-  }
-}
-
-Glob.prototype._readdirEntries = function (abs, entries, cb) {
-  if (this.aborted)
-    return
-
-  // if we haven't asked to stat everything, then just
-  // assume that everything in there exists, so we can avoid
-  // having to stat it a second time.
-  if (!this.mark && !this.stat) {
-    for (var i = 0; i < entries.length; i ++) {
-      var e = entries[i]
-      if (abs === '/')
-        e = abs + e
-      else
-        e = abs + '/' + e
-      this.cache[e] = true
-    }
-  }
-
-  this.cache[abs] = entries
-  return cb(null, entries)
-}
-
-Glob.prototype._readdirError = function (f, er, cb) {
-  if (this.aborted)
-    return
-
-  // handle errors, and cache the information
-  switch (er.code) {
-    case 'ENOTSUP': // https://github.com/isaacs/node-glob/issues/205
-    case 'ENOTDIR': // totally normal. means it *does* exist.
-      var abs = this._makeAbs(f)
-      this.cache[abs] = 'FILE'
-      if (abs === this.cwdAbs) {
-        var error = new Error(er.code + ' invalid cwd ' + this.cwd)
-        error.path = this.cwd
-        error.code = er.code
-        this.emit('error', error)
-        this.abort()
-      }
-      break
-
-    case 'ENOENT': // not terribly unusual
-    case 'ELOOP':
-    case 'ENAMETOOLONG':
-    case 'UNKNOWN':
-      this.cache[this._makeAbs(f)] = false
-      break
-
-    default: // some unusual error.  Treat as failure.
-      this.cache[this._makeAbs(f)] = false
-      if (this.strict) {
-        this.emit('error', er)
-        // If the error is handled, then we abort
-        // if not, we threw out of here
-        this.abort()
-      }
-      if (!this.silent)
-        console.error('glob error', er)
-      break
-  }
-
-  return cb()
-}
-
-Glob.prototype._processGlobStar = function (prefix, read, abs, remain, index, inGlobStar, cb) {
-  var self = this
-  this._readdir(abs, inGlobStar, function (er, entries) {
-    self._processGlobStar2(prefix, read, abs, remain, index, inGlobStar, entries, cb)
-  })
-}
-
-
-Glob.prototype._processGlobStar2 = function (prefix, read, abs, remain, index, inGlobStar, entries, cb) {
-  //console.error('pgs2', prefix, remain[0], entries)
-
-  // no entries means not a dir, so it can never have matches
-  // foo.txt/** doesn't match foo.txt
-  if (!entries)
-    return cb()
-
-  // test without the globstar, and with every child both below
-  // and replacing the globstar.
-  var remainWithoutGlobStar = remain.slice(1)
-  var gspref = prefix ? [ prefix ] : []
-  var noGlobStar = gspref.concat(remainWithoutGlobStar)
-
-  // the noGlobStar pattern exits the inGlobStar state
-  this._process(noGlobStar, index, false, cb)
-
-  var isSym = this.symlinks[abs]
-  var len = entries.length
-
-  // If it's a symlink, and we're in a globstar, then stop
-  if (isSym && inGlobStar)
-    return cb()
-
-  for (var i = 0; i < len; i++) {
-    var e = entries[i]
-    if (e.charAt(0) === '.' && !this.dot)
-      continue
-
-    // these two cases enter the inGlobStar state
-    var instead = gspref.concat(entries[i], remainWithoutGlobStar)
-    this._process(instead, index, true, cb)
-
-    var below = gspref.concat(entries[i], remain)
-    this._process(below, index, true, cb)
-  }
-
-  cb()
-}
-
-Glob.prototype._processSimple = function (prefix, index, cb) {
-  // XXX review this.  Shouldn't it be doing the mounting etc
-  // before doing stat?  kinda weird?
-  var self = this
-  this._stat(prefix, function (er, exists) {
-    self._processSimple2(prefix, index, er, exists, cb)
-  })
-}
-Glob.prototype._processSimple2 = function (prefix, index, er, exists, cb) {
-
-  //console.error('ps2', prefix, exists)
-
-  if (!this.matches[index])
-    this.matches[index] = Object.create(null)
-
-  // If it doesn't exist, then just mark the lack of results
-  if (!exists)
-    return cb()
-
-  if (prefix && isAbsolute(prefix) && !this.nomount) {
-    var trail = /[\/\\]$/.test(prefix)
-    if (prefix.charAt(0) === '/') {
-      prefix = path.join(this.root, prefix)
-    } else {
-      prefix = path.resolve(this.root, prefix)
-      if (trail)
-        prefix += '/'
-    }
-  }
-
-  if (process.platform === 'win32')
-    prefix = prefix.replace(/\\/g, '/')
-
-  // Mark this as a match
-  this._emitMatch(index, prefix)
-  cb()
-}
-
-// Returns either 'DIR', 'FILE', or false
-Glob.prototype._stat = function (f, cb) {
-  var abs = this._makeAbs(f)
-  var needDir = f.slice(-1) === '/'
-
-  if (f.length > this.maxLength)
-    return cb()
-
-  if (!this.stat && ownProp(this.cache, abs)) {
-    var c = this.cache[abs]
-
-    if (Array.isArray(c))
-      c = 'DIR'
-
-    // It exists, but maybe not how we need it
-    if (!needDir || c === 'DIR')
-      return cb(null, c)
-
-    if (needDir && c === 'FILE')
-      return cb()
-
-    // otherwise we have to stat, because maybe c=true
-    // if we know it exists, but not what it is.
-  }
-
-  var exists
-  var stat = this.statCache[abs]
-  if (stat !== undefined) {
-    if (stat === false)
-      return cb(null, stat)
-    else {
-      var type = stat.isDirectory() ? 'DIR' : 'FILE'
-      if (needDir && type === 'FILE')
-        return cb()
-      else
-        return cb(null, type, stat)
-    }
-  }
-
-  var self = this
-  var statcb = inflight('stat\0' + abs, lstatcb_)
-  if (statcb)
-    self.fs.lstat(abs, statcb)
-
-  function lstatcb_ (er, lstat) {
-    if (lstat && lstat.isSymbolicLink()) {
-      // If it's a symlink, then treat it as the target, unless
-      // the target does not exist, then treat it as a file.
-      return self.fs.stat(abs, function (er, stat) {
-        if (er)
-          self._stat2(f, abs, null, lstat, cb)
-        else
-          self._stat2(f, abs, er, stat, cb)
-      })
-    } else {
-      self._stat2(f, abs, er, lstat, cb)
-    }
-  }
-}
-
-Glob.prototype._stat2 = function (f, abs, er, stat, cb) {
-  if (er && (er.code === 'ENOENT' || er.code === 'ENOTDIR')) {
-    this.statCache[abs] = false
-    return cb()
-  }
-
-  var needDir = f.slice(-1) === '/'
-  this.statCache[abs] = stat
-
-  if (abs.slice(-1) === '/' && stat && !stat.isDirectory())
-    return cb(null, false, stat)
-
-  var c = true
-  if (stat)
-    c = stat.isDirectory() ? 'DIR' : 'FILE'
-  this.cache[abs] = this.cache[abs] || c
-
-  if (needDir && c === 'FILE')
-    return cb()
-
-  return cb(null, c, stat)
-}
-
-
-/***/ }),
-
-/***/ 7388:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-module.exports = globSync
-globSync.GlobSync = GlobSync
-
-var rp = __nccwpck_require__(6863)
-var minimatch = __nccwpck_require__(8487)
-var Minimatch = minimatch.Minimatch
-var Glob = (__nccwpck_require__(95).Glob)
-var util = __nccwpck_require__(3837)
-var path = __nccwpck_require__(1017)
-var assert = __nccwpck_require__(9491)
-var isAbsolute = (__nccwpck_require__(1017).isAbsolute)
-var common = __nccwpck_require__(4938)
-var setopts = common.setopts
-var ownProp = common.ownProp
-var childrenIgnored = common.childrenIgnored
-var isIgnored = common.isIgnored
-
-function globSync (pattern, options) {
-  if (typeof options === 'function' || arguments.length === 3)
-    throw new TypeError('callback provided to sync glob\n'+
-                        'See: https://github.com/isaacs/node-glob/issues/167')
-
-  return new GlobSync(pattern, options).found
-}
-
-function GlobSync (pattern, options) {
-  if (!pattern)
-    throw new Error('must provide pattern')
-
-  if (typeof options === 'function' || arguments.length === 3)
-    throw new TypeError('callback provided to sync glob\n'+
-                        'See: https://github.com/isaacs/node-glob/issues/167')
-
-  if (!(this instanceof GlobSync))
-    return new GlobSync(pattern, options)
-
-  setopts(this, pattern, options)
-
-  if (this.noprocess)
-    return this
-
-  var n = this.minimatch.set.length
-  this.matches = new Array(n)
-  for (var i = 0; i < n; i ++) {
-    this._process(this.minimatch.set[i], i, false)
-  }
-  this._finish()
-}
-
-GlobSync.prototype._finish = function () {
-  assert.ok(this instanceof GlobSync)
-  if (this.realpath) {
-    var self = this
-    this.matches.forEach(function (matchset, index) {
-      var set = self.matches[index] = Object.create(null)
-      for (var p in matchset) {
-        try {
-          p = self._makeAbs(p)
-          var real = rp.realpathSync(p, self.realpathCache)
-          set[real] = true
-        } catch (er) {
-          if (er.syscall === 'stat')
-            set[self._makeAbs(p)] = true
-          else
-            throw er
-        }
-      }
-    })
-  }
-  common.finish(this)
-}
-
-
-GlobSync.prototype._process = function (pattern, index, inGlobStar) {
-  assert.ok(this instanceof GlobSync)
-
-  // Get the first [n] parts of pattern that are all strings.
-  var n = 0
-  while (typeof pattern[n] === 'string') {
-    n ++
-  }
-  // now n is the index of the first one that is *not* a string.
-
-  // See if there's anything else
-  var prefix
-  switch (n) {
-    // if not, then this is rather simple
-    case pattern.length:
-      this._processSimple(pattern.join('/'), index)
-      return
-
-    case 0:
-      // pattern *starts* with some non-trivial item.
-      // going to readdir(cwd), but not include the prefix in matches.
-      prefix = null
-      break
-
-    default:
-      // pattern has some string bits in the front.
-      // whatever it starts with, whether that's 'absolute' like /foo/bar,
-      // or 'relative' like '../baz'
-      prefix = pattern.slice(0, n).join('/')
-      break
-  }
-
-  var remain = pattern.slice(n)
-
-  // get the list of entries.
-  var read
-  if (prefix === null)
-    read = '.'
-  else if (isAbsolute(prefix) ||
-      isAbsolute(pattern.map(function (p) {
-        return typeof p === 'string' ? p : '[*]'
-      }).join('/'))) {
-    if (!prefix || !isAbsolute(prefix))
-      prefix = '/' + prefix
-    read = prefix
-  } else
-    read = prefix
-
-  var abs = this._makeAbs(read)
-
-  //if ignored, skip processing
-  if (childrenIgnored(this, read))
-    return
-
-  var isGlobStar = remain[0] === minimatch.GLOBSTAR
-  if (isGlobStar)
-    this._processGlobStar(prefix, read, abs, remain, index, inGlobStar)
-  else
-    this._processReaddir(prefix, read, abs, remain, index, inGlobStar)
-}
-
-
-GlobSync.prototype._processReaddir = function (prefix, read, abs, remain, index, inGlobStar) {
-  var entries = this._readdir(abs, inGlobStar)
-
-  // if the abs isn't a dir, then nothing can match!
-  if (!entries)
-    return
-
-  // It will only match dot entries if it starts with a dot, or if
-  // dot is set.  Stuff like @(.foo|.bar) isn't allowed.
-  var pn = remain[0]
-  var negate = !!this.minimatch.negate
-  var rawGlob = pn._glob
-  var dotOk = this.dot || rawGlob.charAt(0) === '.'
-
-  var matchedEntries = []
-  for (var i = 0; i < entries.length; i++) {
-    var e = entries[i]
-    if (e.charAt(0) !== '.' || dotOk) {
-      var m
-      if (negate && !prefix) {
-        m = !e.match(pn)
-      } else {
-        m = e.match(pn)
-      }
-      if (m)
-        matchedEntries.push(e)
-    }
-  }
-
-  var len = matchedEntries.length
-  // If there are no matched entries, then nothing matches.
-  if (len === 0)
-    return
-
-  // if this is the last remaining pattern bit, then no need for
-  // an additional stat *unless* the user has specified mark or
-  // stat explicitly.  We know they exist, since readdir returned
-  // them.
-
-  if (remain.length === 1 && !this.mark && !this.stat) {
-    if (!this.matches[index])
-      this.matches[index] = Object.create(null)
-
-    for (var i = 0; i < len; i ++) {
-      var e = matchedEntries[i]
-      if (prefix) {
-        if (prefix.slice(-1) !== '/')
-          e = prefix + '/' + e
-        else
-          e = prefix + e
-      }
-
-      if (e.charAt(0) === '/' && !this.nomount) {
-        e = path.join(this.root, e)
-      }
-      this._emitMatch(index, e)
-    }
-    // This was the last one, and no stats were needed
-    return
-  }
-
-  // now test all matched entries as stand-ins for that part
-  // of the pattern.
-  remain.shift()
-  for (var i = 0; i < len; i ++) {
-    var e = matchedEntries[i]
-    var newPattern
-    if (prefix)
-      newPattern = [prefix, e]
-    else
-      newPattern = [e]
-    this._process(newPattern.concat(remain), index, inGlobStar)
-  }
-}
-
-
-GlobSync.prototype._emitMatch = function (index, e) {
-  if (isIgnored(this, e))
-    return
-
-  var abs = this._makeAbs(e)
-
-  if (this.mark)
-    e = this._mark(e)
-
-  if (this.absolute) {
-    e = abs
-  }
-
-  if (this.matches[index][e])
-    return
-
-  if (this.nodir) {
-    var c = this.cache[abs]
-    if (c === 'DIR' || Array.isArray(c))
-      return
-  }
-
-  this.matches[index][e] = true
-
-  if (this.stat)
-    this._stat(e)
-}
-
-
-GlobSync.prototype._readdirInGlobStar = function (abs) {
-  // follow all symlinked directories forever
-  // just proceed as if this is a non-globstar situation
-  if (this.follow)
-    return this._readdir(abs, false)
-
-  var entries
-  var lstat
-  var stat
-  try {
-    lstat = this.fs.lstatSync(abs)
-  } catch (er) {
-    if (er.code === 'ENOENT') {
-      // lstat failed, doesn't exist
-      return null
-    }
-  }
-
-  var isSym = lstat && lstat.isSymbolicLink()
-  this.symlinks[abs] = isSym
-
-  // If it's not a symlink or a dir, then it's definitely a regular file.
-  // don't bother doing a readdir in that case.
-  if (!isSym && lstat && !lstat.isDirectory())
-    this.cache[abs] = 'FILE'
-  else
-    entries = this._readdir(abs, false)
-
-  return entries
-}
-
-GlobSync.prototype._readdir = function (abs, inGlobStar) {
-  var entries
-
-  if (inGlobStar && !ownProp(this.symlinks, abs))
-    return this._readdirInGlobStar(abs)
-
-  if (ownProp(this.cache, abs)) {
-    var c = this.cache[abs]
-    if (!c || c === 'FILE')
-      return null
-
-    if (Array.isArray(c))
-      return c
-  }
-
-  try {
-    return this._readdirEntries(abs, this.fs.readdirSync(abs))
-  } catch (er) {
-    this._readdirError(abs, er)
-    return null
-  }
-}
-
-GlobSync.prototype._readdirEntries = function (abs, entries) {
-  // if we haven't asked to stat everything, then just
-  // assume that everything in there exists, so we can avoid
-  // having to stat it a second time.
-  if (!this.mark && !this.stat) {
-    for (var i = 0; i < entries.length; i ++) {
-      var e = entries[i]
-      if (abs === '/')
-        e = abs + e
-      else
-        e = abs + '/' + e
-      this.cache[e] = true
-    }
-  }
-
-  this.cache[abs] = entries
-
-  // mark and cache dir-ness
-  return entries
-}
-
-GlobSync.prototype._readdirError = function (f, er) {
-  // handle errors, and cache the information
-  switch (er.code) {
-    case 'ENOTSUP': // https://github.com/isaacs/node-glob/issues/205
-    case 'ENOTDIR': // totally normal. means it *does* exist.
-      var abs = this._makeAbs(f)
-      this.cache[abs] = 'FILE'
-      if (abs === this.cwdAbs) {
-        var error = new Error(er.code + ' invalid cwd ' + this.cwd)
-        error.path = this.cwd
-        error.code = er.code
-        throw error
-      }
-      break
-
-    case 'ENOENT': // not terribly unusual
-    case 'ELOOP':
-    case 'ENAMETOOLONG':
-    case 'UNKNOWN':
-      this.cache[this._makeAbs(f)] = false
-      break
-
-    default: // some unusual error.  Treat as failure.
-      this.cache[this._makeAbs(f)] = false
-      if (this.strict)
-        throw er
-      if (!this.silent)
-        console.error('glob error', er)
-      break
-  }
-}
-
-GlobSync.prototype._processGlobStar = function (prefix, read, abs, remain, index, inGlobStar) {
-
-  var entries = this._readdir(abs, inGlobStar)
-
-  // no entries means not a dir, so it can never have matches
-  // foo.txt/** doesn't match foo.txt
-  if (!entries)
-    return
-
-  // test without the globstar, and with every child both below
-  // and replacing the globstar.
-  var remainWithoutGlobStar = remain.slice(1)
-  var gspref = prefix ? [ prefix ] : []
-  var noGlobStar = gspref.concat(remainWithoutGlobStar)
-
-  // the noGlobStar pattern exits the inGlobStar state
-  this._process(noGlobStar, index, false)
-
-  var len = entries.length
-  var isSym = this.symlinks[abs]
-
-  // If it's a symlink, and we're in a globstar, then stop
-  if (isSym && inGlobStar)
-    return
-
-  for (var i = 0; i < len; i++) {
-    var e = entries[i]
-    if (e.charAt(0) === '.' && !this.dot)
-      continue
-
-    // these two cases enter the inGlobStar state
-    var instead = gspref.concat(entries[i], remainWithoutGlobStar)
-    this._process(instead, index, true)
-
-    var below = gspref.concat(entries[i], remain)
-    this._process(below, index, true)
-  }
-}
-
-GlobSync.prototype._processSimple = function (prefix, index) {
-  // XXX review this.  Shouldn't it be doing the mounting etc
-  // before doing stat?  kinda weird?
-  var exists = this._stat(prefix)
-
-  if (!this.matches[index])
-    this.matches[index] = Object.create(null)
-
-  // If it doesn't exist, then just mark the lack of results
-  if (!exists)
-    return
-
-  if (prefix && isAbsolute(prefix) && !this.nomount) {
-    var trail = /[\/\\]$/.test(prefix)
-    if (prefix.charAt(0) === '/') {
-      prefix = path.join(this.root, prefix)
-    } else {
-      prefix = path.resolve(this.root, prefix)
-      if (trail)
-        prefix += '/'
-    }
-  }
-
-  if (process.platform === 'win32')
-    prefix = prefix.replace(/\\/g, '/')
-
-  // Mark this as a match
-  this._emitMatch(index, prefix)
-}
-
-// Returns either 'DIR', 'FILE', or false
-GlobSync.prototype._stat = function (f) {
-  var abs = this._makeAbs(f)
-  var needDir = f.slice(-1) === '/'
-
-  if (f.length > this.maxLength)
-    return false
-
-  if (!this.stat && ownProp(this.cache, abs)) {
-    var c = this.cache[abs]
-
-    if (Array.isArray(c))
-      c = 'DIR'
-
-    // It exists, but maybe not how we need it
-    if (!needDir || c === 'DIR')
-      return c
-
-    if (needDir && c === 'FILE')
-      return false
-
-    // otherwise we have to stat, because maybe c=true
-    // if we know it exists, but not what it is.
-  }
-
-  var exists
-  var stat = this.statCache[abs]
-  if (!stat) {
-    var lstat
-    try {
-      lstat = this.fs.lstatSync(abs)
-    } catch (er) {
-      if (er && (er.code === 'ENOENT' || er.code === 'ENOTDIR')) {
-        this.statCache[abs] = false
-        return false
-      }
-    }
-
-    if (lstat && lstat.isSymbolicLink()) {
-      try {
-        stat = this.fs.statSync(abs)
-      } catch (er) {
-        stat = lstat
-      }
-    } else {
-      stat = lstat
-    }
-  }
-
-  this.statCache[abs] = stat
-
-  var c = true
-  if (stat)
-    c = stat.isDirectory() ? 'DIR' : 'FILE'
-
-  this.cache[abs] = this.cache[abs] || c
-
-  if (needDir && c === 'FILE')
-    return false
-
-  return c
-}
-
-GlobSync.prototype._mark = function (p) {
-  return common.mark(this, p)
-}
-
-GlobSync.prototype._makeAbs = function (f) {
-  return common.makeAbs(this, f)
-}
-
-
-/***/ }),
-
-/***/ 3656:
-/***/ ((module) => {
-
-const isWindows = typeof process === 'object' &&
-  process &&
-  process.platform === 'win32'
-module.exports = isWindows ? { sep: '\\' } : { sep: '/' }
-
-
-/***/ }),
-
-/***/ 8487:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-const minimatch = module.exports = (p, pattern, options = {}) => {
-  assertValidPattern(pattern)
-
-  // shortcut: comments match nothing.
-  if (!options.nocomment && pattern.charAt(0) === '#') {
-    return false
-  }
-
-  return new Minimatch(pattern, options).match(p)
-}
-
-module.exports = minimatch
-
-const path = __nccwpck_require__(3656)
-minimatch.sep = path.sep
-
-const GLOBSTAR = Symbol('globstar **')
-minimatch.GLOBSTAR = GLOBSTAR
-const expand = __nccwpck_require__(8311)
-
-const plTypes = {
-  '!': { open: '(?:(?!(?:', close: '))[^/]*?)'},
-  '?': { open: '(?:', close: ')?' },
-  '+': { open: '(?:', close: ')+' },
-  '*': { open: '(?:', close: ')*' },
-  '@': { open: '(?:', close: ')' }
-}
-
-// any single thing other than /
-// don't need to escape / when using new RegExp()
-const qmark = '[^/]'
-
-// * => any number of characters
-const star = qmark + '*?'
-
-// ** when dots are allowed.  Anything goes, except .. and .
-// not (^ or / followed by one or two dots followed by $ or /),
-// followed by anything, any number of times.
-const twoStarDot = '(?:(?!(?:\\\/|^)(?:\\.{1,2})($|\\\/)).)*?'
-
-// not a ^ or / followed by a dot,
-// followed by anything, any number of times.
-const twoStarNoDot = '(?:(?!(?:\\\/|^)\\.).)*?'
-
-// "abc" -> { a:true, b:true, c:true }
-const charSet = s => s.split('').reduce((set, c) => {
-  set[c] = true
-  return set
-}, {})
-
-// characters that need to be escaped in RegExp.
-const reSpecials = charSet('().*{}+?[]^$\\!')
-
-// characters that indicate we have to add the pattern start
-const addPatternStartSet = charSet('[.(')
-
-// normalizes slashes.
-const slashSplit = /\/+/
-
-minimatch.filter = (pattern, options = {}) =>
-  (p, i, list) => minimatch(p, pattern, options)
-
-const ext = (a, b = {}) => {
-  const t = {}
-  Object.keys(a).forEach(k => t[k] = a[k])
-  Object.keys(b).forEach(k => t[k] = b[k])
-  return t
-}
-
-minimatch.defaults = def => {
-  if (!def || typeof def !== 'object' || !Object.keys(def).length) {
-    return minimatch
-  }
-
-  const orig = minimatch
-
-  const m = (p, pattern, options) => orig(p, pattern, ext(def, options))
-  m.Minimatch = class Minimatch extends orig.Minimatch {
-    constructor (pattern, options) {
-      super(pattern, ext(def, options))
-    }
-  }
-  m.Minimatch.defaults = options => orig.defaults(ext(def, options)).Minimatch
-  m.filter = (pattern, options) => orig.filter(pattern, ext(def, options))
-  m.defaults = options => orig.defaults(ext(def, options))
-  m.makeRe = (pattern, options) => orig.makeRe(pattern, ext(def, options))
-  m.braceExpand = (pattern, options) => orig.braceExpand(pattern, ext(def, options))
-  m.match = (list, pattern, options) => orig.match(list, pattern, ext(def, options))
-
-  return m
-}
-
-
-
-
-
-// Brace expansion:
-// a{b,c}d -> abd acd
-// a{b,}c -> abc ac
-// a{0..3}d -> a0d a1d a2d a3d
-// a{b,c{d,e}f}g -> abg acdfg acefg
-// a{b,c}d{e,f}g -> abdeg acdeg abdeg abdfg
-//
-// Invalid sets are not expanded.
-// a{2..}b -> a{2..}b
-// a{b}c -> a{b}c
-minimatch.braceExpand = (pattern, options) => braceExpand(pattern, options)
-
-const braceExpand = (pattern, options = {}) => {
-  assertValidPattern(pattern)
-
-  // Thanks to Yeting Li <https://github.com/yetingli> for
-  // improving this regexp to avoid a ReDOS vulnerability.
-  if (options.nobrace || !/\{(?:(?!\{).)*\}/.test(pattern)) {
-    // shortcut. no need to expand.
-    return [pattern]
-  }
-
-  return expand(pattern)
-}
-
-const MAX_PATTERN_LENGTH = 1024 * 64
-const assertValidPattern = pattern => {
-  if (typeof pattern !== 'string') {
-    throw new TypeError('invalid pattern')
-  }
-
-  if (pattern.length > MAX_PATTERN_LENGTH) {
-    throw new TypeError('pattern is too long')
-  }
-}
-
-// parse a component of the expanded set.
-// At this point, no pattern may contain "/" in it
-// so we're going to return a 2d array, where each entry is the full
-// pattern, split on '/', and then turned into a regular expression.
-// A regexp is made at the end which joins each array with an
-// escaped /, and another full one which joins each regexp with |.
-//
-// Following the lead of Bash 4.1, note that "**" only has special meaning
-// when it is the *only* thing in a path portion.  Otherwise, any series
-// of * is equivalent to a single *.  Globstar behavior is enabled by
-// default, and can be disabled by setting options.noglobstar.
-const SUBPARSE = Symbol('subparse')
-
-minimatch.makeRe = (pattern, options) =>
-  new Minimatch(pattern, options || {}).makeRe()
-
-minimatch.match = (list, pattern, options = {}) => {
-  const mm = new Minimatch(pattern, options)
-  list = list.filter(f => mm.match(f))
-  if (mm.options.nonull && !list.length) {
-    list.push(pattern)
-  }
-  return list
-}
-
-// replace stuff like \* with *
-const globUnescape = s => s.replace(/\\(.)/g, '$1')
-const charUnescape = s => s.replace(/\\([^-\]])/g, '$1')
-const regExpEscape = s => s.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')
-const braExpEscape = s => s.replace(/[[\]\\]/g, '\\$&')
-
-class Minimatch {
-  constructor (pattern, options) {
-    assertValidPattern(pattern)
-
-    if (!options) options = {}
-
-    this.options = options
-    this.set = []
-    this.pattern = pattern
-    this.windowsPathsNoEscape = !!options.windowsPathsNoEscape ||
-      options.allowWindowsEscape === false
-    if (this.windowsPathsNoEscape) {
-      this.pattern = this.pattern.replace(/\\/g, '/')
-    }
-    this.regexp = null
-    this.negate = false
-    this.comment = false
-    this.empty = false
-    this.partial = !!options.partial
-
-    // make the set of regexps etc.
-    this.make()
-  }
-
-  debug () {}
-
-  make () {
-    const pattern = this.pattern
-    const options = this.options
-
-    // empty patterns and comments match nothing.
-    if (!options.nocomment && pattern.charAt(0) === '#') {
-      this.comment = true
-      return
-    }
-    if (!pattern) {
-      this.empty = true
-      return
-    }
-
-    // step 1: figure out negation, etc.
-    this.parseNegate()
-
-    // step 2: expand braces
-    let set = this.globSet = this.braceExpand()
-
-    if (options.debug) this.debug = (...args) => console.error(...args)
-
-    this.debug(this.pattern, set)
-
-    // step 3: now we have a set, so turn each one into a series of path-portion
-    // matching patterns.
-    // These will be regexps, except in the case of "**", which is
-    // set to the GLOBSTAR object for globstar behavior,
-    // and will not contain any / characters
-    set = this.globParts = set.map(s => s.split(slashSplit))
-
-    this.debug(this.pattern, set)
-
-    // glob --> regexps
-    set = set.map((s, si, set) => s.map(this.parse, this))
-
-    this.debug(this.pattern, set)
-
-    // filter out everything that didn't compile properly.
-    set = set.filter(s => s.indexOf(false) === -1)
-
-    this.debug(this.pattern, set)
-
-    this.set = set
-  }
-
-  parseNegate () {
-    if (this.options.nonegate) return
-
-    const pattern = this.pattern
-    let negate = false
-    let negateOffset = 0
-
-    for (let i = 0; i < pattern.length && pattern.charAt(i) === '!'; i++) {
-      negate = !negate
-      negateOffset++
-    }
-
-    if (negateOffset) this.pattern = pattern.slice(negateOffset)
-    this.negate = negate
-  }
-
-  // set partial to true to test if, for example,
-  // "/a/b" matches the start of "/*/b/*/d"
-  // Partial means, if you run out of file before you run
-  // out of pattern, then that's fine, as long as all
-  // the parts match.
-  matchOne (file, pattern, partial) {
-    var options = this.options
-
-    this.debug('matchOne',
-      { 'this': this, file: file, pattern: pattern })
-
-    this.debug('matchOne', file.length, pattern.length)
-
-    for (var fi = 0,
-        pi = 0,
-        fl = file.length,
-        pl = pattern.length
-        ; (fi < fl) && (pi < pl)
-        ; fi++, pi++) {
-      this.debug('matchOne loop')
-      var p = pattern[pi]
-      var f = file[fi]
-
-      this.debug(pattern, p, f)
-
-      // should be impossible.
-      // some invalid regexp stuff in the set.
-      /* istanbul ignore if */
-      if (p === false) return false
-
-      if (p === GLOBSTAR) {
-        this.debug('GLOBSTAR', [pattern, p, f])
-
-        // "**"
-        // a/**/b/**/c would match the following:
-        // a/b/x/y/z/c
-        // a/x/y/z/b/c
-        // a/b/x/b/x/c
-        // a/b/c
-        // To do this, take the rest of the pattern after
-        // the **, and see if it would match the file remainder.
-        // If so, return success.
-        // If not, the ** "swallows" a segment, and try again.
-        // This is recursively awful.
-        //
-        // a/**/b/**/c matching a/b/x/y/z/c
-        // - a matches a
-        // - doublestar
-        //   - matchOne(b/x/y/z/c, b/**/c)
-        //     - b matches b
-        //     - doublestar
-        //       - matchOne(x/y/z/c, c) -> no
-        //       - matchOne(y/z/c, c) -> no
-        //       - matchOne(z/c, c) -> no
-        //       - matchOne(c, c) yes, hit
-        var fr = fi
-        var pr = pi + 1
-        if (pr === pl) {
-          this.debug('** at the end')
-          // a ** at the end will just swallow the rest.
-          // We have found a match.
-          // however, it will not swallow /.x, unless
-          // options.dot is set.
-          // . and .. are *never* matched by **, for explosively
-          // exponential reasons.
-          for (; fi < fl; fi++) {
-            if (file[fi] === '.' || file[fi] === '..' ||
-              (!options.dot && file[fi].charAt(0) === '.')) return false
-          }
-          return true
-        }
-
-        // ok, let's see if we can swallow whatever we can.
-        while (fr < fl) {
-          var swallowee = file[fr]
-
-          this.debug('\nglobstar while', file, fr, pattern, pr, swallowee)
-
-          // XXX remove this slice.  Just pass the start index.
-          if (this.matchOne(file.slice(fr), pattern.slice(pr), partial)) {
-            this.debug('globstar found match!', fr, fl, swallowee)
-            // found a match.
-            return true
-          } else {
-            // can't swallow "." or ".." ever.
-            // can only swallow ".foo" when explicitly asked.
-            if (swallowee === '.' || swallowee === '..' ||
-              (!options.dot && swallowee.charAt(0) === '.')) {
-              this.debug('dot detected!', file, fr, pattern, pr)
-              break
-            }
-
-            // ** swallows a segment, and continue.
-            this.debug('globstar swallow a segment, and continue')
-            fr++
-          }
-        }
-
-        // no match was found.
-        // However, in partial mode, we can't say this is necessarily over.
-        // If there's more *pattern* left, then
-        /* istanbul ignore if */
-        if (partial) {
-          // ran out of file
-          this.debug('\n>>> no match, partial?', file, fr, pattern, pr)
-          if (fr === fl) return true
-        }
-        return false
-      }
-
-      // something other than **
-      // non-magic patterns just have to match exactly
-      // patterns with magic have been turned into regexps.
-      var hit
-      if (typeof p === 'string') {
-        hit = f === p
-        this.debug('string match', p, f, hit)
-      } else {
-        hit = f.match(p)
-        this.debug('pattern match', p, f, hit)
-      }
-
-      if (!hit) return false
-    }
-
-    // Note: ending in / means that we'll get a final ""
-    // at the end of the pattern.  This can only match a
-    // corresponding "" at the end of the file.
-    // If the file ends in /, then it can only match a
-    // a pattern that ends in /, unless the pattern just
-    // doesn't have any more for it. But, a/b/ should *not*
-    // match "a/b/*", even though "" matches against the
-    // [^/]*? pattern, except in partial mode, where it might
-    // simply not be reached yet.
-    // However, a/b/ should still satisfy a/*
-
-    // now either we fell off the end of the pattern, or we're done.
-    if (fi === fl && pi === pl) {
-      // ran out of pattern and filename at the same time.
-      // an exact hit!
-      return true
-    } else if (fi === fl) {
-      // ran out of file, but still had pattern left.
-      // this is ok if we're doing the match as part of
-      // a glob fs traversal.
-      return partial
-    } else /* istanbul ignore else */ if (pi === pl) {
-      // ran out of pattern, still have file left.
-      // this is only acceptable if we're on the very last
-      // empty segment of a file with a trailing slash.
-      // a/* should match a/b/
-      return (fi === fl - 1) && (file[fi] === '')
-    }
-
-    // should be unreachable.
-    /* istanbul ignore next */
-    throw new Error('wtf?')
-  }
-
-  braceExpand () {
-    return braceExpand(this.pattern, this.options)
-  }
-
-  parse (pattern, isSub) {
-    assertValidPattern(pattern)
-
-    const options = this.options
-
-    // shortcuts
-    if (pattern === '**') {
-      if (!options.noglobstar)
-        return GLOBSTAR
-      else
-        pattern = '*'
-    }
-    if (pattern === '') return ''
-
-    let re = ''
-    let hasMagic = false
-    let escaping = false
-    // ? => one single character
-    const patternListStack = []
-    const negativeLists = []
-    let stateChar
-    let inClass = false
-    let reClassStart = -1
-    let classStart = -1
-    let cs
-    let pl
-    let sp
-    // . and .. never match anything that doesn't start with .,
-    // even when options.dot is set.  However, if the pattern
-    // starts with ., then traversal patterns can match.
-    let dotTravAllowed = pattern.charAt(0) === '.'
-    let dotFileAllowed = options.dot || dotTravAllowed
-    const patternStart = () =>
-      dotTravAllowed
-        ? ''
-        : dotFileAllowed
-        ? '(?!(?:^|\\/)\\.{1,2}(?:$|\\/))'
-        : '(?!\\.)'
-    const subPatternStart = (p) =>
-      p.charAt(0) === '.'
-        ? ''
-        : options.dot
-        ? '(?!(?:^|\\/)\\.{1,2}(?:$|\\/))'
-        : '(?!\\.)'
-
-
-    const clearStateChar = () => {
-      if (stateChar) {
-        // we had some state-tracking character
-        // that wasn't consumed by this pass.
-        switch (stateChar) {
-          case '*':
-            re += star
-            hasMagic = true
-          break
-          case '?':
-            re += qmark
-            hasMagic = true
-          break
-          default:
-            re += '\\' + stateChar
-          break
-        }
-        this.debug('clearStateChar %j %j', stateChar, re)
-        stateChar = false
-      }
-    }
-
-    for (let i = 0, c; (i < pattern.length) && (c = pattern.charAt(i)); i++) {
-      this.debug('%s\t%s %s %j', pattern, i, re, c)
-
-      // skip over any that are escaped.
-      if (escaping) {
-        /* istanbul ignore next - completely not allowed, even escaped. */
-        if (c === '/') {
-          return false
-        }
-
-        if (reSpecials[c]) {
-          re += '\\'
-        }
-        re += c
-        escaping = false
-        continue
-      }
-
-      switch (c) {
-        /* istanbul ignore next */
-        case '/': {
-          // Should already be path-split by now.
-          return false
-        }
-
-        case '\\':
-          if (inClass && pattern.charAt(i + 1) === '-') {
-            re += c
-            continue
-          }
-
-          clearStateChar()
-          escaping = true
-        continue
-
-        // the various stateChar values
-        // for the "extglob" stuff.
-        case '?':
-        case '*':
-        case '+':
-        case '@':
-        case '!':
-          this.debug('%s\t%s %s %j <-- stateChar', pattern, i, re, c)
-
-          // all of those are literals inside a class, except that
-          // the glob [!a] means [^a] in regexp
-          if (inClass) {
-            this.debug('  in class')
-            if (c === '!' && i === classStart + 1) c = '^'
-            re += c
-            continue
-          }
-
-          // if we already have a stateChar, then it means
-          // that there was something like ** or +? in there.
-          // Handle the stateChar, then proceed with this one.
-          this.debug('call clearStateChar %j', stateChar)
-          clearStateChar()
-          stateChar = c
-          // if extglob is disabled, then +(asdf|foo) isn't a thing.
-          // just clear the statechar *now*, rather than even diving into
-          // the patternList stuff.
-          if (options.noext) clearStateChar()
-        continue
-
-        case '(': {
-          if (inClass) {
-            re += '('
-            continue
-          }
-
-          if (!stateChar) {
-            re += '\\('
-            continue
-          }
-
-          const plEntry = {
-            type: stateChar,
-            start: i - 1,
-            reStart: re.length,
-            open: plTypes[stateChar].open,
-            close: plTypes[stateChar].close,
-          }
-          this.debug(this.pattern, '\t', plEntry)
-          patternListStack.push(plEntry)
-          // negation is (?:(?!(?:js)(?:<rest>))[^/]*)
-          re += plEntry.open
-          // next entry starts with a dot maybe?
-          if (plEntry.start === 0 && plEntry.type !== '!') {
-            dotTravAllowed = true
-            re += subPatternStart(pattern.slice(i + 1))
-          }
-          this.debug('plType %j %j', stateChar, re)
-          stateChar = false
-          continue
-        }
-
-        case ')': {
-          const plEntry = patternListStack[patternListStack.length - 1]
-          if (inClass || !plEntry) {
-            re += '\\)'
-            continue
-          }
-          patternListStack.pop()
-
-          // closing an extglob
-          clearStateChar()
-          hasMagic = true
-          pl = plEntry
-          // negation is (?:(?!js)[^/]*)
-          // The others are (?:<pattern>)<type>
-          re += pl.close
-          if (pl.type === '!') {
-            negativeLists.push(Object.assign(pl, { reEnd: re.length }))
-          }
-          continue
-        }
-
-        case '|': {
-          const plEntry = patternListStack[patternListStack.length - 1]
-          if (inClass || !plEntry) {
-            re += '\\|'
-            continue
-          }
-
-          clearStateChar()
-          re += '|'
-          // next subpattern can start with a dot?
-          if (plEntry.start === 0 && plEntry.type !== '!') {
-            dotTravAllowed = true
-            re += subPatternStart(pattern.slice(i + 1))
-          }
-          continue
-        }
-
-        // these are mostly the same in regexp and glob
-        case '[':
-          // swallow any state-tracking char before the [
-          clearStateChar()
-
-          if (inClass) {
-            re += '\\' + c
-            continue
-          }
-
-          inClass = true
-          classStart = i
-          reClassStart = re.length
-          re += c
-        continue
-
-        case ']':
-          //  a right bracket shall lose its special
-          //  meaning and represent itself in
-          //  a bracket expression if it occurs
-          //  first in the list.  -- POSIX.2 2.8.3.2
-          if (i === classStart + 1 || !inClass) {
-            re += '\\' + c
-            continue
-          }
-
-          // split where the last [ was, make sure we don't have
-          // an invalid re. if so, re-walk the contents of the
-          // would-be class to re-translate any characters that
-          // were passed through as-is
-          // TODO: It would probably be faster to determine this
-          // without a try/catch and a new RegExp, but it's tricky
-          // to do safely.  For now, this is safe and works.
-          cs = pattern.substring(classStart + 1, i)
-          try {
-            RegExp('[' + braExpEscape(charUnescape(cs)) + ']')
-            // looks good, finish up the class.
-            re += c
-          } catch (er) {
-            // out of order ranges in JS are errors, but in glob syntax,
-            // they're just a range that matches nothing.
-            re = re.substring(0, reClassStart) + '(?:$.)' // match nothing ever
-          }
-          hasMagic = true
-          inClass = false
-        continue
-
-        default:
-          // swallow any state char that wasn't consumed
-          clearStateChar()
-
-          if (reSpecials[c] && !(c === '^' && inClass)) {
-            re += '\\'
-          }
-
-          re += c
-          break
-
-      } // switch
-    } // for
-
-    // handle the case where we left a class open.
-    // "[abc" is valid, equivalent to "\[abc"
-    if (inClass) {
-      // split where the last [ was, and escape it
-      // this is a huge pita.  We now have to re-walk
-      // the contents of the would-be class to re-translate
-      // any characters that were passed through as-is
-      cs = pattern.slice(classStart + 1)
-      sp = this.parse(cs, SUBPARSE)
-      re = re.substring(0, reClassStart) + '\\[' + sp[0]
-      hasMagic = hasMagic || sp[1]
-    }
-
-    // handle the case where we had a +( thing at the *end*
-    // of the pattern.
-    // each pattern list stack adds 3 chars, and we need to go through
-    // and escape any | chars that were passed through as-is for the regexp.
-    // Go through and escape them, taking care not to double-escape any
-    // | chars that were already escaped.
-    for (pl = patternListStack.pop(); pl; pl = patternListStack.pop()) {
-      let tail
-      tail = re.slice(pl.reStart + pl.open.length)
-      this.debug('setting tail', re, pl)
-      // maybe some even number of \, then maybe 1 \, followed by a |
-      tail = tail.replace(/((?:\\{2}){0,64})(\\?)\|/g, (_, $1, $2) => {
-        /* istanbul ignore else - should already be done */
-        if (!$2) {
-          // the | isn't already escaped, so escape it.
-          $2 = '\\'
-        }
-
-        // need to escape all those slashes *again*, without escaping the
-        // one that we need for escaping the | character.  As it works out,
-        // escaping an even number of slashes can be done by simply repeating
-        // it exactly after itself.  That's why this trick works.
-        //
-        // I am sorry that you have to see this.
-        return $1 + $1 + $2 + '|'
-      })
-
-      this.debug('tail=%j\n   %s', tail, tail, pl, re)
-      const t = pl.type === '*' ? star
-        : pl.type === '?' ? qmark
-        : '\\' + pl.type
-
-      hasMagic = true
-      re = re.slice(0, pl.reStart) + t + '\\(' + tail
-    }
-
-    // handle trailing things that only matter at the very end.
-    clearStateChar()
-    if (escaping) {
-      // trailing \\
-      re += '\\\\'
-    }
-
-    // only need to apply the nodot start if the re starts with
-    // something that could conceivably capture a dot
-    const addPatternStart = addPatternStartSet[re.charAt(0)]
-
-    // Hack to work around lack of negative lookbehind in JS
-    // A pattern like: *.!(x).!(y|z) needs to ensure that a name
-    // like 'a.xyz.yz' doesn't match.  So, the first negative
-    // lookahead, has to look ALL the way ahead, to the end of
-    // the pattern.
-    for (let n = negativeLists.length - 1; n > -1; n--) {
-      const nl = negativeLists[n]
-
-      const nlBefore = re.slice(0, nl.reStart)
-      const nlFirst = re.slice(nl.reStart, nl.reEnd - 8)
-      let nlAfter = re.slice(nl.reEnd)
-      const nlLast = re.slice(nl.reEnd - 8, nl.reEnd) + nlAfter
-
-      // Handle nested stuff like *(*.js|!(*.json)), where open parens
-      // mean that we should *not* include the ) in the bit that is considered
-      // "after" the negated section.
-      const closeParensBefore = nlBefore.split(')').length
-      const openParensBefore = nlBefore.split('(').length - closeParensBefore
-      let cleanAfter = nlAfter
-      for (let i = 0; i < openParensBefore; i++) {
-        cleanAfter = cleanAfter.replace(/\)[+*?]?/, '')
-      }
-      nlAfter = cleanAfter
-
-      const dollar = nlAfter === '' && isSub !== SUBPARSE ? '(?:$|\\/)' : ''
-
-      re = nlBefore + nlFirst + nlAfter + dollar + nlLast
-    }
-
-    // if the re is not "" at this point, then we need to make sure
-    // it doesn't match against an empty path part.
-    // Otherwise a/* will match a/, which it should not.
-    if (re !== '' && hasMagic) {
-      re = '(?=.)' + re
-    }
-
-    if (addPatternStart) {
-      re = patternStart() + re
-    }
-
-    // parsing just a piece of a larger pattern.
-    if (isSub === SUBPARSE) {
-      return [re, hasMagic]
-    }
-
-    // if it's nocase, and the lcase/uppercase don't match, it's magic
-    if (options.nocase && !hasMagic) {
-      hasMagic = pattern.toUpperCase() !== pattern.toLowerCase()
-    }
-
-    // skip the regexp for non-magical patterns
-    // unescape anything in it, though, so that it'll be
-    // an exact match against a file etc.
-    if (!hasMagic) {
-      return globUnescape(pattern)
-    }
-
-    const flags = options.nocase ? 'i' : ''
-    try {
-      return Object.assign(new RegExp('^' + re + '$', flags), {
-        _glob: pattern,
-        _src: re,
-      })
-    } catch (er) /* istanbul ignore next - should be impossible */ {
-      // If it was an invalid regular expression, then it can't match
-      // anything.  This trick looks for a character after the end of
-      // the string, which is of course impossible, except in multi-line
-      // mode, but it's not a /m regex.
-      return new RegExp('$.')
-    }
-  }
-
-  makeRe () {
-    if (this.regexp || this.regexp === false) return this.regexp
-
-    // at this point, this.set is a 2d array of partial
-    // pattern strings, or "**".
-    //
-    // It's better to use .match().  This function shouldn't
-    // be used, really, but it's pretty convenient sometimes,
-    // when you just want to work with a regex.
-    const set = this.set
-
-    if (!set.length) {
-      this.regexp = false
-      return this.regexp
-    }
-    const options = this.options
-
-    const twoStar = options.noglobstar ? star
-      : options.dot ? twoStarDot
-      : twoStarNoDot
-    const flags = options.nocase ? 'i' : ''
-
-    // coalesce globstars and regexpify non-globstar patterns
-    // if it's the only item, then we just do one twoStar
-    // if it's the first, and there are more, prepend (\/|twoStar\/)? to next
-    // if it's the last, append (\/twoStar|) to previous
-    // if it's in the middle, append (\/|\/twoStar\/) to previous
-    // then filter out GLOBSTAR symbols
-    let re = set.map(pattern => {
-      pattern = pattern.map(p =>
-        typeof p === 'string' ? regExpEscape(p)
-        : p === GLOBSTAR ? GLOBSTAR
-        : p._src
-      ).reduce((set, p) => {
-        if (!(set[set.length - 1] === GLOBSTAR && p === GLOBSTAR)) {
-          set.push(p)
-        }
-        return set
-      }, [])
-      pattern.forEach((p, i) => {
-        if (p !== GLOBSTAR || pattern[i-1] === GLOBSTAR) {
-          return
-        }
-        if (i === 0) {
-          if (pattern.length > 1) {
-            pattern[i+1] = '(?:\\\/|' + twoStar + '\\\/)?' + pattern[i+1]
-          } else {
-            pattern[i] = twoStar
-          }
-        } else if (i === pattern.length - 1) {
-          pattern[i-1] += '(?:\\\/|' + twoStar + ')?'
-        } else {
-          pattern[i-1] += '(?:\\\/|\\\/' + twoStar + '\\\/)' + pattern[i+1]
-          pattern[i+1] = GLOBSTAR
-        }
-      })
-      return pattern.filter(p => p !== GLOBSTAR).join('/')
-    }).join('|')
-
-    // must match entire pattern
-    // ending in a * or ** will make it less strict.
-    re = '^(?:' + re + ')$'
-
-    // can match anything, as long as it's not this.
-    if (this.negate) re = '^(?!' + re + ').*$'
-
-    try {
-      this.regexp = new RegExp(re, flags)
-    } catch (ex) /* istanbul ignore next - should be impossible */ {
-      this.regexp = false
-    }
-    return this.regexp
-  }
-
-  match (f, partial = this.partial) {
-    this.debug('match', f, this.pattern)
-    // short-circuit in the case of busted things.
-    // comments, etc.
-    if (this.comment) return false
-    if (this.empty) return f === ''
-
-    if (f === '/' && partial) return true
-
-    const options = this.options
-
-    // windows: need to use /, not \
-    if (path.sep !== '/') {
-      f = f.split(path.sep).join('/')
-    }
-
-    // treat the test path as a set of pathparts.
-    f = f.split(slashSplit)
-    this.debug(this.pattern, 'split', f)
-
-    // just ONE of the pattern sets in this.set needs to match
-    // in order for it to be valid.  If negating, then just one
-    // match means that we have failed.
-    // Either way, return on the first hit.
-
-    const set = this.set
-    this.debug(this.pattern, 'set', set)
-
-    // Find the basename of the path by looking for the last non-empty segment
-    let filename
-    for (let i = f.length - 1; i >= 0; i--) {
-      filename = f[i]
-      if (filename) break
-    }
-
-    for (let i = 0; i < set.length; i++) {
-      const pattern = set[i]
-      let file = f
-      if (options.matchBase && pattern.length === 1) {
-        file = [filename]
-      }
-      const hit = this.matchOne(file, pattern, partial)
-      if (hit) {
-        if (options.flipNegate) return true
-        return !this.negate
-      }
-    }
-
-    // didn't get any hits.  this is success if it's a negative
-    // pattern, failure otherwise.
-    if (options.flipNegate) return false
-    return this.negate
-  }
-
-  static defaults (def) {
-    return minimatch.defaults(def).Minimatch
-  }
-}
-
-minimatch.Minimatch = Minimatch
-
-
-/***/ }),
-
 /***/ 3084:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
@@ -4960,7 +2593,7 @@ var util = __nccwpck_require__(2072);
 
 var inherits = (__nccwpck_require__(3837).inherits);
 var ArchiverError = __nccwpck_require__(3143);
-var Transform = (__nccwpck_require__(1642).Transform);
+var Transform = (__nccwpck_require__(5193).Transform);
 
 var win32 = process.platform === 'win32';
 
@@ -5980,9 +3613,9 @@ exports = module.exports = ArchiverError;
  * @copyright (c) 2012-2014 Chris Talkington, contributors.
  */
 var inherits = (__nccwpck_require__(3837).inherits);
-var Transform = (__nccwpck_require__(1642).Transform);
+var Transform = (__nccwpck_require__(5193).Transform);
 
-var crc32 = __nccwpck_require__(4794);
+var crc32 = __nccwpck_require__(4119);
 var util = __nccwpck_require__(2072);
 
 /**
@@ -13118,124 +10751,6 @@ function range(a, b, str) {
 
 /***/ }),
 
-/***/ 4794:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-var Buffer = (__nccwpck_require__(4300).Buffer);
-
-var CRC_TABLE = [
-  0x00000000, 0x77073096, 0xee0e612c, 0x990951ba, 0x076dc419,
-  0x706af48f, 0xe963a535, 0x9e6495a3, 0x0edb8832, 0x79dcb8a4,
-  0xe0d5e91e, 0x97d2d988, 0x09b64c2b, 0x7eb17cbd, 0xe7b82d07,
-  0x90bf1d91, 0x1db71064, 0x6ab020f2, 0xf3b97148, 0x84be41de,
-  0x1adad47d, 0x6ddde4eb, 0xf4d4b551, 0x83d385c7, 0x136c9856,
-  0x646ba8c0, 0xfd62f97a, 0x8a65c9ec, 0x14015c4f, 0x63066cd9,
-  0xfa0f3d63, 0x8d080df5, 0x3b6e20c8, 0x4c69105e, 0xd56041e4,
-  0xa2677172, 0x3c03e4d1, 0x4b04d447, 0xd20d85fd, 0xa50ab56b,
-  0x35b5a8fa, 0x42b2986c, 0xdbbbc9d6, 0xacbcf940, 0x32d86ce3,
-  0x45df5c75, 0xdcd60dcf, 0xabd13d59, 0x26d930ac, 0x51de003a,
-  0xc8d75180, 0xbfd06116, 0x21b4f4b5, 0x56b3c423, 0xcfba9599,
-  0xb8bda50f, 0x2802b89e, 0x5f058808, 0xc60cd9b2, 0xb10be924,
-  0x2f6f7c87, 0x58684c11, 0xc1611dab, 0xb6662d3d, 0x76dc4190,
-  0x01db7106, 0x98d220bc, 0xefd5102a, 0x71b18589, 0x06b6b51f,
-  0x9fbfe4a5, 0xe8b8d433, 0x7807c9a2, 0x0f00f934, 0x9609a88e,
-  0xe10e9818, 0x7f6a0dbb, 0x086d3d2d, 0x91646c97, 0xe6635c01,
-  0x6b6b51f4, 0x1c6c6162, 0x856530d8, 0xf262004e, 0x6c0695ed,
-  0x1b01a57b, 0x8208f4c1, 0xf50fc457, 0x65b0d9c6, 0x12b7e950,
-  0x8bbeb8ea, 0xfcb9887c, 0x62dd1ddf, 0x15da2d49, 0x8cd37cf3,
-  0xfbd44c65, 0x4db26158, 0x3ab551ce, 0xa3bc0074, 0xd4bb30e2,
-  0x4adfa541, 0x3dd895d7, 0xa4d1c46d, 0xd3d6f4fb, 0x4369e96a,
-  0x346ed9fc, 0xad678846, 0xda60b8d0, 0x44042d73, 0x33031de5,
-  0xaa0a4c5f, 0xdd0d7cc9, 0x5005713c, 0x270241aa, 0xbe0b1010,
-  0xc90c2086, 0x5768b525, 0x206f85b3, 0xb966d409, 0xce61e49f,
-  0x5edef90e, 0x29d9c998, 0xb0d09822, 0xc7d7a8b4, 0x59b33d17,
-  0x2eb40d81, 0xb7bd5c3b, 0xc0ba6cad, 0xedb88320, 0x9abfb3b6,
-  0x03b6e20c, 0x74b1d29a, 0xead54739, 0x9dd277af, 0x04db2615,
-  0x73dc1683, 0xe3630b12, 0x94643b84, 0x0d6d6a3e, 0x7a6a5aa8,
-  0xe40ecf0b, 0x9309ff9d, 0x0a00ae27, 0x7d079eb1, 0xf00f9344,
-  0x8708a3d2, 0x1e01f268, 0x6906c2fe, 0xf762575d, 0x806567cb,
-  0x196c3671, 0x6e6b06e7, 0xfed41b76, 0x89d32be0, 0x10da7a5a,
-  0x67dd4acc, 0xf9b9df6f, 0x8ebeeff9, 0x17b7be43, 0x60b08ed5,
-  0xd6d6a3e8, 0xa1d1937e, 0x38d8c2c4, 0x4fdff252, 0xd1bb67f1,
-  0xa6bc5767, 0x3fb506dd, 0x48b2364b, 0xd80d2bda, 0xaf0a1b4c,
-  0x36034af6, 0x41047a60, 0xdf60efc3, 0xa867df55, 0x316e8eef,
-  0x4669be79, 0xcb61b38c, 0xbc66831a, 0x256fd2a0, 0x5268e236,
-  0xcc0c7795, 0xbb0b4703, 0x220216b9, 0x5505262f, 0xc5ba3bbe,
-  0xb2bd0b28, 0x2bb45a92, 0x5cb36a04, 0xc2d7ffa7, 0xb5d0cf31,
-  0x2cd99e8b, 0x5bdeae1d, 0x9b64c2b0, 0xec63f226, 0x756aa39c,
-  0x026d930a, 0x9c0906a9, 0xeb0e363f, 0x72076785, 0x05005713,
-  0x95bf4a82, 0xe2b87a14, 0x7bb12bae, 0x0cb61b38, 0x92d28e9b,
-  0xe5d5be0d, 0x7cdcefb7, 0x0bdbdf21, 0x86d3d2d4, 0xf1d4e242,
-  0x68ddb3f8, 0x1fda836e, 0x81be16cd, 0xf6b9265b, 0x6fb077e1,
-  0x18b74777, 0x88085ae6, 0xff0f6a70, 0x66063bca, 0x11010b5c,
-  0x8f659eff, 0xf862ae69, 0x616bffd3, 0x166ccf45, 0xa00ae278,
-  0xd70dd2ee, 0x4e048354, 0x3903b3c2, 0xa7672661, 0xd06016f7,
-  0x4969474d, 0x3e6e77db, 0xaed16a4a, 0xd9d65adc, 0x40df0b66,
-  0x37d83bf0, 0xa9bcae53, 0xdebb9ec5, 0x47b2cf7f, 0x30b5ffe9,
-  0xbdbdf21c, 0xcabac28a, 0x53b39330, 0x24b4a3a6, 0xbad03605,
-  0xcdd70693, 0x54de5729, 0x23d967bf, 0xb3667a2e, 0xc4614ab8,
-  0x5d681b02, 0x2a6f2b94, 0xb40bbe37, 0xc30c8ea1, 0x5a05df1b,
-  0x2d02ef8d
-];
-
-if (typeof Int32Array !== 'undefined') {
-  CRC_TABLE = new Int32Array(CRC_TABLE);
-}
-
-function ensureBuffer(input) {
-  if (Buffer.isBuffer(input)) {
-    return input;
-  }
-
-  var hasNewBufferAPI =
-      typeof Buffer.alloc === "function" &&
-      typeof Buffer.from === "function";
-
-  if (typeof input === "number") {
-    return hasNewBufferAPI ? Buffer.alloc(input) : new Buffer(input);
-  }
-  else if (typeof input === "string") {
-    return hasNewBufferAPI ? Buffer.from(input) : new Buffer(input);
-  }
-  else {
-    throw new Error("input must be buffer, number, or string, received " +
-                    typeof input);
-  }
-}
-
-function bufferizeInt(num) {
-  var tmp = ensureBuffer(4);
-  tmp.writeInt32BE(num, 0);
-  return tmp;
-}
-
-function _crc32(buf, previous) {
-  buf = ensureBuffer(buf);
-  if (Buffer.isBuffer(previous)) {
-    previous = previous.readUInt32BE(0);
-  }
-  var crc = ~~previous ^ -1;
-  for (var n = 0; n < buf.length; n++) {
-    crc = CRC_TABLE[(crc ^ buf[n]) & 0xff] ^ (crc >>> 8);
-  }
-  return (crc ^ -1);
-}
-
-function crc32() {
-  return bufferizeInt(_crc32.apply(null, arguments));
-}
-crc32.signed = function () {
-  return _crc32.apply(null, arguments);
-};
-crc32.unsigned = function () {
-  return _crc32.apply(null, arguments) >>> 0;
-};
-
-module.exports = crc32;
-
-
-/***/ }),
-
 /***/ 5443:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
@@ -13484,7 +10999,8 @@ ArchiveEntry.prototype.isDirectory = function() {};
  * https://github.com/archiverjs/node-compress-commons/blob/master/LICENSE-MIT
  */
 var inherits = (__nccwpck_require__(3837).inherits);
-var Transform = (__nccwpck_require__(1642).Transform);
+var isStream = __nccwpck_require__(1554);
+var Transform = (__nccwpck_require__(5193).Transform);
 
 var ArchiveEntry = __nccwpck_require__(2240);
 var util = __nccwpck_require__(5208);
@@ -13562,7 +11078,7 @@ ArchiveOutputStream.prototype.entry = function(ae, source, callback) {
 
   if (Buffer.isBuffer(source)) {
     this._appendBuffer(ae, source, callback);
-  } else if (util.isStream(source)) {
+  } else if (isStream(source)) {
     this._appendStream(ae, source, callback);
   } else {
     this._archive.processing = false;
@@ -14608,14 +12124,15 @@ ZipArchiveOutputStream.prototype._writeCentralDirectoryZip64 = function() {
 ZipArchiveOutputStream.prototype._writeCentralFileHeader = function(ae) {
   var gpb = ae.getGeneralPurposeBit();
   var method = ae.getMethod();
-  var offsets = ae._offsets;
+  var fileOffset = ae._offsets.file;
 
   var size = ae.getSize();
   var compressedSize = ae.getCompressedSize();
 
-  if (ae.isZip64() || offsets.file > constants.ZIP64_MAGIC) {
+  if (ae.isZip64() || fileOffset > constants.ZIP64_MAGIC) {
     size = constants.ZIP64_MAGIC;
     compressedSize = constants.ZIP64_MAGIC;
+    fileOffset = constants.ZIP64_MAGIC;
 
     ae.setVersionNeededToExtract(constants.MIN_VERSION_ZIP64);
 
@@ -14624,7 +12141,7 @@ ZipArchiveOutputStream.prototype._writeCentralFileHeader = function(ae) {
       zipUtil.getShortBytes(24),
       zipUtil.getEightBytes(ae.getSize()),
       zipUtil.getEightBytes(ae.getCompressedSize()),
-      zipUtil.getEightBytes(offsets.file)
+      zipUtil.getEightBytes(ae._offsets.file)
     ], 28);
 
     ae.setExtra(extraBuf);
@@ -14681,11 +12198,7 @@ ZipArchiveOutputStream.prototype._writeCentralFileHeader = function(ae) {
   this.write(zipUtil.getLongBytes(ae.getExternalAttributes()));
 
   // relative offset of LFH
-  if (offsets.file > constants.ZIP64_MAGIC) {
-    this.write(zipUtil.getLongBytes(constants.ZIP64_MAGIC));
-  } else {
-    this.write(zipUtil.getLongBytes(offsets.file));
-  }
+  this.write(zipUtil.getLongBytes(fileOffset));
 
   // name
   this.write(name);
@@ -14817,20 +12330,17 @@ module.exports = {
  * https://github.com/archiverjs/node-compress-commons/blob/master/LICENSE-MIT
  */
 var Stream = (__nccwpck_require__(2781).Stream);
-var PassThrough = (__nccwpck_require__(1642).PassThrough);
+var PassThrough = (__nccwpck_require__(5193).PassThrough);
+var isStream = __nccwpck_require__(1554);
 
 var util = module.exports = {};
-
-util.isStream = function(source) {
-  return source instanceof Stream;
-};
 
 util.normalizeInputSource = function(source) {
   if (source === null) {
     return Buffer.alloc(0);
   } else if (typeof source === 'string') {
     return Buffer.from(source);
-  } else if (util.isStream(source) && !source._readableState) {
+  } else if (isStream(source) && !source._readableState) {
     var normalized = new PassThrough();
     source.pipe(normalized);
 
@@ -15084,7 +12594,7 @@ CRC32.str = crc32_str;
 
  
 
-const {Transform} = __nccwpck_require__(1642);
+const {Transform} = __nccwpck_require__(5193);
 
 const crc32 = __nccwpck_require__(3201);
 
@@ -16176,6 +13686,885 @@ DelayedStream.prototype._checkIfMaxDataSizeExceeded = function() {
 
 /***/ }),
 
+/***/ 4697:
+/***/ ((module, exports) => {
+
+"use strict";
+/**
+ * @author Toru Nagashima <https://github.com/mysticatea>
+ * @copyright 2015 Toru Nagashima. All rights reserved.
+ * See LICENSE file in root directory for full license.
+ */
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+
+/**
+ * @typedef {object} PrivateData
+ * @property {EventTarget} eventTarget The event target.
+ * @property {{type:string}} event The original event object.
+ * @property {number} eventPhase The current event phase.
+ * @property {EventTarget|null} currentTarget The current event target.
+ * @property {boolean} canceled The flag to prevent default.
+ * @property {boolean} stopped The flag to stop propagation.
+ * @property {boolean} immediateStopped The flag to stop propagation immediately.
+ * @property {Function|null} passiveListener The listener if the current listener is passive. Otherwise this is null.
+ * @property {number} timeStamp The unix time.
+ * @private
+ */
+
+/**
+ * Private data for event wrappers.
+ * @type {WeakMap<Event, PrivateData>}
+ * @private
+ */
+const privateData = new WeakMap();
+
+/**
+ * Cache for wrapper classes.
+ * @type {WeakMap<Object, Function>}
+ * @private
+ */
+const wrappers = new WeakMap();
+
+/**
+ * Get private data.
+ * @param {Event} event The event object to get private data.
+ * @returns {PrivateData} The private data of the event.
+ * @private
+ */
+function pd(event) {
+    const retv = privateData.get(event);
+    console.assert(
+        retv != null,
+        "'this' is expected an Event object, but got",
+        event
+    );
+    return retv
+}
+
+/**
+ * https://dom.spec.whatwg.org/#set-the-canceled-flag
+ * @param data {PrivateData} private data.
+ */
+function setCancelFlag(data) {
+    if (data.passiveListener != null) {
+        if (
+            typeof console !== "undefined" &&
+            typeof console.error === "function"
+        ) {
+            console.error(
+                "Unable to preventDefault inside passive event listener invocation.",
+                data.passiveListener
+            );
+        }
+        return
+    }
+    if (!data.event.cancelable) {
+        return
+    }
+
+    data.canceled = true;
+    if (typeof data.event.preventDefault === "function") {
+        data.event.preventDefault();
+    }
+}
+
+/**
+ * @see https://dom.spec.whatwg.org/#interface-event
+ * @private
+ */
+/**
+ * The event wrapper.
+ * @constructor
+ * @param {EventTarget} eventTarget The event target of this dispatching.
+ * @param {Event|{type:string}} event The original event to wrap.
+ */
+function Event(eventTarget, event) {
+    privateData.set(this, {
+        eventTarget,
+        event,
+        eventPhase: 2,
+        currentTarget: eventTarget,
+        canceled: false,
+        stopped: false,
+        immediateStopped: false,
+        passiveListener: null,
+        timeStamp: event.timeStamp || Date.now(),
+    });
+
+    // https://heycam.github.io/webidl/#Unforgeable
+    Object.defineProperty(this, "isTrusted", { value: false, enumerable: true });
+
+    // Define accessors
+    const keys = Object.keys(event);
+    for (let i = 0; i < keys.length; ++i) {
+        const key = keys[i];
+        if (!(key in this)) {
+            Object.defineProperty(this, key, defineRedirectDescriptor(key));
+        }
+    }
+}
+
+// Should be enumerable, but class methods are not enumerable.
+Event.prototype = {
+    /**
+     * The type of this event.
+     * @type {string}
+     */
+    get type() {
+        return pd(this).event.type
+    },
+
+    /**
+     * The target of this event.
+     * @type {EventTarget}
+     */
+    get target() {
+        return pd(this).eventTarget
+    },
+
+    /**
+     * The target of this event.
+     * @type {EventTarget}
+     */
+    get currentTarget() {
+        return pd(this).currentTarget
+    },
+
+    /**
+     * @returns {EventTarget[]} The composed path of this event.
+     */
+    composedPath() {
+        const currentTarget = pd(this).currentTarget;
+        if (currentTarget == null) {
+            return []
+        }
+        return [currentTarget]
+    },
+
+    /**
+     * Constant of NONE.
+     * @type {number}
+     */
+    get NONE() {
+        return 0
+    },
+
+    /**
+     * Constant of CAPTURING_PHASE.
+     * @type {number}
+     */
+    get CAPTURING_PHASE() {
+        return 1
+    },
+
+    /**
+     * Constant of AT_TARGET.
+     * @type {number}
+     */
+    get AT_TARGET() {
+        return 2
+    },
+
+    /**
+     * Constant of BUBBLING_PHASE.
+     * @type {number}
+     */
+    get BUBBLING_PHASE() {
+        return 3
+    },
+
+    /**
+     * The target of this event.
+     * @type {number}
+     */
+    get eventPhase() {
+        return pd(this).eventPhase
+    },
+
+    /**
+     * Stop event bubbling.
+     * @returns {void}
+     */
+    stopPropagation() {
+        const data = pd(this);
+
+        data.stopped = true;
+        if (typeof data.event.stopPropagation === "function") {
+            data.event.stopPropagation();
+        }
+    },
+
+    /**
+     * Stop event bubbling.
+     * @returns {void}
+     */
+    stopImmediatePropagation() {
+        const data = pd(this);
+
+        data.stopped = true;
+        data.immediateStopped = true;
+        if (typeof data.event.stopImmediatePropagation === "function") {
+            data.event.stopImmediatePropagation();
+        }
+    },
+
+    /**
+     * The flag to be bubbling.
+     * @type {boolean}
+     */
+    get bubbles() {
+        return Boolean(pd(this).event.bubbles)
+    },
+
+    /**
+     * The flag to be cancelable.
+     * @type {boolean}
+     */
+    get cancelable() {
+        return Boolean(pd(this).event.cancelable)
+    },
+
+    /**
+     * Cancel this event.
+     * @returns {void}
+     */
+    preventDefault() {
+        setCancelFlag(pd(this));
+    },
+
+    /**
+     * The flag to indicate cancellation state.
+     * @type {boolean}
+     */
+    get defaultPrevented() {
+        return pd(this).canceled
+    },
+
+    /**
+     * The flag to be composed.
+     * @type {boolean}
+     */
+    get composed() {
+        return Boolean(pd(this).event.composed)
+    },
+
+    /**
+     * The unix time of this event.
+     * @type {number}
+     */
+    get timeStamp() {
+        return pd(this).timeStamp
+    },
+
+    /**
+     * The target of this event.
+     * @type {EventTarget}
+     * @deprecated
+     */
+    get srcElement() {
+        return pd(this).eventTarget
+    },
+
+    /**
+     * The flag to stop event bubbling.
+     * @type {boolean}
+     * @deprecated
+     */
+    get cancelBubble() {
+        return pd(this).stopped
+    },
+    set cancelBubble(value) {
+        if (!value) {
+            return
+        }
+        const data = pd(this);
+
+        data.stopped = true;
+        if (typeof data.event.cancelBubble === "boolean") {
+            data.event.cancelBubble = true;
+        }
+    },
+
+    /**
+     * The flag to indicate cancellation state.
+     * @type {boolean}
+     * @deprecated
+     */
+    get returnValue() {
+        return !pd(this).canceled
+    },
+    set returnValue(value) {
+        if (!value) {
+            setCancelFlag(pd(this));
+        }
+    },
+
+    /**
+     * Initialize this event object. But do nothing under event dispatching.
+     * @param {string} type The event type.
+     * @param {boolean} [bubbles=false] The flag to be possible to bubble up.
+     * @param {boolean} [cancelable=false] The flag to be possible to cancel.
+     * @deprecated
+     */
+    initEvent() {
+        // Do nothing.
+    },
+};
+
+// `constructor` is not enumerable.
+Object.defineProperty(Event.prototype, "constructor", {
+    value: Event,
+    configurable: true,
+    writable: true,
+});
+
+// Ensure `event instanceof window.Event` is `true`.
+if (typeof window !== "undefined" && typeof window.Event !== "undefined") {
+    Object.setPrototypeOf(Event.prototype, window.Event.prototype);
+
+    // Make association for wrappers.
+    wrappers.set(window.Event.prototype, Event);
+}
+
+/**
+ * Get the property descriptor to redirect a given property.
+ * @param {string} key Property name to define property descriptor.
+ * @returns {PropertyDescriptor} The property descriptor to redirect the property.
+ * @private
+ */
+function defineRedirectDescriptor(key) {
+    return {
+        get() {
+            return pd(this).event[key]
+        },
+        set(value) {
+            pd(this).event[key] = value;
+        },
+        configurable: true,
+        enumerable: true,
+    }
+}
+
+/**
+ * Get the property descriptor to call a given method property.
+ * @param {string} key Property name to define property descriptor.
+ * @returns {PropertyDescriptor} The property descriptor to call the method property.
+ * @private
+ */
+function defineCallDescriptor(key) {
+    return {
+        value() {
+            const event = pd(this).event;
+            return event[key].apply(event, arguments)
+        },
+        configurable: true,
+        enumerable: true,
+    }
+}
+
+/**
+ * Define new wrapper class.
+ * @param {Function} BaseEvent The base wrapper class.
+ * @param {Object} proto The prototype of the original event.
+ * @returns {Function} The defined wrapper class.
+ * @private
+ */
+function defineWrapper(BaseEvent, proto) {
+    const keys = Object.keys(proto);
+    if (keys.length === 0) {
+        return BaseEvent
+    }
+
+    /** CustomEvent */
+    function CustomEvent(eventTarget, event) {
+        BaseEvent.call(this, eventTarget, event);
+    }
+
+    CustomEvent.prototype = Object.create(BaseEvent.prototype, {
+        constructor: { value: CustomEvent, configurable: true, writable: true },
+    });
+
+    // Define accessors.
+    for (let i = 0; i < keys.length; ++i) {
+        const key = keys[i];
+        if (!(key in BaseEvent.prototype)) {
+            const descriptor = Object.getOwnPropertyDescriptor(proto, key);
+            const isFunc = typeof descriptor.value === "function";
+            Object.defineProperty(
+                CustomEvent.prototype,
+                key,
+                isFunc
+                    ? defineCallDescriptor(key)
+                    : defineRedirectDescriptor(key)
+            );
+        }
+    }
+
+    return CustomEvent
+}
+
+/**
+ * Get the wrapper class of a given prototype.
+ * @param {Object} proto The prototype of the original event to get its wrapper.
+ * @returns {Function} The wrapper class.
+ * @private
+ */
+function getWrapper(proto) {
+    if (proto == null || proto === Object.prototype) {
+        return Event
+    }
+
+    let wrapper = wrappers.get(proto);
+    if (wrapper == null) {
+        wrapper = defineWrapper(getWrapper(Object.getPrototypeOf(proto)), proto);
+        wrappers.set(proto, wrapper);
+    }
+    return wrapper
+}
+
+/**
+ * Wrap a given event to management a dispatching.
+ * @param {EventTarget} eventTarget The event target of this dispatching.
+ * @param {Object} event The event to wrap.
+ * @returns {Event} The wrapper instance.
+ * @private
+ */
+function wrapEvent(eventTarget, event) {
+    const Wrapper = getWrapper(Object.getPrototypeOf(event));
+    return new Wrapper(eventTarget, event)
+}
+
+/**
+ * Get the immediateStopped flag of a given event.
+ * @param {Event} event The event to get.
+ * @returns {boolean} The flag to stop propagation immediately.
+ * @private
+ */
+function isStopped(event) {
+    return pd(event).immediateStopped
+}
+
+/**
+ * Set the current event phase of a given event.
+ * @param {Event} event The event to set current target.
+ * @param {number} eventPhase New event phase.
+ * @returns {void}
+ * @private
+ */
+function setEventPhase(event, eventPhase) {
+    pd(event).eventPhase = eventPhase;
+}
+
+/**
+ * Set the current target of a given event.
+ * @param {Event} event The event to set current target.
+ * @param {EventTarget|null} currentTarget New current target.
+ * @returns {void}
+ * @private
+ */
+function setCurrentTarget(event, currentTarget) {
+    pd(event).currentTarget = currentTarget;
+}
+
+/**
+ * Set a passive listener of a given event.
+ * @param {Event} event The event to set current target.
+ * @param {Function|null} passiveListener New passive listener.
+ * @returns {void}
+ * @private
+ */
+function setPassiveListener(event, passiveListener) {
+    pd(event).passiveListener = passiveListener;
+}
+
+/**
+ * @typedef {object} ListenerNode
+ * @property {Function} listener
+ * @property {1|2|3} listenerType
+ * @property {boolean} passive
+ * @property {boolean} once
+ * @property {ListenerNode|null} next
+ * @private
+ */
+
+/**
+ * @type {WeakMap<object, Map<string, ListenerNode>>}
+ * @private
+ */
+const listenersMap = new WeakMap();
+
+// Listener types
+const CAPTURE = 1;
+const BUBBLE = 2;
+const ATTRIBUTE = 3;
+
+/**
+ * Check whether a given value is an object or not.
+ * @param {any} x The value to check.
+ * @returns {boolean} `true` if the value is an object.
+ */
+function isObject(x) {
+    return x !== null && typeof x === "object" //eslint-disable-line no-restricted-syntax
+}
+
+/**
+ * Get listeners.
+ * @param {EventTarget} eventTarget The event target to get.
+ * @returns {Map<string, ListenerNode>} The listeners.
+ * @private
+ */
+function getListeners(eventTarget) {
+    const listeners = listenersMap.get(eventTarget);
+    if (listeners == null) {
+        throw new TypeError(
+            "'this' is expected an EventTarget object, but got another value."
+        )
+    }
+    return listeners
+}
+
+/**
+ * Get the property descriptor for the event attribute of a given event.
+ * @param {string} eventName The event name to get property descriptor.
+ * @returns {PropertyDescriptor} The property descriptor.
+ * @private
+ */
+function defineEventAttributeDescriptor(eventName) {
+    return {
+        get() {
+            const listeners = getListeners(this);
+            let node = listeners.get(eventName);
+            while (node != null) {
+                if (node.listenerType === ATTRIBUTE) {
+                    return node.listener
+                }
+                node = node.next;
+            }
+            return null
+        },
+
+        set(listener) {
+            if (typeof listener !== "function" && !isObject(listener)) {
+                listener = null; // eslint-disable-line no-param-reassign
+            }
+            const listeners = getListeners(this);
+
+            // Traverse to the tail while removing old value.
+            let prev = null;
+            let node = listeners.get(eventName);
+            while (node != null) {
+                if (node.listenerType === ATTRIBUTE) {
+                    // Remove old value.
+                    if (prev !== null) {
+                        prev.next = node.next;
+                    } else if (node.next !== null) {
+                        listeners.set(eventName, node.next);
+                    } else {
+                        listeners.delete(eventName);
+                    }
+                } else {
+                    prev = node;
+                }
+
+                node = node.next;
+            }
+
+            // Add new value.
+            if (listener !== null) {
+                const newNode = {
+                    listener,
+                    listenerType: ATTRIBUTE,
+                    passive: false,
+                    once: false,
+                    next: null,
+                };
+                if (prev === null) {
+                    listeners.set(eventName, newNode);
+                } else {
+                    prev.next = newNode;
+                }
+            }
+        },
+        configurable: true,
+        enumerable: true,
+    }
+}
+
+/**
+ * Define an event attribute (e.g. `eventTarget.onclick`).
+ * @param {Object} eventTargetPrototype The event target prototype to define an event attrbite.
+ * @param {string} eventName The event name to define.
+ * @returns {void}
+ */
+function defineEventAttribute(eventTargetPrototype, eventName) {
+    Object.defineProperty(
+        eventTargetPrototype,
+        `on${eventName}`,
+        defineEventAttributeDescriptor(eventName)
+    );
+}
+
+/**
+ * Define a custom EventTarget with event attributes.
+ * @param {string[]} eventNames Event names for event attributes.
+ * @returns {EventTarget} The custom EventTarget.
+ * @private
+ */
+function defineCustomEventTarget(eventNames) {
+    /** CustomEventTarget */
+    function CustomEventTarget() {
+        EventTarget.call(this);
+    }
+
+    CustomEventTarget.prototype = Object.create(EventTarget.prototype, {
+        constructor: {
+            value: CustomEventTarget,
+            configurable: true,
+            writable: true,
+        },
+    });
+
+    for (let i = 0; i < eventNames.length; ++i) {
+        defineEventAttribute(CustomEventTarget.prototype, eventNames[i]);
+    }
+
+    return CustomEventTarget
+}
+
+/**
+ * EventTarget.
+ *
+ * - This is constructor if no arguments.
+ * - This is a function which returns a CustomEventTarget constructor if there are arguments.
+ *
+ * For example:
+ *
+ *     class A extends EventTarget {}
+ *     class B extends EventTarget("message") {}
+ *     class C extends EventTarget("message", "error") {}
+ *     class D extends EventTarget(["message", "error"]) {}
+ */
+function EventTarget() {
+    /*eslint-disable consistent-return */
+    if (this instanceof EventTarget) {
+        listenersMap.set(this, new Map());
+        return
+    }
+    if (arguments.length === 1 && Array.isArray(arguments[0])) {
+        return defineCustomEventTarget(arguments[0])
+    }
+    if (arguments.length > 0) {
+        const types = new Array(arguments.length);
+        for (let i = 0; i < arguments.length; ++i) {
+            types[i] = arguments[i];
+        }
+        return defineCustomEventTarget(types)
+    }
+    throw new TypeError("Cannot call a class as a function")
+    /*eslint-enable consistent-return */
+}
+
+// Should be enumerable, but class methods are not enumerable.
+EventTarget.prototype = {
+    /**
+     * Add a given listener to this event target.
+     * @param {string} eventName The event name to add.
+     * @param {Function} listener The listener to add.
+     * @param {boolean|{capture?:boolean,passive?:boolean,once?:boolean}} [options] The options for this listener.
+     * @returns {void}
+     */
+    addEventListener(eventName, listener, options) {
+        if (listener == null) {
+            return
+        }
+        if (typeof listener !== "function" && !isObject(listener)) {
+            throw new TypeError("'listener' should be a function or an object.")
+        }
+
+        const listeners = getListeners(this);
+        const optionsIsObj = isObject(options);
+        const capture = optionsIsObj
+            ? Boolean(options.capture)
+            : Boolean(options);
+        const listenerType = capture ? CAPTURE : BUBBLE;
+        const newNode = {
+            listener,
+            listenerType,
+            passive: optionsIsObj && Boolean(options.passive),
+            once: optionsIsObj && Boolean(options.once),
+            next: null,
+        };
+
+        // Set it as the first node if the first node is null.
+        let node = listeners.get(eventName);
+        if (node === undefined) {
+            listeners.set(eventName, newNode);
+            return
+        }
+
+        // Traverse to the tail while checking duplication..
+        let prev = null;
+        while (node != null) {
+            if (
+                node.listener === listener &&
+                node.listenerType === listenerType
+            ) {
+                // Should ignore duplication.
+                return
+            }
+            prev = node;
+            node = node.next;
+        }
+
+        // Add it.
+        prev.next = newNode;
+    },
+
+    /**
+     * Remove a given listener from this event target.
+     * @param {string} eventName The event name to remove.
+     * @param {Function} listener The listener to remove.
+     * @param {boolean|{capture?:boolean,passive?:boolean,once?:boolean}} [options] The options for this listener.
+     * @returns {void}
+     */
+    removeEventListener(eventName, listener, options) {
+        if (listener == null) {
+            return
+        }
+
+        const listeners = getListeners(this);
+        const capture = isObject(options)
+            ? Boolean(options.capture)
+            : Boolean(options);
+        const listenerType = capture ? CAPTURE : BUBBLE;
+
+        let prev = null;
+        let node = listeners.get(eventName);
+        while (node != null) {
+            if (
+                node.listener === listener &&
+                node.listenerType === listenerType
+            ) {
+                if (prev !== null) {
+                    prev.next = node.next;
+                } else if (node.next !== null) {
+                    listeners.set(eventName, node.next);
+                } else {
+                    listeners.delete(eventName);
+                }
+                return
+            }
+
+            prev = node;
+            node = node.next;
+        }
+    },
+
+    /**
+     * Dispatch a given event.
+     * @param {Event|{type:string}} event The event to dispatch.
+     * @returns {boolean} `false` if canceled.
+     */
+    dispatchEvent(event) {
+        if (event == null || typeof event.type !== "string") {
+            throw new TypeError('"event.type" should be a string.')
+        }
+
+        // If listeners aren't registered, terminate.
+        const listeners = getListeners(this);
+        const eventName = event.type;
+        let node = listeners.get(eventName);
+        if (node == null) {
+            return true
+        }
+
+        // Since we cannot rewrite several properties, so wrap object.
+        const wrappedEvent = wrapEvent(this, event);
+
+        // This doesn't process capturing phase and bubbling phase.
+        // This isn't participating in a tree.
+        let prev = null;
+        while (node != null) {
+            // Remove this listener if it's once
+            if (node.once) {
+                if (prev !== null) {
+                    prev.next = node.next;
+                } else if (node.next !== null) {
+                    listeners.set(eventName, node.next);
+                } else {
+                    listeners.delete(eventName);
+                }
+            } else {
+                prev = node;
+            }
+
+            // Call this listener
+            setPassiveListener(
+                wrappedEvent,
+                node.passive ? node.listener : null
+            );
+            if (typeof node.listener === "function") {
+                try {
+                    node.listener.call(this, wrappedEvent);
+                } catch (err) {
+                    if (
+                        typeof console !== "undefined" &&
+                        typeof console.error === "function"
+                    ) {
+                        console.error(err);
+                    }
+                }
+            } else if (
+                node.listenerType !== ATTRIBUTE &&
+                typeof node.listener.handleEvent === "function"
+            ) {
+                node.listener.handleEvent(wrappedEvent);
+            }
+
+            // Break if `event.stopImmediatePropagation` was called.
+            if (isStopped(wrappedEvent)) {
+                break
+            }
+
+            node = node.next;
+        }
+        setPassiveListener(wrappedEvent, null);
+        setEventPhase(wrappedEvent, 0);
+        setCurrentTarget(wrappedEvent, null);
+
+        return !wrappedEvent.defaultPrevented
+    },
+};
+
+// `constructor` is not enumerable.
+Object.defineProperty(EventTarget.prototype, "constructor", {
+    value: EventTarget,
+    configurable: true,
+    writable: true,
+});
+
+// Ensure `eventTarget instanceof window.EventTarget` is `true`.
+if (
+    typeof window !== "undefined" &&
+    typeof window.EventTarget !== "undefined"
+) {
+    Object.setPrototypeOf(EventTarget.prototype, window.EventTarget.prototype);
+}
+
+exports.defineEventAttribute = defineEventAttribute;
+exports.EventTarget = EventTarget;
+exports["default"] = EventTarget;
+
+module.exports = EventTarget
+module.exports.EventTarget = module.exports["default"] = EventTarget
+module.exports.defineEventAttribute = defineEventAttribute
+//# sourceMappingURL=event-target-shim.js.map
+
+
+/***/ }),
+
 /***/ 7030:
 /***/ ((module) => {
 
@@ -16310,6 +14699,30 @@ var Writable = (__nccwpck_require__(2781).Writable);
 var assert = __nccwpck_require__(9491);
 var debug = __nccwpck_require__(1133);
 
+// Whether to use the native URL object or the legacy url module
+var useNativeURL = false;
+try {
+  assert(new URL());
+}
+catch (error) {
+  useNativeURL = error.code === "ERR_INVALID_URL";
+}
+
+// URL fields to preserve in copy operations
+var preservedUrlFields = [
+  "auth",
+  "host",
+  "hostname",
+  "href",
+  "path",
+  "pathname",
+  "port",
+  "protocol",
+  "query",
+  "search",
+  "hash",
+];
+
 // Create handlers that pass events from native requests
 var events = ["abort", "aborted", "connect", "error", "socket", "timeout"];
 var eventHandlers = Object.create(null);
@@ -16319,19 +14732,20 @@ events.forEach(function (event) {
   };
 });
 
+// Error types with codes
 var InvalidUrlError = createErrorType(
   "ERR_INVALID_URL",
   "Invalid URL",
   TypeError
 );
-// Error types with codes
 var RedirectionError = createErrorType(
   "ERR_FR_REDIRECTION_FAILURE",
   "Redirected request failed"
 );
 var TooManyRedirectsError = createErrorType(
   "ERR_FR_TOO_MANY_REDIRECTS",
-  "Maximum number of redirects exceeded"
+  "Maximum number of redirects exceeded",
+  RedirectionError
 );
 var MaxBodyLengthExceededError = createErrorType(
   "ERR_FR_MAX_BODY_LENGTH_EXCEEDED",
@@ -16341,6 +14755,9 @@ var WriteAfterEndError = createErrorType(
   "ERR_STREAM_WRITE_AFTER_END",
   "write after end"
 );
+
+// istanbul ignore next
+var destroy = Writable.prototype.destroy || noop;
 
 // An HTTP(S) request that can be redirected
 function RedirectableRequest(options, responseCallback) {
@@ -16363,7 +14780,13 @@ function RedirectableRequest(options, responseCallback) {
   // React to responses of native requests
   var self = this;
   this._onNativeResponse = function (response) {
-    self._processResponse(response);
+    try {
+      self._processResponse(response);
+    }
+    catch (cause) {
+      self.emit("error", cause instanceof RedirectionError ?
+        cause : new RedirectionError({ cause: cause }));
+    }
   };
 
   // Perform the first request
@@ -16372,8 +14795,15 @@ function RedirectableRequest(options, responseCallback) {
 RedirectableRequest.prototype = Object.create(Writable.prototype);
 
 RedirectableRequest.prototype.abort = function () {
-  abortRequest(this._currentRequest);
+  destroyRequest(this._currentRequest);
+  this._currentRequest.abort();
   this.emit("abort");
+};
+
+RedirectableRequest.prototype.destroy = function (error) {
+  destroyRequest(this._currentRequest, error);
+  destroy.call(this, error);
+  return this;
 };
 
 // Writes buffered data to the current native request
@@ -16488,6 +14918,7 @@ RedirectableRequest.prototype.setTimeout = function (msecs, callback) {
     self.removeListener("abort", clearTimer);
     self.removeListener("error", clearTimer);
     self.removeListener("response", clearTimer);
+    self.removeListener("close", clearTimer);
     if (callback) {
       self.removeListener("timeout", callback);
     }
@@ -16514,6 +14945,7 @@ RedirectableRequest.prototype.setTimeout = function (msecs, callback) {
   this.on("abort", clearTimer);
   this.on("error", clearTimer);
   this.on("response", clearTimer);
+  this.on("close", clearTimer);
 
   return this;
 };
@@ -16572,8 +15004,7 @@ RedirectableRequest.prototype._performRequest = function () {
   var protocol = this._options.protocol;
   var nativeProtocol = this._options.nativeProtocols[protocol];
   if (!nativeProtocol) {
-    this.emit("error", new TypeError("Unsupported protocol " + protocol));
-    return;
+    throw new TypeError("Unsupported protocol " + protocol);
   }
 
   // If specified, use the agent corresponding to the protocol
@@ -16665,15 +15096,14 @@ RedirectableRequest.prototype._processResponse = function (response) {
   }
 
   // The response is a redirect, so abort the current request
-  abortRequest(this._currentRequest);
+  destroyRequest(this._currentRequest);
   // Discard the remainder of the response to avoid waiting for data
   response.destroy();
 
   // RFC7231§6.4: A client SHOULD detect and intervene
   // in cyclical redirections (i.e., "infinite" redirection loops).
   if (++this._redirectCount > this._options.maxRedirects) {
-    this.emit("error", new TooManyRedirectsError());
-    return;
+    throw new TooManyRedirectsError();
   }
 
   // Store the request headers if applicable
@@ -16707,34 +15137,24 @@ RedirectableRequest.prototype._processResponse = function (response) {
   var currentHostHeader = removeMatchingHeaders(/^host$/i, this._options.headers);
 
   // If the redirect is relative, carry over the host of the last request
-  var currentUrlParts = url.parse(this._currentUrl);
+  var currentUrlParts = parseUrl(this._currentUrl);
   var currentHost = currentHostHeader || currentUrlParts.host;
   var currentUrl = /^\w+:/.test(location) ? this._currentUrl :
     url.format(Object.assign(currentUrlParts, { host: currentHost }));
 
-  // Determine the URL of the redirection
-  var redirectUrl;
-  try {
-    redirectUrl = url.resolve(currentUrl, location);
-  }
-  catch (cause) {
-    this.emit("error", new RedirectionError({ cause: cause }));
-    return;
-  }
-
   // Create the redirected request
-  debug("redirecting to", redirectUrl);
+  var redirectUrl = resolveUrl(location, currentUrl);
+  debug("redirecting to", redirectUrl.href);
   this._isRedirect = true;
-  var redirectUrlParts = url.parse(redirectUrl);
-  Object.assign(this._options, redirectUrlParts);
+  spreadUrlObject(redirectUrl, this._options);
 
   // Drop confidential headers when redirecting to a less secure protocol
   // or to a different domain that is not a superdomain
-  if (redirectUrlParts.protocol !== currentUrlParts.protocol &&
-     redirectUrlParts.protocol !== "https:" ||
-     redirectUrlParts.host !== currentHost &&
-     !isSubdomain(redirectUrlParts.host, currentHost)) {
-    removeMatchingHeaders(/^(?:authorization|cookie)$/i, this._options.headers);
+  if (redirectUrl.protocol !== currentUrlParts.protocol &&
+     redirectUrl.protocol !== "https:" ||
+     redirectUrl.host !== currentHost &&
+     !isSubdomain(redirectUrl.host, currentHost)) {
+    removeMatchingHeaders(/^(?:(?:proxy-)?authorization|cookie)$/i, this._options.headers);
   }
 
   // Evaluate the beforeRedirect callback
@@ -16748,23 +15168,12 @@ RedirectableRequest.prototype._processResponse = function (response) {
       method: method,
       headers: requestHeaders,
     };
-    try {
-      beforeRedirect(this._options, responseDetails, requestDetails);
-    }
-    catch (err) {
-      this.emit("error", err);
-      return;
-    }
+    beforeRedirect(this._options, responseDetails, requestDetails);
     this._sanitizeOptions(this._options);
   }
 
   // Perform the redirected request
-  try {
-    this._performRequest();
-  }
-  catch (cause) {
-    this.emit("error", new RedirectionError({ cause: cause }));
-  }
+  this._performRequest();
 };
 
 // Wraps the key/value object of protocols with redirect functionality
@@ -16784,27 +15193,16 @@ function wrap(protocols) {
 
     // Executes a request, following redirects
     function request(input, options, callback) {
-      // Parse parameters
-      if (isString(input)) {
-        var parsed;
-        try {
-          parsed = urlToOptions(new URL(input));
-        }
-        catch (err) {
-          /* istanbul ignore next */
-          parsed = url.parse(input);
-        }
-        if (!isString(parsed.protocol)) {
-          throw new InvalidUrlError({ input });
-        }
-        input = parsed;
+      // Parse parameters, ensuring that input is an object
+      if (isURL(input)) {
+        input = spreadUrlObject(input);
       }
-      else if (URL && (input instanceof URL)) {
-        input = urlToOptions(input);
+      else if (isString(input)) {
+        input = spreadUrlObject(parseUrl(input));
       }
       else {
         callback = options;
-        options = input;
+        options = validateUrl(input);
         input = { protocol: protocol };
       }
       if (isFunction(options)) {
@@ -16843,27 +15241,57 @@ function wrap(protocols) {
   return exports;
 }
 
-/* istanbul ignore next */
 function noop() { /* empty */ }
 
-// from https://github.com/nodejs/node/blob/master/lib/internal/url.js
-function urlToOptions(urlObject) {
-  var options = {
-    protocol: urlObject.protocol,
-    hostname: urlObject.hostname.startsWith("[") ?
-      /* istanbul ignore next */
-      urlObject.hostname.slice(1, -1) :
-      urlObject.hostname,
-    hash: urlObject.hash,
-    search: urlObject.search,
-    pathname: urlObject.pathname,
-    path: urlObject.pathname + urlObject.search,
-    href: urlObject.href,
-  };
-  if (urlObject.port !== "") {
-    options.port = Number(urlObject.port);
+function parseUrl(input) {
+  var parsed;
+  /* istanbul ignore else */
+  if (useNativeURL) {
+    parsed = new URL(input);
   }
-  return options;
+  else {
+    // Ensure the URL is valid and absolute
+    parsed = validateUrl(url.parse(input));
+    if (!isString(parsed.protocol)) {
+      throw new InvalidUrlError({ input });
+    }
+  }
+  return parsed;
+}
+
+function resolveUrl(relative, base) {
+  /* istanbul ignore next */
+  return useNativeURL ? new URL(relative, base) : parseUrl(url.resolve(base, relative));
+}
+
+function validateUrl(input) {
+  if (/^\[/.test(input.hostname) && !/^\[[:0-9a-f]+\]$/i.test(input.hostname)) {
+    throw new InvalidUrlError({ input: input.href || input });
+  }
+  if (/^\[/.test(input.host) && !/^\[[:0-9a-f]+\](:\d+)?$/i.test(input.host)) {
+    throw new InvalidUrlError({ input: input.href || input });
+  }
+  return input;
+}
+
+function spreadUrlObject(urlObject, target) {
+  var spread = target || {};
+  for (var key of preservedUrlFields) {
+    spread[key] = urlObject[key];
+  }
+
+  // Fix IPv6 hostname
+  if (spread.hostname.startsWith("[")) {
+    spread.hostname = spread.hostname.slice(1, -1);
+  }
+  // Ensure port is a number
+  if (spread.port !== "") {
+    spread.port = Number(spread.port);
+  }
+  // Concatenate path
+  spread.path = spread.search ? spread.pathname + spread.search : spread.pathname;
+
+  return spread;
 }
 
 function removeMatchingHeaders(regex, headers) {
@@ -16889,17 +15317,25 @@ function createErrorType(code, message, baseClass) {
 
   // Attach constructor and set default properties
   CustomError.prototype = new (baseClass || Error)();
-  CustomError.prototype.constructor = CustomError;
-  CustomError.prototype.name = "Error [" + code + "]";
+  Object.defineProperties(CustomError.prototype, {
+    constructor: {
+      value: CustomError,
+      enumerable: false,
+    },
+    name: {
+      value: "Error [" + code + "]",
+      enumerable: false,
+    },
+  });
   return CustomError;
 }
 
-function abortRequest(request) {
+function destroyRequest(request, error) {
   for (var event of events) {
     request.removeListener(event, eventHandlers[event]);
   }
   request.on("error", noop);
-  request.abort();
+  request.destroy(error);
 }
 
 function isSubdomain(subdomain, domain) {
@@ -16918,6 +15354,10 @@ function isFunction(value) {
 
 function isBuffer(value) {
   return typeof value === "object" && ("length" in value);
+}
+
+function isURL(value) {
+  return URL && value instanceof URL;
 }
 
 // Exports
@@ -17447,389 +15887,6 @@ module.exports = function(dst, src) {
   });
 
   return dst;
-};
-
-
-/***/ }),
-
-/***/ 6863:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-module.exports = realpath
-realpath.realpath = realpath
-realpath.sync = realpathSync
-realpath.realpathSync = realpathSync
-realpath.monkeypatch = monkeypatch
-realpath.unmonkeypatch = unmonkeypatch
-
-var fs = __nccwpck_require__(7147)
-var origRealpath = fs.realpath
-var origRealpathSync = fs.realpathSync
-
-var version = process.version
-var ok = /^v[0-5]\./.test(version)
-var old = __nccwpck_require__(1734)
-
-function newError (er) {
-  return er && er.syscall === 'realpath' && (
-    er.code === 'ELOOP' ||
-    er.code === 'ENOMEM' ||
-    er.code === 'ENAMETOOLONG'
-  )
-}
-
-function realpath (p, cache, cb) {
-  if (ok) {
-    return origRealpath(p, cache, cb)
-  }
-
-  if (typeof cache === 'function') {
-    cb = cache
-    cache = null
-  }
-  origRealpath(p, cache, function (er, result) {
-    if (newError(er)) {
-      old.realpath(p, cache, cb)
-    } else {
-      cb(er, result)
-    }
-  })
-}
-
-function realpathSync (p, cache) {
-  if (ok) {
-    return origRealpathSync(p, cache)
-  }
-
-  try {
-    return origRealpathSync(p, cache)
-  } catch (er) {
-    if (newError(er)) {
-      return old.realpathSync(p, cache)
-    } else {
-      throw er
-    }
-  }
-}
-
-function monkeypatch () {
-  fs.realpath = realpath
-  fs.realpathSync = realpathSync
-}
-
-function unmonkeypatch () {
-  fs.realpath = origRealpath
-  fs.realpathSync = origRealpathSync
-}
-
-
-/***/ }),
-
-/***/ 1734:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-// Copyright Joyent, Inc. and other Node contributors.
-//
-// Permission is hereby granted, free of charge, to any person obtaining a
-// copy of this software and associated documentation files (the
-// "Software"), to deal in the Software without restriction, including
-// without limitation the rights to use, copy, modify, merge, publish,
-// distribute, sublicense, and/or sell copies of the Software, and to permit
-// persons to whom the Software is furnished to do so, subject to the
-// following conditions:
-//
-// The above copyright notice and this permission notice shall be included
-// in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-// USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-var pathModule = __nccwpck_require__(1017);
-var isWindows = process.platform === 'win32';
-var fs = __nccwpck_require__(7147);
-
-// JavaScript implementation of realpath, ported from node pre-v6
-
-var DEBUG = process.env.NODE_DEBUG && /fs/.test(process.env.NODE_DEBUG);
-
-function rethrow() {
-  // Only enable in debug mode. A backtrace uses ~1000 bytes of heap space and
-  // is fairly slow to generate.
-  var callback;
-  if (DEBUG) {
-    var backtrace = new Error;
-    callback = debugCallback;
-  } else
-    callback = missingCallback;
-
-  return callback;
-
-  function debugCallback(err) {
-    if (err) {
-      backtrace.message = err.message;
-      err = backtrace;
-      missingCallback(err);
-    }
-  }
-
-  function missingCallback(err) {
-    if (err) {
-      if (process.throwDeprecation)
-        throw err;  // Forgot a callback but don't know where? Use NODE_DEBUG=fs
-      else if (!process.noDeprecation) {
-        var msg = 'fs: missing callback ' + (err.stack || err.message);
-        if (process.traceDeprecation)
-          console.trace(msg);
-        else
-          console.error(msg);
-      }
-    }
-  }
-}
-
-function maybeCallback(cb) {
-  return typeof cb === 'function' ? cb : rethrow();
-}
-
-var normalize = pathModule.normalize;
-
-// Regexp that finds the next partion of a (partial) path
-// result is [base_with_slash, base], e.g. ['somedir/', 'somedir']
-if (isWindows) {
-  var nextPartRe = /(.*?)(?:[\/\\]+|$)/g;
-} else {
-  var nextPartRe = /(.*?)(?:[\/]+|$)/g;
-}
-
-// Regex to find the device root, including trailing slash. E.g. 'c:\\'.
-if (isWindows) {
-  var splitRootRe = /^(?:[a-zA-Z]:|[\\\/]{2}[^\\\/]+[\\\/][^\\\/]+)?[\\\/]*/;
-} else {
-  var splitRootRe = /^[\/]*/;
-}
-
-exports.realpathSync = function realpathSync(p, cache) {
-  // make p is absolute
-  p = pathModule.resolve(p);
-
-  if (cache && Object.prototype.hasOwnProperty.call(cache, p)) {
-    return cache[p];
-  }
-
-  var original = p,
-      seenLinks = {},
-      knownHard = {};
-
-  // current character position in p
-  var pos;
-  // the partial path so far, including a trailing slash if any
-  var current;
-  // the partial path without a trailing slash (except when pointing at a root)
-  var base;
-  // the partial path scanned in the previous round, with slash
-  var previous;
-
-  start();
-
-  function start() {
-    // Skip over roots
-    var m = splitRootRe.exec(p);
-    pos = m[0].length;
-    current = m[0];
-    base = m[0];
-    previous = '';
-
-    // On windows, check that the root exists. On unix there is no need.
-    if (isWindows && !knownHard[base]) {
-      fs.lstatSync(base);
-      knownHard[base] = true;
-    }
-  }
-
-  // walk down the path, swapping out linked pathparts for their real
-  // values
-  // NB: p.length changes.
-  while (pos < p.length) {
-    // find the next part
-    nextPartRe.lastIndex = pos;
-    var result = nextPartRe.exec(p);
-    previous = current;
-    current += result[0];
-    base = previous + result[1];
-    pos = nextPartRe.lastIndex;
-
-    // continue if not a symlink
-    if (knownHard[base] || (cache && cache[base] === base)) {
-      continue;
-    }
-
-    var resolvedLink;
-    if (cache && Object.prototype.hasOwnProperty.call(cache, base)) {
-      // some known symbolic link.  no need to stat again.
-      resolvedLink = cache[base];
-    } else {
-      var stat = fs.lstatSync(base);
-      if (!stat.isSymbolicLink()) {
-        knownHard[base] = true;
-        if (cache) cache[base] = base;
-        continue;
-      }
-
-      // read the link if it wasn't read before
-      // dev/ino always return 0 on windows, so skip the check.
-      var linkTarget = null;
-      if (!isWindows) {
-        var id = stat.dev.toString(32) + ':' + stat.ino.toString(32);
-        if (seenLinks.hasOwnProperty(id)) {
-          linkTarget = seenLinks[id];
-        }
-      }
-      if (linkTarget === null) {
-        fs.statSync(base);
-        linkTarget = fs.readlinkSync(base);
-      }
-      resolvedLink = pathModule.resolve(previous, linkTarget);
-      // track this, if given a cache.
-      if (cache) cache[base] = resolvedLink;
-      if (!isWindows) seenLinks[id] = linkTarget;
-    }
-
-    // resolve the link, then start over
-    p = pathModule.resolve(resolvedLink, p.slice(pos));
-    start();
-  }
-
-  if (cache) cache[original] = p;
-
-  return p;
-};
-
-
-exports.realpath = function realpath(p, cache, cb) {
-  if (typeof cb !== 'function') {
-    cb = maybeCallback(cache);
-    cache = null;
-  }
-
-  // make p is absolute
-  p = pathModule.resolve(p);
-
-  if (cache && Object.prototype.hasOwnProperty.call(cache, p)) {
-    return process.nextTick(cb.bind(null, null, cache[p]));
-  }
-
-  var original = p,
-      seenLinks = {},
-      knownHard = {};
-
-  // current character position in p
-  var pos;
-  // the partial path so far, including a trailing slash if any
-  var current;
-  // the partial path without a trailing slash (except when pointing at a root)
-  var base;
-  // the partial path scanned in the previous round, with slash
-  var previous;
-
-  start();
-
-  function start() {
-    // Skip over roots
-    var m = splitRootRe.exec(p);
-    pos = m[0].length;
-    current = m[0];
-    base = m[0];
-    previous = '';
-
-    // On windows, check that the root exists. On unix there is no need.
-    if (isWindows && !knownHard[base]) {
-      fs.lstat(base, function(err) {
-        if (err) return cb(err);
-        knownHard[base] = true;
-        LOOP();
-      });
-    } else {
-      process.nextTick(LOOP);
-    }
-  }
-
-  // walk down the path, swapping out linked pathparts for their real
-  // values
-  function LOOP() {
-    // stop if scanned past end of path
-    if (pos >= p.length) {
-      if (cache) cache[original] = p;
-      return cb(null, p);
-    }
-
-    // find the next part
-    nextPartRe.lastIndex = pos;
-    var result = nextPartRe.exec(p);
-    previous = current;
-    current += result[0];
-    base = previous + result[1];
-    pos = nextPartRe.lastIndex;
-
-    // continue if not a symlink
-    if (knownHard[base] || (cache && cache[base] === base)) {
-      return process.nextTick(LOOP);
-    }
-
-    if (cache && Object.prototype.hasOwnProperty.call(cache, base)) {
-      // known symbolic link.  no need to stat again.
-      return gotResolvedLink(cache[base]);
-    }
-
-    return fs.lstat(base, gotStat);
-  }
-
-  function gotStat(err, stat) {
-    if (err) return cb(err);
-
-    // if not a symlink, skip to the next path part
-    if (!stat.isSymbolicLink()) {
-      knownHard[base] = true;
-      if (cache) cache[base] = base;
-      return process.nextTick(LOOP);
-    }
-
-    // stat & read the link if not read before
-    // call gotTarget as soon as the link target is known
-    // dev/ino always return 0 on windows, so skip the check.
-    if (!isWindows) {
-      var id = stat.dev.toString(32) + ':' + stat.ino.toString(32);
-      if (seenLinks.hasOwnProperty(id)) {
-        return gotTarget(null, seenLinks[id], base);
-      }
-    }
-    fs.stat(base, function(err) {
-      if (err) return cb(err);
-
-      fs.readlink(base, function(err, target) {
-        if (!isWindows) seenLinks[id] = target;
-        gotTarget(err, target);
-      });
-    });
-  }
-
-  function gotTarget(err, target, base) {
-    if (err) return cb(err);
-
-    var resolvedLink = pathModule.resolve(previous, target);
-    if (cache) cache[base] = resolvedLink;
-    gotResolvedLink(resolvedLink);
-  }
-
-  function gotResolvedLink(resolvedLink) {
-    // resolve the link, then start over
-    p = pathModule.resolve(resolvedLink, p.slice(pos));
-    start();
-  }
 };
 
 
@@ -18824,67 +16881,6 @@ module.exports = (flag, argv = process.argv) => {
 
 /***/ }),
 
-/***/ 2492:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-var wrappy = __nccwpck_require__(2940)
-var reqs = Object.create(null)
-var once = __nccwpck_require__(1223)
-
-module.exports = wrappy(inflight)
-
-function inflight (key, cb) {
-  if (reqs[key]) {
-    reqs[key].push(cb)
-    return null
-  } else {
-    reqs[key] = [cb]
-    return makeres(key)
-  }
-}
-
-function makeres (key) {
-  return once(function RES () {
-    var cbs = reqs[key]
-    var len = cbs.length
-    var args = slice(arguments)
-
-    // XXX It's somewhat ambiguous whether a new callback added in this
-    // pass should be queued for later execution if something in the
-    // list of callbacks throws, or if it should just be discarded.
-    // However, it's such an edge case that it hardly matters, and either
-    // choice is likely as surprising as the other.
-    // As it happens, we do go ahead and schedule it for later execution.
-    try {
-      for (var i = 0; i < len; i++) {
-        cbs[i].apply(null, args)
-      }
-    } finally {
-      if (cbs.length > len) {
-        // added more in the interim.
-        // de-zalgo, just in case, but don't call again.
-        cbs.splice(0, len)
-        process.nextTick(function () {
-          RES.apply(null, args)
-        })
-      } else {
-        delete reqs[key]
-      }
-    }
-  })
-}
-
-function slice (args) {
-  var length = args.length
-  var array = []
-
-  for (var i = 0; i < length; i++) array[i] = args[i]
-  return array
-}
-
-
-/***/ }),
-
 /***/ 4124:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
@@ -18931,6 +16927,42 @@ if (typeof Object.create === 'function') {
     }
   }
 }
+
+
+/***/ }),
+
+/***/ 1554:
+/***/ ((module) => {
+
+"use strict";
+
+
+const isStream = stream =>
+	stream !== null &&
+	typeof stream === 'object' &&
+	typeof stream.pipe === 'function';
+
+isStream.writable = stream =>
+	isStream(stream) &&
+	stream.writable !== false &&
+	typeof stream._write === 'function' &&
+	typeof stream._writableState === 'object';
+
+isStream.readable = stream =>
+	isStream(stream) &&
+	stream.readable !== false &&
+	typeof stream._read === 'function' &&
+	typeof stream._readableState === 'object';
+
+isStream.duplex = stream =>
+	isStream.writable(stream) &&
+	isStream.readable(stream);
+
+isStream.transform = stream =>
+	isStream.duplex(stream) &&
+	typeof stream._transform === 'function';
+
+module.exports = isStream;
 
 
 /***/ }),
@@ -21702,7 +19734,7 @@ module.exports = Hash;
 /***/ 6608:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
-var listCacheClear = __nccwpck_require__(9792),
+var listCacheClear = __nccwpck_require__(7580),
     listCacheDelete = __nccwpck_require__(7716),
     listCacheGet = __nccwpck_require__(5789),
     listCacheHas = __nccwpck_require__(9386),
@@ -23205,7 +21237,7 @@ module.exports = isPrototype;
 
 /***/ }),
 
-/***/ 9792:
+/***/ 7580:
 /***/ ((module) => {
 
 /**
@@ -25122,55 +23154,6 @@ module.exports = function(path, stripTrailing) {
 
 /***/ }),
 
-/***/ 1223:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-var wrappy = __nccwpck_require__(2940)
-module.exports = wrappy(once)
-module.exports.strict = wrappy(onceStrict)
-
-once.proto = once(function () {
-  Object.defineProperty(Function.prototype, 'once', {
-    value: function () {
-      return once(this)
-    },
-    configurable: true
-  })
-
-  Object.defineProperty(Function.prototype, 'onceStrict', {
-    value: function () {
-      return onceStrict(this)
-    },
-    configurable: true
-  })
-})
-
-function once (fn) {
-  var f = function () {
-    if (f.called) return f.value
-    f.called = true
-    return f.value = fn.apply(this, arguments)
-  }
-  f.called = false
-  return f
-}
-
-function onceStrict (fn) {
-  var f = function () {
-    if (f.called)
-      throw new Error(f.onceError)
-    f.called = true
-    return f.value = fn.apply(this, arguments)
-  }
-  var name = fn.name || 'Function wrapped with `once`'
-  f.onceError = name + " shouldn't be called more than once"
-  f.called = false
-  return f
-}
-
-
-/***/ }),
-
 /***/ 7810:
 /***/ ((module) => {
 
@@ -25220,6 +23203,15 @@ function nextTick(fn, arg1, arg2, arg3) {
   }
 }
 
+
+
+/***/ }),
+
+/***/ 5676:
+/***/ ((module) => {
+
+// for now just expose the builtin process global from node.js
+module.exports = global.process;
 
 
 /***/ }),
@@ -25358,131 +23350,732 @@ module.exports = typeof queueMicrotask === 'function' ? queueMicrotask : (fn) =>
 
 /***/ }),
 
-/***/ 7214:
-/***/ ((module) => {
+/***/ 289:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
 
 
-const codes = {};
+const { SymbolDispose } = __nccwpck_require__(9629)
+const { AbortError, codes } = __nccwpck_require__(529)
+const { isNodeStream, isWebStream, kControllerErrorFunction } = __nccwpck_require__(7981)
+const eos = __nccwpck_require__(6080)
+const { ERR_INVALID_ARG_TYPE } = codes
+let addAbortListener
 
-function createErrorType(code, message, Base) {
-  if (!Base) {
-    Base = Error
+// This method is inlined here for readable-stream
+// It also does not allow for signal to not exist on the stream
+// https://github.com/nodejs/node/pull/36061#discussion_r533718029
+const validateAbortSignal = (signal, name) => {
+  if (typeof signal !== 'object' || !('aborted' in signal)) {
+    throw new ERR_INVALID_ARG_TYPE(name, 'AbortSignal', signal)
   }
-
-  function getMessage (arg1, arg2, arg3) {
-    if (typeof message === 'string') {
-      return message
-    } else {
-      return message(arg1, arg2, arg3)
-    }
-  }
-
-  class NodeError extends Base {
-    constructor (arg1, arg2, arg3) {
-      super(getMessage(arg1, arg2, arg3));
-    }
-  }
-
-  NodeError.prototype.name = Base.name;
-  NodeError.prototype.code = code;
-
-  codes[code] = NodeError;
 }
-
-// https://github.com/nodejs/node/blob/v10.8.0/lib/internal/errors.js
-function oneOf(expected, thing) {
-  if (Array.isArray(expected)) {
-    const len = expected.length;
-    expected = expected.map((i) => String(i));
-    if (len > 2) {
-      return `one of ${thing} ${expected.slice(0, len - 1).join(', ')}, or ` +
-             expected[len - 1];
-    } else if (len === 2) {
-      return `one of ${thing} ${expected[0]} or ${expected[1]}`;
-    } else {
-      return `of ${thing} ${expected[0]}`;
-    }
+module.exports.addAbortSignal = function addAbortSignal(signal, stream) {
+  validateAbortSignal(signal, 'signal')
+  if (!isNodeStream(stream) && !isWebStream(stream)) {
+    throw new ERR_INVALID_ARG_TYPE('stream', ['ReadableStream', 'WritableStream', 'Stream'], stream)
+  }
+  return module.exports.addAbortSignalNoValidate(signal, stream)
+}
+module.exports.addAbortSignalNoValidate = function (signal, stream) {
+  if (typeof signal !== 'object' || !('aborted' in signal)) {
+    return stream
+  }
+  const onAbort = isNodeStream(stream)
+    ? () => {
+        stream.destroy(
+          new AbortError(undefined, {
+            cause: signal.reason
+          })
+        )
+      }
+    : () => {
+        stream[kControllerErrorFunction](
+          new AbortError(undefined, {
+            cause: signal.reason
+          })
+        )
+      }
+  if (signal.aborted) {
+    onAbort()
   } else {
-    return `of ${thing} ${String(expected)}`;
+    addAbortListener = addAbortListener || (__nccwpck_require__(6959).addAbortListener)
+    const disposable = addAbortListener(signal, onAbort)
+    eos(stream, disposable[SymbolDispose])
   }
+  return stream
 }
-
-// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/startsWith
-function startsWith(str, search, pos) {
-	return str.substr(!pos || pos < 0 ? 0 : +pos, search.length) === search;
-}
-
-// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/endsWith
-function endsWith(str, search, this_len) {
-	if (this_len === undefined || this_len > str.length) {
-		this_len = str.length;
-	}
-	return str.substring(this_len - search.length, this_len) === search;
-}
-
-// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/includes
-function includes(str, search, start) {
-  if (typeof start !== 'number') {
-    start = 0;
-  }
-
-  if (start + search.length > str.length) {
-    return false;
-  } else {
-    return str.indexOf(search, start) !== -1;
-  }
-}
-
-createErrorType('ERR_INVALID_OPT_VALUE', function (name, value) {
-  return 'The value "' + value + '" is invalid for option "' + name + '"'
-}, TypeError);
-createErrorType('ERR_INVALID_ARG_TYPE', function (name, expected, actual) {
-  // determiner: 'must be' or 'must not be'
-  let determiner;
-  if (typeof expected === 'string' && startsWith(expected, 'not ')) {
-    determiner = 'must not be';
-    expected = expected.replace(/^not /, '');
-  } else {
-    determiner = 'must be';
-  }
-
-  let msg;
-  if (endsWith(name, ' argument')) {
-    // For cases like 'first argument'
-    msg = `The ${name} ${determiner} ${oneOf(expected, 'type')}`;
-  } else {
-    const type = includes(name, '.') ? 'property' : 'argument';
-    msg = `The "${name}" ${type} ${determiner} ${oneOf(expected, 'type')}`;
-  }
-
-  msg += `. Received type ${typeof actual}`;
-  return msg;
-}, TypeError);
-createErrorType('ERR_STREAM_PUSH_AFTER_EOF', 'stream.push() after EOF');
-createErrorType('ERR_METHOD_NOT_IMPLEMENTED', function (name) {
-  return 'The ' + name + ' method is not implemented'
-});
-createErrorType('ERR_STREAM_PREMATURE_CLOSE', 'Premature close');
-createErrorType('ERR_STREAM_DESTROYED', function (name) {
-  return 'Cannot call ' + name + ' after a stream was destroyed';
-});
-createErrorType('ERR_MULTIPLE_CALLBACK', 'Callback called multiple times');
-createErrorType('ERR_STREAM_CANNOT_PIPE', 'Cannot pipe, not readable');
-createErrorType('ERR_STREAM_WRITE_AFTER_END', 'write after end');
-createErrorType('ERR_STREAM_NULL_VALUES', 'May not write null values to stream', TypeError);
-createErrorType('ERR_UNKNOWN_ENCODING', function (arg) {
-  return 'Unknown encoding: ' + arg
-}, TypeError);
-createErrorType('ERR_STREAM_UNSHIFT_AFTER_END_EVENT', 'stream.unshift() after end event');
-
-module.exports.q = codes;
 
 
 /***/ }),
 
-/***/ 1359:
+/***/ 6522:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+const { StringPrototypeSlice, SymbolIterator, TypedArrayPrototypeSet, Uint8Array } = __nccwpck_require__(9629)
+const { Buffer } = __nccwpck_require__(4300)
+const { inspect } = __nccwpck_require__(6959)
+module.exports = class BufferList {
+  constructor() {
+    this.head = null
+    this.tail = null
+    this.length = 0
+  }
+  push(v) {
+    const entry = {
+      data: v,
+      next: null
+    }
+    if (this.length > 0) this.tail.next = entry
+    else this.head = entry
+    this.tail = entry
+    ++this.length
+  }
+  unshift(v) {
+    const entry = {
+      data: v,
+      next: this.head
+    }
+    if (this.length === 0) this.tail = entry
+    this.head = entry
+    ++this.length
+  }
+  shift() {
+    if (this.length === 0) return
+    const ret = this.head.data
+    if (this.length === 1) this.head = this.tail = null
+    else this.head = this.head.next
+    --this.length
+    return ret
+  }
+  clear() {
+    this.head = this.tail = null
+    this.length = 0
+  }
+  join(s) {
+    if (this.length === 0) return ''
+    let p = this.head
+    let ret = '' + p.data
+    while ((p = p.next) !== null) ret += s + p.data
+    return ret
+  }
+  concat(n) {
+    if (this.length === 0) return Buffer.alloc(0)
+    const ret = Buffer.allocUnsafe(n >>> 0)
+    let p = this.head
+    let i = 0
+    while (p) {
+      TypedArrayPrototypeSet(ret, p.data, i)
+      i += p.data.length
+      p = p.next
+    }
+    return ret
+  }
+
+  // Consumes a specified amount of bytes or characters from the buffered data.
+  consume(n, hasStrings) {
+    const data = this.head.data
+    if (n < data.length) {
+      // `slice` is the same for buffers and strings.
+      const slice = data.slice(0, n)
+      this.head.data = data.slice(n)
+      return slice
+    }
+    if (n === data.length) {
+      // First chunk is a perfect match.
+      return this.shift()
+    }
+    // Result spans more than one buffer.
+    return hasStrings ? this._getString(n) : this._getBuffer(n)
+  }
+  first() {
+    return this.head.data
+  }
+  *[SymbolIterator]() {
+    for (let p = this.head; p; p = p.next) {
+      yield p.data
+    }
+  }
+
+  // Consumes a specified amount of characters from the buffered data.
+  _getString(n) {
+    let ret = ''
+    let p = this.head
+    let c = 0
+    do {
+      const str = p.data
+      if (n > str.length) {
+        ret += str
+        n -= str.length
+      } else {
+        if (n === str.length) {
+          ret += str
+          ++c
+          if (p.next) this.head = p.next
+          else this.head = this.tail = null
+        } else {
+          ret += StringPrototypeSlice(str, 0, n)
+          this.head = p
+          p.data = StringPrototypeSlice(str, n)
+        }
+        break
+      }
+      ++c
+    } while ((p = p.next) !== null)
+    this.length -= c
+    return ret
+  }
+
+  // Consumes a specified amount of bytes from the buffered data.
+  _getBuffer(n) {
+    const ret = Buffer.allocUnsafe(n)
+    const retLen = n
+    let p = this.head
+    let c = 0
+    do {
+      const buf = p.data
+      if (n > buf.length) {
+        TypedArrayPrototypeSet(ret, buf, retLen - n)
+        n -= buf.length
+      } else {
+        if (n === buf.length) {
+          TypedArrayPrototypeSet(ret, buf, retLen - n)
+          ++c
+          if (p.next) this.head = p.next
+          else this.head = this.tail = null
+        } else {
+          TypedArrayPrototypeSet(ret, new Uint8Array(buf.buffer, buf.byteOffset, n), retLen - n)
+          this.head = p
+          p.data = buf.slice(n)
+        }
+        break
+      }
+      ++c
+    } while ((p = p.next) !== null)
+    this.length -= c
+    return ret
+  }
+
+  // Make sure the linked list only shows the minimal necessary information.
+  [Symbol.for('nodejs.util.inspect.custom')](_, options) {
+    return inspect(this, {
+      ...options,
+      // Only inspect one level.
+      depth: 0,
+      // It should not recurse.
+      customInspect: false
+    })
+  }
+}
+
+
+/***/ }),
+
+/***/ 3129:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+const { pipeline } = __nccwpck_require__(6989)
+const Duplex = __nccwpck_require__(2613)
+const { destroyer } = __nccwpck_require__(7049)
+const {
+  isNodeStream,
+  isReadable,
+  isWritable,
+  isWebStream,
+  isTransformStream,
+  isWritableStream,
+  isReadableStream
+} = __nccwpck_require__(7981)
+const {
+  AbortError,
+  codes: { ERR_INVALID_ARG_VALUE, ERR_MISSING_ARGS }
+} = __nccwpck_require__(529)
+const eos = __nccwpck_require__(6080)
+module.exports = function compose(...streams) {
+  if (streams.length === 0) {
+    throw new ERR_MISSING_ARGS('streams')
+  }
+  if (streams.length === 1) {
+    return Duplex.from(streams[0])
+  }
+  const orgStreams = [...streams]
+  if (typeof streams[0] === 'function') {
+    streams[0] = Duplex.from(streams[0])
+  }
+  if (typeof streams[streams.length - 1] === 'function') {
+    const idx = streams.length - 1
+    streams[idx] = Duplex.from(streams[idx])
+  }
+  for (let n = 0; n < streams.length; ++n) {
+    if (!isNodeStream(streams[n]) && !isWebStream(streams[n])) {
+      // TODO(ronag): Add checks for non streams.
+      continue
+    }
+    if (
+      n < streams.length - 1 &&
+      !(isReadable(streams[n]) || isReadableStream(streams[n]) || isTransformStream(streams[n]))
+    ) {
+      throw new ERR_INVALID_ARG_VALUE(`streams[${n}]`, orgStreams[n], 'must be readable')
+    }
+    if (n > 0 && !(isWritable(streams[n]) || isWritableStream(streams[n]) || isTransformStream(streams[n]))) {
+      throw new ERR_INVALID_ARG_VALUE(`streams[${n}]`, orgStreams[n], 'must be writable')
+    }
+  }
+  let ondrain
+  let onfinish
+  let onreadable
+  let onclose
+  let d
+  function onfinished(err) {
+    const cb = onclose
+    onclose = null
+    if (cb) {
+      cb(err)
+    } else if (err) {
+      d.destroy(err)
+    } else if (!readable && !writable) {
+      d.destroy()
+    }
+  }
+  const head = streams[0]
+  const tail = pipeline(streams, onfinished)
+  const writable = !!(isWritable(head) || isWritableStream(head) || isTransformStream(head))
+  const readable = !!(isReadable(tail) || isReadableStream(tail) || isTransformStream(tail))
+
+  // TODO(ronag): Avoid double buffering.
+  // Implement Writable/Readable/Duplex traits.
+  // See, https://github.com/nodejs/node/pull/33515.
+  d = new Duplex({
+    // TODO (ronag): highWaterMark?
+    writableObjectMode: !!(head !== null && head !== undefined && head.writableObjectMode),
+    readableObjectMode: !!(tail !== null && tail !== undefined && tail.readableObjectMode),
+    writable,
+    readable
+  })
+  if (writable) {
+    if (isNodeStream(head)) {
+      d._write = function (chunk, encoding, callback) {
+        if (head.write(chunk, encoding)) {
+          callback()
+        } else {
+          ondrain = callback
+        }
+      }
+      d._final = function (callback) {
+        head.end()
+        onfinish = callback
+      }
+      head.on('drain', function () {
+        if (ondrain) {
+          const cb = ondrain
+          ondrain = null
+          cb()
+        }
+      })
+    } else if (isWebStream(head)) {
+      const writable = isTransformStream(head) ? head.writable : head
+      const writer = writable.getWriter()
+      d._write = async function (chunk, encoding, callback) {
+        try {
+          await writer.ready
+          writer.write(chunk).catch(() => {})
+          callback()
+        } catch (err) {
+          callback(err)
+        }
+      }
+      d._final = async function (callback) {
+        try {
+          await writer.ready
+          writer.close().catch(() => {})
+          onfinish = callback
+        } catch (err) {
+          callback(err)
+        }
+      }
+    }
+    const toRead = isTransformStream(tail) ? tail.readable : tail
+    eos(toRead, () => {
+      if (onfinish) {
+        const cb = onfinish
+        onfinish = null
+        cb()
+      }
+    })
+  }
+  if (readable) {
+    if (isNodeStream(tail)) {
+      tail.on('readable', function () {
+        if (onreadable) {
+          const cb = onreadable
+          onreadable = null
+          cb()
+        }
+      })
+      tail.on('end', function () {
+        d.push(null)
+      })
+      d._read = function () {
+        while (true) {
+          const buf = tail.read()
+          if (buf === null) {
+            onreadable = d._read
+            return
+          }
+          if (!d.push(buf)) {
+            return
+          }
+        }
+      }
+    } else if (isWebStream(tail)) {
+      const readable = isTransformStream(tail) ? tail.readable : tail
+      const reader = readable.getReader()
+      d._read = async function () {
+        while (true) {
+          try {
+            const { value, done } = await reader.read()
+            if (!d.push(value)) {
+              return
+            }
+            if (done) {
+              d.push(null)
+              return
+            }
+          } catch {
+            return
+          }
+        }
+      }
+    }
+  }
+  d._destroy = function (err, callback) {
+    if (!err && onclose !== null) {
+      err = new AbortError()
+    }
+    onreadable = null
+    ondrain = null
+    onfinish = null
+    if (onclose === null) {
+      callback(err)
+    } else {
+      onclose = callback
+      if (isNodeStream(tail)) {
+        destroyer(tail, err)
+      }
+    }
+  }
+  return d
+}
+
+
+/***/ }),
+
+/***/ 7049:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+/* replacement start */
+
+const process = __nccwpck_require__(5676)
+
+/* replacement end */
+
+const {
+  aggregateTwoErrors,
+  codes: { ERR_MULTIPLE_CALLBACK },
+  AbortError
+} = __nccwpck_require__(529)
+const { Symbol } = __nccwpck_require__(9629)
+const { kIsDestroyed, isDestroyed, isFinished, isServerRequest } = __nccwpck_require__(7981)
+const kDestroy = Symbol('kDestroy')
+const kConstruct = Symbol('kConstruct')
+function checkError(err, w, r) {
+  if (err) {
+    // Avoid V8 leak, https://github.com/nodejs/node/pull/34103#issuecomment-652002364
+    err.stack // eslint-disable-line no-unused-expressions
+
+    if (w && !w.errored) {
+      w.errored = err
+    }
+    if (r && !r.errored) {
+      r.errored = err
+    }
+  }
+}
+
+// Backwards compat. cb() is undocumented and unused in core but
+// unfortunately might be used by modules.
+function destroy(err, cb) {
+  const r = this._readableState
+  const w = this._writableState
+  // With duplex streams we use the writable side for state.
+  const s = w || r
+  if ((w !== null && w !== undefined && w.destroyed) || (r !== null && r !== undefined && r.destroyed)) {
+    if (typeof cb === 'function') {
+      cb()
+    }
+    return this
+  }
+
+  // We set destroyed to true before firing error callbacks in order
+  // to make it re-entrance safe in case destroy() is called within callbacks
+  checkError(err, w, r)
+  if (w) {
+    w.destroyed = true
+  }
+  if (r) {
+    r.destroyed = true
+  }
+
+  // If still constructing then defer calling _destroy.
+  if (!s.constructed) {
+    this.once(kDestroy, function (er) {
+      _destroy(this, aggregateTwoErrors(er, err), cb)
+    })
+  } else {
+    _destroy(this, err, cb)
+  }
+  return this
+}
+function _destroy(self, err, cb) {
+  let called = false
+  function onDestroy(err) {
+    if (called) {
+      return
+    }
+    called = true
+    const r = self._readableState
+    const w = self._writableState
+    checkError(err, w, r)
+    if (w) {
+      w.closed = true
+    }
+    if (r) {
+      r.closed = true
+    }
+    if (typeof cb === 'function') {
+      cb(err)
+    }
+    if (err) {
+      process.nextTick(emitErrorCloseNT, self, err)
+    } else {
+      process.nextTick(emitCloseNT, self)
+    }
+  }
+  try {
+    self._destroy(err || null, onDestroy)
+  } catch (err) {
+    onDestroy(err)
+  }
+}
+function emitErrorCloseNT(self, err) {
+  emitErrorNT(self, err)
+  emitCloseNT(self)
+}
+function emitCloseNT(self) {
+  const r = self._readableState
+  const w = self._writableState
+  if (w) {
+    w.closeEmitted = true
+  }
+  if (r) {
+    r.closeEmitted = true
+  }
+  if ((w !== null && w !== undefined && w.emitClose) || (r !== null && r !== undefined && r.emitClose)) {
+    self.emit('close')
+  }
+}
+function emitErrorNT(self, err) {
+  const r = self._readableState
+  const w = self._writableState
+  if ((w !== null && w !== undefined && w.errorEmitted) || (r !== null && r !== undefined && r.errorEmitted)) {
+    return
+  }
+  if (w) {
+    w.errorEmitted = true
+  }
+  if (r) {
+    r.errorEmitted = true
+  }
+  self.emit('error', err)
+}
+function undestroy() {
+  const r = this._readableState
+  const w = this._writableState
+  if (r) {
+    r.constructed = true
+    r.closed = false
+    r.closeEmitted = false
+    r.destroyed = false
+    r.errored = null
+    r.errorEmitted = false
+    r.reading = false
+    r.ended = r.readable === false
+    r.endEmitted = r.readable === false
+  }
+  if (w) {
+    w.constructed = true
+    w.destroyed = false
+    w.closed = false
+    w.closeEmitted = false
+    w.errored = null
+    w.errorEmitted = false
+    w.finalCalled = false
+    w.prefinished = false
+    w.ended = w.writable === false
+    w.ending = w.writable === false
+    w.finished = w.writable === false
+  }
+}
+function errorOrDestroy(stream, err, sync) {
+  // We have tests that rely on errors being emitted
+  // in the same tick, so changing this is semver major.
+  // For now when you opt-in to autoDestroy we allow
+  // the error to be emitted nextTick. In a future
+  // semver major update we should change the default to this.
+
+  const r = stream._readableState
+  const w = stream._writableState
+  if ((w !== null && w !== undefined && w.destroyed) || (r !== null && r !== undefined && r.destroyed)) {
+    return this
+  }
+  if ((r !== null && r !== undefined && r.autoDestroy) || (w !== null && w !== undefined && w.autoDestroy))
+    stream.destroy(err)
+  else if (err) {
+    // Avoid V8 leak, https://github.com/nodejs/node/pull/34103#issuecomment-652002364
+    err.stack // eslint-disable-line no-unused-expressions
+
+    if (w && !w.errored) {
+      w.errored = err
+    }
+    if (r && !r.errored) {
+      r.errored = err
+    }
+    if (sync) {
+      process.nextTick(emitErrorNT, stream, err)
+    } else {
+      emitErrorNT(stream, err)
+    }
+  }
+}
+function construct(stream, cb) {
+  if (typeof stream._construct !== 'function') {
+    return
+  }
+  const r = stream._readableState
+  const w = stream._writableState
+  if (r) {
+    r.constructed = false
+  }
+  if (w) {
+    w.constructed = false
+  }
+  stream.once(kConstruct, cb)
+  if (stream.listenerCount(kConstruct) > 1) {
+    // Duplex
+    return
+  }
+  process.nextTick(constructNT, stream)
+}
+function constructNT(stream) {
+  let called = false
+  function onConstruct(err) {
+    if (called) {
+      errorOrDestroy(stream, err !== null && err !== undefined ? err : new ERR_MULTIPLE_CALLBACK())
+      return
+    }
+    called = true
+    const r = stream._readableState
+    const w = stream._writableState
+    const s = w || r
+    if (r) {
+      r.constructed = true
+    }
+    if (w) {
+      w.constructed = true
+    }
+    if (s.destroyed) {
+      stream.emit(kDestroy, err)
+    } else if (err) {
+      errorOrDestroy(stream, err, true)
+    } else {
+      process.nextTick(emitConstructNT, stream)
+    }
+  }
+  try {
+    stream._construct((err) => {
+      process.nextTick(onConstruct, err)
+    })
+  } catch (err) {
+    process.nextTick(onConstruct, err)
+  }
+}
+function emitConstructNT(stream) {
+  stream.emit(kConstruct)
+}
+function isRequest(stream) {
+  return (stream === null || stream === undefined ? undefined : stream.setHeader) && typeof stream.abort === 'function'
+}
+function emitCloseLegacy(stream) {
+  stream.emit('close')
+}
+function emitErrorCloseLegacy(stream, err) {
+  stream.emit('error', err)
+  process.nextTick(emitCloseLegacy, stream)
+}
+
+// Normalize destroy for legacy.
+function destroyer(stream, err) {
+  if (!stream || isDestroyed(stream)) {
+    return
+  }
+  if (!err && !isFinished(stream)) {
+    err = new AbortError()
+  }
+
+  // TODO: Remove isRequest branches.
+  if (isServerRequest(stream)) {
+    stream.socket = null
+    stream.destroy(err)
+  } else if (isRequest(stream)) {
+    stream.abort()
+  } else if (isRequest(stream.req)) {
+    stream.req.abort()
+  } else if (typeof stream.destroy === 'function') {
+    stream.destroy(err)
+  } else if (typeof stream.close === 'function') {
+    // TODO: Don't lose err?
+    stream.close()
+  } else if (err) {
+    process.nextTick(emitErrorCloseLegacy, stream, err)
+  } else {
+    process.nextTick(emitCloseLegacy, stream)
+  }
+  if (!stream.destroyed) {
+    stream[kIsDestroyed] = true
+  }
+}
+module.exports = {
+  construct,
+  destroyer,
+  destroy,
+  undestroy,
+  errorOrDestroy
+}
+
+
+/***/ }),
+
+/***/ 2613:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -25508,114 +24101,1476 @@ module.exports.q = codes;
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 // a duplex stream is just a stream that is both readable and writable.
-// Since JS doesn't have multiple prototypal inheritance, this class
-// prototypally inherits from Readable, and then parasitically from
+// Since JS doesn't have multiple prototype inheritance, this class
+// prototypically inherits from Readable, and then parasitically from
 // Writable.
 
 
 
-/*<replacement>*/
-var objectKeys = Object.keys || function (obj) {
-  var keys = [];
-  for (var key in obj) keys.push(key);
-  return keys;
-};
-/*</replacement>*/
-
-module.exports = Duplex;
-var Readable = __nccwpck_require__(1433);
-var Writable = __nccwpck_require__(6993);
-__nccwpck_require__(4124)(Duplex, Readable);
+const {
+  ObjectDefineProperties,
+  ObjectGetOwnPropertyDescriptor,
+  ObjectKeys,
+  ObjectSetPrototypeOf
+} = __nccwpck_require__(9629)
+module.exports = Duplex
+const Readable = __nccwpck_require__(7920)
+const Writable = __nccwpck_require__(8488)
+ObjectSetPrototypeOf(Duplex.prototype, Readable.prototype)
+ObjectSetPrototypeOf(Duplex, Readable)
 {
+  const keys = ObjectKeys(Writable.prototype)
   // Allow the keys array to be GC'ed.
-  var keys = objectKeys(Writable.prototype);
-  for (var v = 0; v < keys.length; v++) {
-    var method = keys[v];
-    if (!Duplex.prototype[method]) Duplex.prototype[method] = Writable.prototype[method];
+  for (let i = 0; i < keys.length; i++) {
+    const method = keys[i]
+    if (!Duplex.prototype[method]) Duplex.prototype[method] = Writable.prototype[method]
   }
 }
 function Duplex(options) {
-  if (!(this instanceof Duplex)) return new Duplex(options);
-  Readable.call(this, options);
-  Writable.call(this, options);
-  this.allowHalfOpen = true;
+  if (!(this instanceof Duplex)) return new Duplex(options)
+  Readable.call(this, options)
+  Writable.call(this, options)
   if (options) {
-    if (options.readable === false) this.readable = false;
-    if (options.writable === false) this.writable = false;
-    if (options.allowHalfOpen === false) {
-      this.allowHalfOpen = false;
-      this.once('end', onend);
+    this.allowHalfOpen = options.allowHalfOpen !== false
+    if (options.readable === false) {
+      this._readableState.readable = false
+      this._readableState.ended = true
+      this._readableState.endEmitted = true
     }
-  }
-}
-Object.defineProperty(Duplex.prototype, 'writableHighWaterMark', {
-  // making it explicit this property is not enumerable
-  // because otherwise some prototype manipulation in
-  // userland will fail
-  enumerable: false,
-  get: function get() {
-    return this._writableState.highWaterMark;
-  }
-});
-Object.defineProperty(Duplex.prototype, 'writableBuffer', {
-  // making it explicit this property is not enumerable
-  // because otherwise some prototype manipulation in
-  // userland will fail
-  enumerable: false,
-  get: function get() {
-    return this._writableState && this._writableState.getBuffer();
-  }
-});
-Object.defineProperty(Duplex.prototype, 'writableLength', {
-  // making it explicit this property is not enumerable
-  // because otherwise some prototype manipulation in
-  // userland will fail
-  enumerable: false,
-  get: function get() {
-    return this._writableState.length;
-  }
-});
-
-// the no-half-open enforcer
-function onend() {
-  // If the writable side ended, then we're ok.
-  if (this._writableState.ended) return;
-
-  // no more data can be written.
-  // But allow more writes to happen in this tick.
-  process.nextTick(onEndNT, this);
-}
-function onEndNT(self) {
-  self.end();
-}
-Object.defineProperty(Duplex.prototype, 'destroyed', {
-  // making it explicit this property is not enumerable
-  // because otherwise some prototype manipulation in
-  // userland will fail
-  enumerable: false,
-  get: function get() {
-    if (this._readableState === undefined || this._writableState === undefined) {
-      return false;
+    if (options.writable === false) {
+      this._writableState.writable = false
+      this._writableState.ending = true
+      this._writableState.ended = true
+      this._writableState.finished = true
     }
-    return this._readableState.destroyed && this._writableState.destroyed;
+  } else {
+    this.allowHalfOpen = true
+  }
+}
+ObjectDefineProperties(Duplex.prototype, {
+  writable: {
+    __proto__: null,
+    ...ObjectGetOwnPropertyDescriptor(Writable.prototype, 'writable')
   },
-  set: function set(value) {
-    // we ignore the value if the stream
-    // has not been initialized yet
-    if (this._readableState === undefined || this._writableState === undefined) {
-      return;
+  writableHighWaterMark: {
+    __proto__: null,
+    ...ObjectGetOwnPropertyDescriptor(Writable.prototype, 'writableHighWaterMark')
+  },
+  writableObjectMode: {
+    __proto__: null,
+    ...ObjectGetOwnPropertyDescriptor(Writable.prototype, 'writableObjectMode')
+  },
+  writableBuffer: {
+    __proto__: null,
+    ...ObjectGetOwnPropertyDescriptor(Writable.prototype, 'writableBuffer')
+  },
+  writableLength: {
+    __proto__: null,
+    ...ObjectGetOwnPropertyDescriptor(Writable.prototype, 'writableLength')
+  },
+  writableFinished: {
+    __proto__: null,
+    ...ObjectGetOwnPropertyDescriptor(Writable.prototype, 'writableFinished')
+  },
+  writableCorked: {
+    __proto__: null,
+    ...ObjectGetOwnPropertyDescriptor(Writable.prototype, 'writableCorked')
+  },
+  writableEnded: {
+    __proto__: null,
+    ...ObjectGetOwnPropertyDescriptor(Writable.prototype, 'writableEnded')
+  },
+  writableNeedDrain: {
+    __proto__: null,
+    ...ObjectGetOwnPropertyDescriptor(Writable.prototype, 'writableNeedDrain')
+  },
+  destroyed: {
+    __proto__: null,
+    get() {
+      if (this._readableState === undefined || this._writableState === undefined) {
+        return false
+      }
+      return this._readableState.destroyed && this._writableState.destroyed
+    },
+    set(value) {
+      // Backward compatibility, the user is explicitly
+      // managing destroyed.
+      if (this._readableState && this._writableState) {
+        this._readableState.destroyed = value
+        this._writableState.destroyed = value
+      }
     }
-
-    // backward compatibility, the user is explicitly
-    // managing destroyed
-    this._readableState.destroyed = value;
-    this._writableState.destroyed = value;
   }
-});
+})
+let webStreamsAdapters
+
+// Lazy to avoid circular references
+function lazyWebStreams() {
+  if (webStreamsAdapters === undefined) webStreamsAdapters = {}
+  return webStreamsAdapters
+}
+Duplex.fromWeb = function (pair, options) {
+  return lazyWebStreams().newStreamDuplexFromReadableWritablePair(pair, options)
+}
+Duplex.toWeb = function (duplex) {
+  return lazyWebStreams().newReadableWritablePairFromDuplex(duplex)
+}
+let duplexify
+Duplex.from = function (body) {
+  if (!duplexify) {
+    duplexify = __nccwpck_require__(6350)
+  }
+  return duplexify(body, 'body')
+}
+
 
 /***/ }),
 
-/***/ 1542:
+/***/ 6350:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+/* replacement start */
+
+const process = __nccwpck_require__(5676)
+
+/* replacement end */
+
+;('use strict')
+const bufferModule = __nccwpck_require__(4300)
+const {
+  isReadable,
+  isWritable,
+  isIterable,
+  isNodeStream,
+  isReadableNodeStream,
+  isWritableNodeStream,
+  isDuplexNodeStream,
+  isReadableStream,
+  isWritableStream
+} = __nccwpck_require__(7981)
+const eos = __nccwpck_require__(6080)
+const {
+  AbortError,
+  codes: { ERR_INVALID_ARG_TYPE, ERR_INVALID_RETURN_VALUE }
+} = __nccwpck_require__(529)
+const { destroyer } = __nccwpck_require__(7049)
+const Duplex = __nccwpck_require__(2613)
+const Readable = __nccwpck_require__(7920)
+const Writable = __nccwpck_require__(8488)
+const { createDeferredPromise } = __nccwpck_require__(6959)
+const from = __nccwpck_require__(9082)
+const Blob = globalThis.Blob || bufferModule.Blob
+const isBlob =
+  typeof Blob !== 'undefined'
+    ? function isBlob(b) {
+        return b instanceof Blob
+      }
+    : function isBlob(b) {
+        return false
+      }
+const AbortController = globalThis.AbortController || (__nccwpck_require__(1659).AbortController)
+const { FunctionPrototypeCall } = __nccwpck_require__(9629)
+
+// This is needed for pre node 17.
+class Duplexify extends Duplex {
+  constructor(options) {
+    super(options)
+
+    // https://github.com/nodejs/node/pull/34385
+
+    if ((options === null || options === undefined ? undefined : options.readable) === false) {
+      this._readableState.readable = false
+      this._readableState.ended = true
+      this._readableState.endEmitted = true
+    }
+    if ((options === null || options === undefined ? undefined : options.writable) === false) {
+      this._writableState.writable = false
+      this._writableState.ending = true
+      this._writableState.ended = true
+      this._writableState.finished = true
+    }
+  }
+}
+module.exports = function duplexify(body, name) {
+  if (isDuplexNodeStream(body)) {
+    return body
+  }
+  if (isReadableNodeStream(body)) {
+    return _duplexify({
+      readable: body
+    })
+  }
+  if (isWritableNodeStream(body)) {
+    return _duplexify({
+      writable: body
+    })
+  }
+  if (isNodeStream(body)) {
+    return _duplexify({
+      writable: false,
+      readable: false
+    })
+  }
+  if (isReadableStream(body)) {
+    return _duplexify({
+      readable: Readable.fromWeb(body)
+    })
+  }
+  if (isWritableStream(body)) {
+    return _duplexify({
+      writable: Writable.fromWeb(body)
+    })
+  }
+  if (typeof body === 'function') {
+    const { value, write, final, destroy } = fromAsyncGen(body)
+    if (isIterable(value)) {
+      return from(Duplexify, value, {
+        // TODO (ronag): highWaterMark?
+        objectMode: true,
+        write,
+        final,
+        destroy
+      })
+    }
+    const then = value === null || value === undefined ? undefined : value.then
+    if (typeof then === 'function') {
+      let d
+      const promise = FunctionPrototypeCall(
+        then,
+        value,
+        (val) => {
+          if (val != null) {
+            throw new ERR_INVALID_RETURN_VALUE('nully', 'body', val)
+          }
+        },
+        (err) => {
+          destroyer(d, err)
+        }
+      )
+      return (d = new Duplexify({
+        // TODO (ronag): highWaterMark?
+        objectMode: true,
+        readable: false,
+        write,
+        final(cb) {
+          final(async () => {
+            try {
+              await promise
+              process.nextTick(cb, null)
+            } catch (err) {
+              process.nextTick(cb, err)
+            }
+          })
+        },
+        destroy
+      }))
+    }
+    throw new ERR_INVALID_RETURN_VALUE('Iterable, AsyncIterable or AsyncFunction', name, value)
+  }
+  if (isBlob(body)) {
+    return duplexify(body.arrayBuffer())
+  }
+  if (isIterable(body)) {
+    return from(Duplexify, body, {
+      // TODO (ronag): highWaterMark?
+      objectMode: true,
+      writable: false
+    })
+  }
+  if (
+    isReadableStream(body === null || body === undefined ? undefined : body.readable) &&
+    isWritableStream(body === null || body === undefined ? undefined : body.writable)
+  ) {
+    return Duplexify.fromWeb(body)
+  }
+  if (
+    typeof (body === null || body === undefined ? undefined : body.writable) === 'object' ||
+    typeof (body === null || body === undefined ? undefined : body.readable) === 'object'
+  ) {
+    const readable =
+      body !== null && body !== undefined && body.readable
+        ? isReadableNodeStream(body === null || body === undefined ? undefined : body.readable)
+          ? body === null || body === undefined
+            ? undefined
+            : body.readable
+          : duplexify(body.readable)
+        : undefined
+    const writable =
+      body !== null && body !== undefined && body.writable
+        ? isWritableNodeStream(body === null || body === undefined ? undefined : body.writable)
+          ? body === null || body === undefined
+            ? undefined
+            : body.writable
+          : duplexify(body.writable)
+        : undefined
+    return _duplexify({
+      readable,
+      writable
+    })
+  }
+  const then = body === null || body === undefined ? undefined : body.then
+  if (typeof then === 'function') {
+    let d
+    FunctionPrototypeCall(
+      then,
+      body,
+      (val) => {
+        if (val != null) {
+          d.push(val)
+        }
+        d.push(null)
+      },
+      (err) => {
+        destroyer(d, err)
+      }
+    )
+    return (d = new Duplexify({
+      objectMode: true,
+      writable: false,
+      read() {}
+    }))
+  }
+  throw new ERR_INVALID_ARG_TYPE(
+    name,
+    [
+      'Blob',
+      'ReadableStream',
+      'WritableStream',
+      'Stream',
+      'Iterable',
+      'AsyncIterable',
+      'Function',
+      '{ readable, writable } pair',
+      'Promise'
+    ],
+    body
+  )
+}
+function fromAsyncGen(fn) {
+  let { promise, resolve } = createDeferredPromise()
+  const ac = new AbortController()
+  const signal = ac.signal
+  const value = fn(
+    (async function* () {
+      while (true) {
+        const _promise = promise
+        promise = null
+        const { chunk, done, cb } = await _promise
+        process.nextTick(cb)
+        if (done) return
+        if (signal.aborted)
+          throw new AbortError(undefined, {
+            cause: signal.reason
+          })
+        ;({ promise, resolve } = createDeferredPromise())
+        yield chunk
+      }
+    })(),
+    {
+      signal
+    }
+  )
+  return {
+    value,
+    write(chunk, encoding, cb) {
+      const _resolve = resolve
+      resolve = null
+      _resolve({
+        chunk,
+        done: false,
+        cb
+      })
+    },
+    final(cb) {
+      const _resolve = resolve
+      resolve = null
+      _resolve({
+        done: true,
+        cb
+      })
+    },
+    destroy(err, cb) {
+      ac.abort()
+      cb(err)
+    }
+  }
+}
+function _duplexify(pair) {
+  const r = pair.readable && typeof pair.readable.read !== 'function' ? Readable.wrap(pair.readable) : pair.readable
+  const w = pair.writable
+  let readable = !!isReadable(r)
+  let writable = !!isWritable(w)
+  let ondrain
+  let onfinish
+  let onreadable
+  let onclose
+  let d
+  function onfinished(err) {
+    const cb = onclose
+    onclose = null
+    if (cb) {
+      cb(err)
+    } else if (err) {
+      d.destroy(err)
+    }
+  }
+
+  // TODO(ronag): Avoid double buffering.
+  // Implement Writable/Readable/Duplex traits.
+  // See, https://github.com/nodejs/node/pull/33515.
+  d = new Duplexify({
+    // TODO (ronag): highWaterMark?
+    readableObjectMode: !!(r !== null && r !== undefined && r.readableObjectMode),
+    writableObjectMode: !!(w !== null && w !== undefined && w.writableObjectMode),
+    readable,
+    writable
+  })
+  if (writable) {
+    eos(w, (err) => {
+      writable = false
+      if (err) {
+        destroyer(r, err)
+      }
+      onfinished(err)
+    })
+    d._write = function (chunk, encoding, callback) {
+      if (w.write(chunk, encoding)) {
+        callback()
+      } else {
+        ondrain = callback
+      }
+    }
+    d._final = function (callback) {
+      w.end()
+      onfinish = callback
+    }
+    w.on('drain', function () {
+      if (ondrain) {
+        const cb = ondrain
+        ondrain = null
+        cb()
+      }
+    })
+    w.on('finish', function () {
+      if (onfinish) {
+        const cb = onfinish
+        onfinish = null
+        cb()
+      }
+    })
+  }
+  if (readable) {
+    eos(r, (err) => {
+      readable = false
+      if (err) {
+        destroyer(r, err)
+      }
+      onfinished(err)
+    })
+    r.on('readable', function () {
+      if (onreadable) {
+        const cb = onreadable
+        onreadable = null
+        cb()
+      }
+    })
+    r.on('end', function () {
+      d.push(null)
+    })
+    d._read = function () {
+      while (true) {
+        const buf = r.read()
+        if (buf === null) {
+          onreadable = d._read
+          return
+        }
+        if (!d.push(buf)) {
+          return
+        }
+      }
+    }
+  }
+  d._destroy = function (err, callback) {
+    if (!err && onclose !== null) {
+      err = new AbortError()
+    }
+    onreadable = null
+    ondrain = null
+    onfinish = null
+    if (onclose === null) {
+      callback(err)
+    } else {
+      onclose = callback
+      destroyer(w, err)
+      destroyer(r, err)
+    }
+  }
+  return d
+}
+
+
+/***/ }),
+
+/***/ 6080:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+/* replacement start */
+
+const process = __nccwpck_require__(5676)
+
+/* replacement end */
+// Ported from https://github.com/mafintosh/end-of-stream with
+// permission from the author, Mathias Buus (@mafintosh).
+
+;('use strict')
+const { AbortError, codes } = __nccwpck_require__(529)
+const { ERR_INVALID_ARG_TYPE, ERR_STREAM_PREMATURE_CLOSE } = codes
+const { kEmptyObject, once } = __nccwpck_require__(6959)
+const { validateAbortSignal, validateFunction, validateObject, validateBoolean } = __nccwpck_require__(669)
+const { Promise, PromisePrototypeThen, SymbolDispose } = __nccwpck_require__(9629)
+const {
+  isClosed,
+  isReadable,
+  isReadableNodeStream,
+  isReadableStream,
+  isReadableFinished,
+  isReadableErrored,
+  isWritable,
+  isWritableNodeStream,
+  isWritableStream,
+  isWritableFinished,
+  isWritableErrored,
+  isNodeStream,
+  willEmitClose: _willEmitClose,
+  kIsClosedPromise
+} = __nccwpck_require__(7981)
+let addAbortListener
+function isRequest(stream) {
+  return stream.setHeader && typeof stream.abort === 'function'
+}
+const nop = () => {}
+function eos(stream, options, callback) {
+  var _options$readable, _options$writable
+  if (arguments.length === 2) {
+    callback = options
+    options = kEmptyObject
+  } else if (options == null) {
+    options = kEmptyObject
+  } else {
+    validateObject(options, 'options')
+  }
+  validateFunction(callback, 'callback')
+  validateAbortSignal(options.signal, 'options.signal')
+  callback = once(callback)
+  if (isReadableStream(stream) || isWritableStream(stream)) {
+    return eosWeb(stream, options, callback)
+  }
+  if (!isNodeStream(stream)) {
+    throw new ERR_INVALID_ARG_TYPE('stream', ['ReadableStream', 'WritableStream', 'Stream'], stream)
+  }
+  const readable =
+    (_options$readable = options.readable) !== null && _options$readable !== undefined
+      ? _options$readable
+      : isReadableNodeStream(stream)
+  const writable =
+    (_options$writable = options.writable) !== null && _options$writable !== undefined
+      ? _options$writable
+      : isWritableNodeStream(stream)
+  const wState = stream._writableState
+  const rState = stream._readableState
+  const onlegacyfinish = () => {
+    if (!stream.writable) {
+      onfinish()
+    }
+  }
+
+  // TODO (ronag): Improve soft detection to include core modules and
+  // common ecosystem modules that do properly emit 'close' but fail
+  // this generic check.
+  let willEmitClose =
+    _willEmitClose(stream) && isReadableNodeStream(stream) === readable && isWritableNodeStream(stream) === writable
+  let writableFinished = isWritableFinished(stream, false)
+  const onfinish = () => {
+    writableFinished = true
+    // Stream should not be destroyed here. If it is that
+    // means that user space is doing something differently and
+    // we cannot trust willEmitClose.
+    if (stream.destroyed) {
+      willEmitClose = false
+    }
+    if (willEmitClose && (!stream.readable || readable)) {
+      return
+    }
+    if (!readable || readableFinished) {
+      callback.call(stream)
+    }
+  }
+  let readableFinished = isReadableFinished(stream, false)
+  const onend = () => {
+    readableFinished = true
+    // Stream should not be destroyed here. If it is that
+    // means that user space is doing something differently and
+    // we cannot trust willEmitClose.
+    if (stream.destroyed) {
+      willEmitClose = false
+    }
+    if (willEmitClose && (!stream.writable || writable)) {
+      return
+    }
+    if (!writable || writableFinished) {
+      callback.call(stream)
+    }
+  }
+  const onerror = (err) => {
+    callback.call(stream, err)
+  }
+  let closed = isClosed(stream)
+  const onclose = () => {
+    closed = true
+    const errored = isWritableErrored(stream) || isReadableErrored(stream)
+    if (errored && typeof errored !== 'boolean') {
+      return callback.call(stream, errored)
+    }
+    if (readable && !readableFinished && isReadableNodeStream(stream, true)) {
+      if (!isReadableFinished(stream, false)) return callback.call(stream, new ERR_STREAM_PREMATURE_CLOSE())
+    }
+    if (writable && !writableFinished) {
+      if (!isWritableFinished(stream, false)) return callback.call(stream, new ERR_STREAM_PREMATURE_CLOSE())
+    }
+    callback.call(stream)
+  }
+  const onclosed = () => {
+    closed = true
+    const errored = isWritableErrored(stream) || isReadableErrored(stream)
+    if (errored && typeof errored !== 'boolean') {
+      return callback.call(stream, errored)
+    }
+    callback.call(stream)
+  }
+  const onrequest = () => {
+    stream.req.on('finish', onfinish)
+  }
+  if (isRequest(stream)) {
+    stream.on('complete', onfinish)
+    if (!willEmitClose) {
+      stream.on('abort', onclose)
+    }
+    if (stream.req) {
+      onrequest()
+    } else {
+      stream.on('request', onrequest)
+    }
+  } else if (writable && !wState) {
+    // legacy streams
+    stream.on('end', onlegacyfinish)
+    stream.on('close', onlegacyfinish)
+  }
+
+  // Not all streams will emit 'close' after 'aborted'.
+  if (!willEmitClose && typeof stream.aborted === 'boolean') {
+    stream.on('aborted', onclose)
+  }
+  stream.on('end', onend)
+  stream.on('finish', onfinish)
+  if (options.error !== false) {
+    stream.on('error', onerror)
+  }
+  stream.on('close', onclose)
+  if (closed) {
+    process.nextTick(onclose)
+  } else if (
+    (wState !== null && wState !== undefined && wState.errorEmitted) ||
+    (rState !== null && rState !== undefined && rState.errorEmitted)
+  ) {
+    if (!willEmitClose) {
+      process.nextTick(onclosed)
+    }
+  } else if (
+    !readable &&
+    (!willEmitClose || isReadable(stream)) &&
+    (writableFinished || isWritable(stream) === false)
+  ) {
+    process.nextTick(onclosed)
+  } else if (
+    !writable &&
+    (!willEmitClose || isWritable(stream)) &&
+    (readableFinished || isReadable(stream) === false)
+  ) {
+    process.nextTick(onclosed)
+  } else if (rState && stream.req && stream.aborted) {
+    process.nextTick(onclosed)
+  }
+  const cleanup = () => {
+    callback = nop
+    stream.removeListener('aborted', onclose)
+    stream.removeListener('complete', onfinish)
+    stream.removeListener('abort', onclose)
+    stream.removeListener('request', onrequest)
+    if (stream.req) stream.req.removeListener('finish', onfinish)
+    stream.removeListener('end', onlegacyfinish)
+    stream.removeListener('close', onlegacyfinish)
+    stream.removeListener('finish', onfinish)
+    stream.removeListener('end', onend)
+    stream.removeListener('error', onerror)
+    stream.removeListener('close', onclose)
+  }
+  if (options.signal && !closed) {
+    const abort = () => {
+      // Keep it because cleanup removes it.
+      const endCallback = callback
+      cleanup()
+      endCallback.call(
+        stream,
+        new AbortError(undefined, {
+          cause: options.signal.reason
+        })
+      )
+    }
+    if (options.signal.aborted) {
+      process.nextTick(abort)
+    } else {
+      addAbortListener = addAbortListener || (__nccwpck_require__(6959).addAbortListener)
+      const disposable = addAbortListener(options.signal, abort)
+      const originalCallback = callback
+      callback = once((...args) => {
+        disposable[SymbolDispose]()
+        originalCallback.apply(stream, args)
+      })
+    }
+  }
+  return cleanup
+}
+function eosWeb(stream, options, callback) {
+  let isAborted = false
+  let abort = nop
+  if (options.signal) {
+    abort = () => {
+      isAborted = true
+      callback.call(
+        stream,
+        new AbortError(undefined, {
+          cause: options.signal.reason
+        })
+      )
+    }
+    if (options.signal.aborted) {
+      process.nextTick(abort)
+    } else {
+      addAbortListener = addAbortListener || (__nccwpck_require__(6959).addAbortListener)
+      const disposable = addAbortListener(options.signal, abort)
+      const originalCallback = callback
+      callback = once((...args) => {
+        disposable[SymbolDispose]()
+        originalCallback.apply(stream, args)
+      })
+    }
+  }
+  const resolverFn = (...args) => {
+    if (!isAborted) {
+      process.nextTick(() => callback.apply(stream, args))
+    }
+  }
+  PromisePrototypeThen(stream[kIsClosedPromise].promise, resolverFn, resolverFn)
+  return nop
+}
+function finished(stream, opts) {
+  var _opts
+  let autoCleanup = false
+  if (opts === null) {
+    opts = kEmptyObject
+  }
+  if ((_opts = opts) !== null && _opts !== undefined && _opts.cleanup) {
+    validateBoolean(opts.cleanup, 'cleanup')
+    autoCleanup = opts.cleanup
+  }
+  return new Promise((resolve, reject) => {
+    const cleanup = eos(stream, opts, (err) => {
+      if (autoCleanup) {
+        cleanup()
+      }
+      if (err) {
+        reject(err)
+      } else {
+        resolve()
+      }
+    })
+  })
+}
+module.exports = eos
+module.exports.finished = finished
+
+
+/***/ }),
+
+/***/ 9082:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+/* replacement start */
+
+const process = __nccwpck_require__(5676)
+
+/* replacement end */
+
+const { PromisePrototypeThen, SymbolAsyncIterator, SymbolIterator } = __nccwpck_require__(9629)
+const { Buffer } = __nccwpck_require__(4300)
+const { ERR_INVALID_ARG_TYPE, ERR_STREAM_NULL_VALUES } = (__nccwpck_require__(529).codes)
+function from(Readable, iterable, opts) {
+  let iterator
+  if (typeof iterable === 'string' || iterable instanceof Buffer) {
+    return new Readable({
+      objectMode: true,
+      ...opts,
+      read() {
+        this.push(iterable)
+        this.push(null)
+      }
+    })
+  }
+  let isAsync
+  if (iterable && iterable[SymbolAsyncIterator]) {
+    isAsync = true
+    iterator = iterable[SymbolAsyncIterator]()
+  } else if (iterable && iterable[SymbolIterator]) {
+    isAsync = false
+    iterator = iterable[SymbolIterator]()
+  } else {
+    throw new ERR_INVALID_ARG_TYPE('iterable', ['Iterable'], iterable)
+  }
+  const readable = new Readable({
+    objectMode: true,
+    highWaterMark: 1,
+    // TODO(ronag): What options should be allowed?
+    ...opts
+  })
+
+  // Flag to protect against _read
+  // being called before last iteration completion.
+  let reading = false
+  readable._read = function () {
+    if (!reading) {
+      reading = true
+      next()
+    }
+  }
+  readable._destroy = function (error, cb) {
+    PromisePrototypeThen(
+      close(error),
+      () => process.nextTick(cb, error),
+      // nextTick is here in case cb throws
+      (e) => process.nextTick(cb, e || error)
+    )
+  }
+  async function close(error) {
+    const hadError = error !== undefined && error !== null
+    const hasThrow = typeof iterator.throw === 'function'
+    if (hadError && hasThrow) {
+      const { value, done } = await iterator.throw(error)
+      await value
+      if (done) {
+        return
+      }
+    }
+    if (typeof iterator.return === 'function') {
+      const { value } = await iterator.return()
+      await value
+    }
+  }
+  async function next() {
+    for (;;) {
+      try {
+        const { value, done } = isAsync ? await iterator.next() : iterator.next()
+        if (done) {
+          readable.push(null)
+        } else {
+          const res = value && typeof value.then === 'function' ? await value : value
+          if (res === null) {
+            reading = false
+            throw new ERR_STREAM_NULL_VALUES()
+          } else if (readable.push(res)) {
+            continue
+          } else {
+            reading = false
+          }
+        }
+      } catch (err) {
+        readable.destroy(err)
+      }
+      break
+    }
+  }
+  return readable
+}
+module.exports = from
+
+
+/***/ }),
+
+/***/ 9792:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+const { ArrayIsArray, ObjectSetPrototypeOf } = __nccwpck_require__(9629)
+const { EventEmitter: EE } = __nccwpck_require__(2361)
+function Stream(opts) {
+  EE.call(this, opts)
+}
+ObjectSetPrototypeOf(Stream.prototype, EE.prototype)
+ObjectSetPrototypeOf(Stream, EE)
+Stream.prototype.pipe = function (dest, options) {
+  const source = this
+  function ondata(chunk) {
+    if (dest.writable && dest.write(chunk) === false && source.pause) {
+      source.pause()
+    }
+  }
+  source.on('data', ondata)
+  function ondrain() {
+    if (source.readable && source.resume) {
+      source.resume()
+    }
+  }
+  dest.on('drain', ondrain)
+
+  // If the 'end' option is not supplied, dest.end() will be called when
+  // source gets the 'end' or 'close' events.  Only dest.end() once.
+  if (!dest._isStdio && (!options || options.end !== false)) {
+    source.on('end', onend)
+    source.on('close', onclose)
+  }
+  let didOnEnd = false
+  function onend() {
+    if (didOnEnd) return
+    didOnEnd = true
+    dest.end()
+  }
+  function onclose() {
+    if (didOnEnd) return
+    didOnEnd = true
+    if (typeof dest.destroy === 'function') dest.destroy()
+  }
+
+  // Don't leave dangling pipes when there are errors.
+  function onerror(er) {
+    cleanup()
+    if (EE.listenerCount(this, 'error') === 0) {
+      this.emit('error', er)
+    }
+  }
+  prependListener(source, 'error', onerror)
+  prependListener(dest, 'error', onerror)
+
+  // Remove all the event listeners that were added.
+  function cleanup() {
+    source.removeListener('data', ondata)
+    dest.removeListener('drain', ondrain)
+    source.removeListener('end', onend)
+    source.removeListener('close', onclose)
+    source.removeListener('error', onerror)
+    dest.removeListener('error', onerror)
+    source.removeListener('end', cleanup)
+    source.removeListener('close', cleanup)
+    dest.removeListener('close', cleanup)
+  }
+  source.on('end', cleanup)
+  source.on('close', cleanup)
+  dest.on('close', cleanup)
+  dest.emit('pipe', source)
+
+  // Allow for unix-like usage: A.pipe(B).pipe(C)
+  return dest
+}
+function prependListener(emitter, event, fn) {
+  // Sadly this is not cacheable as some libraries bundle their own
+  // event emitter implementation with them.
+  if (typeof emitter.prependListener === 'function') return emitter.prependListener(event, fn)
+
+  // This is a hack to make sure that our error handler is attached before any
+  // userland ones.  NEVER DO THIS. This is here only because this code needs
+  // to continue to work with older versions of Node.js that do not include
+  // the prependListener() method. The goal is to eventually remove this hack.
+  if (!emitter._events || !emitter._events[event]) emitter.on(event, fn)
+  else if (ArrayIsArray(emitter._events[event])) emitter._events[event].unshift(fn)
+  else emitter._events[event] = [fn, emitter._events[event]]
+}
+module.exports = {
+  Stream,
+  prependListener
+}
+
+
+/***/ }),
+
+/***/ 3193:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+const AbortController = globalThis.AbortController || (__nccwpck_require__(1659).AbortController)
+const {
+  codes: { ERR_INVALID_ARG_VALUE, ERR_INVALID_ARG_TYPE, ERR_MISSING_ARGS, ERR_OUT_OF_RANGE },
+  AbortError
+} = __nccwpck_require__(529)
+const { validateAbortSignal, validateInteger, validateObject } = __nccwpck_require__(669)
+const kWeakHandler = (__nccwpck_require__(9629).Symbol)('kWeak')
+const kResistStopPropagation = (__nccwpck_require__(9629).Symbol)('kResistStopPropagation')
+const { finished } = __nccwpck_require__(6080)
+const staticCompose = __nccwpck_require__(3129)
+const { addAbortSignalNoValidate } = __nccwpck_require__(289)
+const { isWritable, isNodeStream } = __nccwpck_require__(7981)
+const { deprecate } = __nccwpck_require__(6959)
+const {
+  ArrayPrototypePush,
+  Boolean,
+  MathFloor,
+  Number,
+  NumberIsNaN,
+  Promise,
+  PromiseReject,
+  PromiseResolve,
+  PromisePrototypeThen,
+  Symbol
+} = __nccwpck_require__(9629)
+const kEmpty = Symbol('kEmpty')
+const kEof = Symbol('kEof')
+function compose(stream, options) {
+  if (options != null) {
+    validateObject(options, 'options')
+  }
+  if ((options === null || options === undefined ? undefined : options.signal) != null) {
+    validateAbortSignal(options.signal, 'options.signal')
+  }
+  if (isNodeStream(stream) && !isWritable(stream)) {
+    throw new ERR_INVALID_ARG_VALUE('stream', stream, 'must be writable')
+  }
+  const composedStream = staticCompose(this, stream)
+  if (options !== null && options !== undefined && options.signal) {
+    // Not validating as we already validated before
+    addAbortSignalNoValidate(options.signal, composedStream)
+  }
+  return composedStream
+}
+function map(fn, options) {
+  if (typeof fn !== 'function') {
+    throw new ERR_INVALID_ARG_TYPE('fn', ['Function', 'AsyncFunction'], fn)
+  }
+  if (options != null) {
+    validateObject(options, 'options')
+  }
+  if ((options === null || options === undefined ? undefined : options.signal) != null) {
+    validateAbortSignal(options.signal, 'options.signal')
+  }
+  let concurrency = 1
+  if ((options === null || options === undefined ? undefined : options.concurrency) != null) {
+    concurrency = MathFloor(options.concurrency)
+  }
+  let highWaterMark = concurrency - 1
+  if ((options === null || options === undefined ? undefined : options.highWaterMark) != null) {
+    highWaterMark = MathFloor(options.highWaterMark)
+  }
+  validateInteger(concurrency, 'options.concurrency', 1)
+  validateInteger(highWaterMark, 'options.highWaterMark', 0)
+  highWaterMark += concurrency
+  return async function* map() {
+    const signal = (__nccwpck_require__(6959).AbortSignalAny)(
+      [options === null || options === undefined ? undefined : options.signal].filter(Boolean)
+    )
+    const stream = this
+    const queue = []
+    const signalOpt = {
+      signal
+    }
+    let next
+    let resume
+    let done = false
+    let cnt = 0
+    function onCatch() {
+      done = true
+      afterItemProcessed()
+    }
+    function afterItemProcessed() {
+      cnt -= 1
+      maybeResume()
+    }
+    function maybeResume() {
+      if (resume && !done && cnt < concurrency && queue.length < highWaterMark) {
+        resume()
+        resume = null
+      }
+    }
+    async function pump() {
+      try {
+        for await (let val of stream) {
+          if (done) {
+            return
+          }
+          if (signal.aborted) {
+            throw new AbortError()
+          }
+          try {
+            val = fn(val, signalOpt)
+            if (val === kEmpty) {
+              continue
+            }
+            val = PromiseResolve(val)
+          } catch (err) {
+            val = PromiseReject(err)
+          }
+          cnt += 1
+          PromisePrototypeThen(val, afterItemProcessed, onCatch)
+          queue.push(val)
+          if (next) {
+            next()
+            next = null
+          }
+          if (!done && (queue.length >= highWaterMark || cnt >= concurrency)) {
+            await new Promise((resolve) => {
+              resume = resolve
+            })
+          }
+        }
+        queue.push(kEof)
+      } catch (err) {
+        const val = PromiseReject(err)
+        PromisePrototypeThen(val, afterItemProcessed, onCatch)
+        queue.push(val)
+      } finally {
+        done = true
+        if (next) {
+          next()
+          next = null
+        }
+      }
+    }
+    pump()
+    try {
+      while (true) {
+        while (queue.length > 0) {
+          const val = await queue[0]
+          if (val === kEof) {
+            return
+          }
+          if (signal.aborted) {
+            throw new AbortError()
+          }
+          if (val !== kEmpty) {
+            yield val
+          }
+          queue.shift()
+          maybeResume()
+        }
+        await new Promise((resolve) => {
+          next = resolve
+        })
+      }
+    } finally {
+      done = true
+      if (resume) {
+        resume()
+        resume = null
+      }
+    }
+  }.call(this)
+}
+function asIndexedPairs(options = undefined) {
+  if (options != null) {
+    validateObject(options, 'options')
+  }
+  if ((options === null || options === undefined ? undefined : options.signal) != null) {
+    validateAbortSignal(options.signal, 'options.signal')
+  }
+  return async function* asIndexedPairs() {
+    let index = 0
+    for await (const val of this) {
+      var _options$signal
+      if (
+        options !== null &&
+        options !== undefined &&
+        (_options$signal = options.signal) !== null &&
+        _options$signal !== undefined &&
+        _options$signal.aborted
+      ) {
+        throw new AbortError({
+          cause: options.signal.reason
+        })
+      }
+      yield [index++, val]
+    }
+  }.call(this)
+}
+async function some(fn, options = undefined) {
+  for await (const unused of filter.call(this, fn, options)) {
+    return true
+  }
+  return false
+}
+async function every(fn, options = undefined) {
+  if (typeof fn !== 'function') {
+    throw new ERR_INVALID_ARG_TYPE('fn', ['Function', 'AsyncFunction'], fn)
+  }
+  // https://en.wikipedia.org/wiki/De_Morgan%27s_laws
+  return !(await some.call(
+    this,
+    async (...args) => {
+      return !(await fn(...args))
+    },
+    options
+  ))
+}
+async function find(fn, options) {
+  for await (const result of filter.call(this, fn, options)) {
+    return result
+  }
+  return undefined
+}
+async function forEach(fn, options) {
+  if (typeof fn !== 'function') {
+    throw new ERR_INVALID_ARG_TYPE('fn', ['Function', 'AsyncFunction'], fn)
+  }
+  async function forEachFn(value, options) {
+    await fn(value, options)
+    return kEmpty
+  }
+  // eslint-disable-next-line no-unused-vars
+  for await (const unused of map.call(this, forEachFn, options));
+}
+function filter(fn, options) {
+  if (typeof fn !== 'function') {
+    throw new ERR_INVALID_ARG_TYPE('fn', ['Function', 'AsyncFunction'], fn)
+  }
+  async function filterFn(value, options) {
+    if (await fn(value, options)) {
+      return value
+    }
+    return kEmpty
+  }
+  return map.call(this, filterFn, options)
+}
+
+// Specific to provide better error to reduce since the argument is only
+// missing if the stream has no items in it - but the code is still appropriate
+class ReduceAwareErrMissingArgs extends ERR_MISSING_ARGS {
+  constructor() {
+    super('reduce')
+    this.message = 'Reduce of an empty stream requires an initial value'
+  }
+}
+async function reduce(reducer, initialValue, options) {
+  var _options$signal2
+  if (typeof reducer !== 'function') {
+    throw new ERR_INVALID_ARG_TYPE('reducer', ['Function', 'AsyncFunction'], reducer)
+  }
+  if (options != null) {
+    validateObject(options, 'options')
+  }
+  if ((options === null || options === undefined ? undefined : options.signal) != null) {
+    validateAbortSignal(options.signal, 'options.signal')
+  }
+  let hasInitialValue = arguments.length > 1
+  if (
+    options !== null &&
+    options !== undefined &&
+    (_options$signal2 = options.signal) !== null &&
+    _options$signal2 !== undefined &&
+    _options$signal2.aborted
+  ) {
+    const err = new AbortError(undefined, {
+      cause: options.signal.reason
+    })
+    this.once('error', () => {}) // The error is already propagated
+    await finished(this.destroy(err))
+    throw err
+  }
+  const ac = new AbortController()
+  const signal = ac.signal
+  if (options !== null && options !== undefined && options.signal) {
+    const opts = {
+      once: true,
+      [kWeakHandler]: this,
+      [kResistStopPropagation]: true
+    }
+    options.signal.addEventListener('abort', () => ac.abort(), opts)
+  }
+  let gotAnyItemFromStream = false
+  try {
+    for await (const value of this) {
+      var _options$signal3
+      gotAnyItemFromStream = true
+      if (
+        options !== null &&
+        options !== undefined &&
+        (_options$signal3 = options.signal) !== null &&
+        _options$signal3 !== undefined &&
+        _options$signal3.aborted
+      ) {
+        throw new AbortError()
+      }
+      if (!hasInitialValue) {
+        initialValue = value
+        hasInitialValue = true
+      } else {
+        initialValue = await reducer(initialValue, value, {
+          signal
+        })
+      }
+    }
+    if (!gotAnyItemFromStream && !hasInitialValue) {
+      throw new ReduceAwareErrMissingArgs()
+    }
+  } finally {
+    ac.abort()
+  }
+  return initialValue
+}
+async function toArray(options) {
+  if (options != null) {
+    validateObject(options, 'options')
+  }
+  if ((options === null || options === undefined ? undefined : options.signal) != null) {
+    validateAbortSignal(options.signal, 'options.signal')
+  }
+  const result = []
+  for await (const val of this) {
+    var _options$signal4
+    if (
+      options !== null &&
+      options !== undefined &&
+      (_options$signal4 = options.signal) !== null &&
+      _options$signal4 !== undefined &&
+      _options$signal4.aborted
+    ) {
+      throw new AbortError(undefined, {
+        cause: options.signal.reason
+      })
+    }
+    ArrayPrototypePush(result, val)
+  }
+  return result
+}
+function flatMap(fn, options) {
+  const values = map.call(this, fn, options)
+  return async function* flatMap() {
+    for await (const val of values) {
+      yield* val
+    }
+  }.call(this)
+}
+function toIntegerOrInfinity(number) {
+  // We coerce here to align with the spec
+  // https://github.com/tc39/proposal-iterator-helpers/issues/169
+  number = Number(number)
+  if (NumberIsNaN(number)) {
+    return 0
+  }
+  if (number < 0) {
+    throw new ERR_OUT_OF_RANGE('number', '>= 0', number)
+  }
+  return number
+}
+function drop(number, options = undefined) {
+  if (options != null) {
+    validateObject(options, 'options')
+  }
+  if ((options === null || options === undefined ? undefined : options.signal) != null) {
+    validateAbortSignal(options.signal, 'options.signal')
+  }
+  number = toIntegerOrInfinity(number)
+  return async function* drop() {
+    var _options$signal5
+    if (
+      options !== null &&
+      options !== undefined &&
+      (_options$signal5 = options.signal) !== null &&
+      _options$signal5 !== undefined &&
+      _options$signal5.aborted
+    ) {
+      throw new AbortError()
+    }
+    for await (const val of this) {
+      var _options$signal6
+      if (
+        options !== null &&
+        options !== undefined &&
+        (_options$signal6 = options.signal) !== null &&
+        _options$signal6 !== undefined &&
+        _options$signal6.aborted
+      ) {
+        throw new AbortError()
+      }
+      if (number-- <= 0) {
+        yield val
+      }
+    }
+  }.call(this)
+}
+function take(number, options = undefined) {
+  if (options != null) {
+    validateObject(options, 'options')
+  }
+  if ((options === null || options === undefined ? undefined : options.signal) != null) {
+    validateAbortSignal(options.signal, 'options.signal')
+  }
+  number = toIntegerOrInfinity(number)
+  return async function* take() {
+    var _options$signal7
+    if (
+      options !== null &&
+      options !== undefined &&
+      (_options$signal7 = options.signal) !== null &&
+      _options$signal7 !== undefined &&
+      _options$signal7.aborted
+    ) {
+      throw new AbortError()
+    }
+    for await (const val of this) {
+      var _options$signal8
+      if (
+        options !== null &&
+        options !== undefined &&
+        (_options$signal8 = options.signal) !== null &&
+        _options$signal8 !== undefined &&
+        _options$signal8.aborted
+      ) {
+        throw new AbortError()
+      }
+      if (number-- > 0) {
+        yield val
+      }
+
+      // Don't get another item from iterator in case we reached the end
+      if (number <= 0) {
+        return
+      }
+    }
+  }.call(this)
+}
+module.exports.streamReturningOperators = {
+  asIndexedPairs: deprecate(asIndexedPairs, 'readable.asIndexedPairs will be removed in a future version.'),
+  drop,
+  filter,
+  flatMap,
+  map,
+  take,
+  compose
+}
+module.exports.promiseReturningOperators = {
+  every,
+  forEach,
+  reduce,
+  toArray,
+  some,
+  find
+}
+
+
+/***/ }),
+
+/***/ 2839:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -25646,23 +25601,508 @@ Object.defineProperty(Duplex.prototype, 'destroyed', {
 
 
 
-module.exports = PassThrough;
-var Transform = __nccwpck_require__(4415);
-__nccwpck_require__(4124)(PassThrough, Transform);
+const { ObjectSetPrototypeOf } = __nccwpck_require__(9629)
+module.exports = PassThrough
+const Transform = __nccwpck_require__(6941)
+ObjectSetPrototypeOf(PassThrough.prototype, Transform.prototype)
+ObjectSetPrototypeOf(PassThrough, Transform)
 function PassThrough(options) {
-  if (!(this instanceof PassThrough)) return new PassThrough(options);
-  Transform.call(this, options);
+  if (!(this instanceof PassThrough)) return new PassThrough(options)
+  Transform.call(this, options)
 }
 PassThrough.prototype._transform = function (chunk, encoding, cb) {
-  cb(null, chunk);
-};
+  cb(null, chunk)
+}
+
 
 /***/ }),
 
-/***/ 1433:
+/***/ 6989:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
-"use strict";
+/* replacement start */
+
+const process = __nccwpck_require__(5676)
+
+/* replacement end */
+// Ported from https://github.com/mafintosh/pump with
+// permission from the author, Mathias Buus (@mafintosh).
+
+;('use strict')
+const { ArrayIsArray, Promise, SymbolAsyncIterator, SymbolDispose } = __nccwpck_require__(9629)
+const eos = __nccwpck_require__(6080)
+const { once } = __nccwpck_require__(6959)
+const destroyImpl = __nccwpck_require__(7049)
+const Duplex = __nccwpck_require__(2613)
+const {
+  aggregateTwoErrors,
+  codes: {
+    ERR_INVALID_ARG_TYPE,
+    ERR_INVALID_RETURN_VALUE,
+    ERR_MISSING_ARGS,
+    ERR_STREAM_DESTROYED,
+    ERR_STREAM_PREMATURE_CLOSE
+  },
+  AbortError
+} = __nccwpck_require__(529)
+const { validateFunction, validateAbortSignal } = __nccwpck_require__(669)
+const {
+  isIterable,
+  isReadable,
+  isReadableNodeStream,
+  isNodeStream,
+  isTransformStream,
+  isWebStream,
+  isReadableStream,
+  isReadableFinished
+} = __nccwpck_require__(7981)
+const AbortController = globalThis.AbortController || (__nccwpck_require__(1659).AbortController)
+let PassThrough
+let Readable
+let addAbortListener
+function destroyer(stream, reading, writing) {
+  let finished = false
+  stream.on('close', () => {
+    finished = true
+  })
+  const cleanup = eos(
+    stream,
+    {
+      readable: reading,
+      writable: writing
+    },
+    (err) => {
+      finished = !err
+    }
+  )
+  return {
+    destroy: (err) => {
+      if (finished) return
+      finished = true
+      destroyImpl.destroyer(stream, err || new ERR_STREAM_DESTROYED('pipe'))
+    },
+    cleanup
+  }
+}
+function popCallback(streams) {
+  // Streams should never be an empty array. It should always contain at least
+  // a single stream. Therefore optimize for the average case instead of
+  // checking for length === 0 as well.
+  validateFunction(streams[streams.length - 1], 'streams[stream.length - 1]')
+  return streams.pop()
+}
+function makeAsyncIterable(val) {
+  if (isIterable(val)) {
+    return val
+  } else if (isReadableNodeStream(val)) {
+    // Legacy streams are not Iterable.
+    return fromReadable(val)
+  }
+  throw new ERR_INVALID_ARG_TYPE('val', ['Readable', 'Iterable', 'AsyncIterable'], val)
+}
+async function* fromReadable(val) {
+  if (!Readable) {
+    Readable = __nccwpck_require__(7920)
+  }
+  yield* Readable.prototype[SymbolAsyncIterator].call(val)
+}
+async function pumpToNode(iterable, writable, finish, { end }) {
+  let error
+  let onresolve = null
+  const resume = (err) => {
+    if (err) {
+      error = err
+    }
+    if (onresolve) {
+      const callback = onresolve
+      onresolve = null
+      callback()
+    }
+  }
+  const wait = () =>
+    new Promise((resolve, reject) => {
+      if (error) {
+        reject(error)
+      } else {
+        onresolve = () => {
+          if (error) {
+            reject(error)
+          } else {
+            resolve()
+          }
+        }
+      }
+    })
+  writable.on('drain', resume)
+  const cleanup = eos(
+    writable,
+    {
+      readable: false
+    },
+    resume
+  )
+  try {
+    if (writable.writableNeedDrain) {
+      await wait()
+    }
+    for await (const chunk of iterable) {
+      if (!writable.write(chunk)) {
+        await wait()
+      }
+    }
+    if (end) {
+      writable.end()
+      await wait()
+    }
+    finish()
+  } catch (err) {
+    finish(error !== err ? aggregateTwoErrors(error, err) : err)
+  } finally {
+    cleanup()
+    writable.off('drain', resume)
+  }
+}
+async function pumpToWeb(readable, writable, finish, { end }) {
+  if (isTransformStream(writable)) {
+    writable = writable.writable
+  }
+  // https://streams.spec.whatwg.org/#example-manual-write-with-backpressure
+  const writer = writable.getWriter()
+  try {
+    for await (const chunk of readable) {
+      await writer.ready
+      writer.write(chunk).catch(() => {})
+    }
+    await writer.ready
+    if (end) {
+      await writer.close()
+    }
+    finish()
+  } catch (err) {
+    try {
+      await writer.abort(err)
+      finish(err)
+    } catch (err) {
+      finish(err)
+    }
+  }
+}
+function pipeline(...streams) {
+  return pipelineImpl(streams, once(popCallback(streams)))
+}
+function pipelineImpl(streams, callback, opts) {
+  if (streams.length === 1 && ArrayIsArray(streams[0])) {
+    streams = streams[0]
+  }
+  if (streams.length < 2) {
+    throw new ERR_MISSING_ARGS('streams')
+  }
+  const ac = new AbortController()
+  const signal = ac.signal
+  const outerSignal = opts === null || opts === undefined ? undefined : opts.signal
+
+  // Need to cleanup event listeners if last stream is readable
+  // https://github.com/nodejs/node/issues/35452
+  const lastStreamCleanup = []
+  validateAbortSignal(outerSignal, 'options.signal')
+  function abort() {
+    finishImpl(new AbortError())
+  }
+  addAbortListener = addAbortListener || (__nccwpck_require__(6959).addAbortListener)
+  let disposable
+  if (outerSignal) {
+    disposable = addAbortListener(outerSignal, abort)
+  }
+  let error
+  let value
+  const destroys = []
+  let finishCount = 0
+  function finish(err) {
+    finishImpl(err, --finishCount === 0)
+  }
+  function finishImpl(err, final) {
+    var _disposable
+    if (err && (!error || error.code === 'ERR_STREAM_PREMATURE_CLOSE')) {
+      error = err
+    }
+    if (!error && !final) {
+      return
+    }
+    while (destroys.length) {
+      destroys.shift()(error)
+    }
+    ;(_disposable = disposable) === null || _disposable === undefined ? undefined : _disposable[SymbolDispose]()
+    ac.abort()
+    if (final) {
+      if (!error) {
+        lastStreamCleanup.forEach((fn) => fn())
+      }
+      process.nextTick(callback, error, value)
+    }
+  }
+  let ret
+  for (let i = 0; i < streams.length; i++) {
+    const stream = streams[i]
+    const reading = i < streams.length - 1
+    const writing = i > 0
+    const end = reading || (opts === null || opts === undefined ? undefined : opts.end) !== false
+    const isLastStream = i === streams.length - 1
+    if (isNodeStream(stream)) {
+      if (end) {
+        const { destroy, cleanup } = destroyer(stream, reading, writing)
+        destroys.push(destroy)
+        if (isReadable(stream) && isLastStream) {
+          lastStreamCleanup.push(cleanup)
+        }
+      }
+
+      // Catch stream errors that occur after pipe/pump has completed.
+      function onError(err) {
+        if (err && err.name !== 'AbortError' && err.code !== 'ERR_STREAM_PREMATURE_CLOSE') {
+          finish(err)
+        }
+      }
+      stream.on('error', onError)
+      if (isReadable(stream) && isLastStream) {
+        lastStreamCleanup.push(() => {
+          stream.removeListener('error', onError)
+        })
+      }
+    }
+    if (i === 0) {
+      if (typeof stream === 'function') {
+        ret = stream({
+          signal
+        })
+        if (!isIterable(ret)) {
+          throw new ERR_INVALID_RETURN_VALUE('Iterable, AsyncIterable or Stream', 'source', ret)
+        }
+      } else if (isIterable(stream) || isReadableNodeStream(stream) || isTransformStream(stream)) {
+        ret = stream
+      } else {
+        ret = Duplex.from(stream)
+      }
+    } else if (typeof stream === 'function') {
+      if (isTransformStream(ret)) {
+        var _ret
+        ret = makeAsyncIterable((_ret = ret) === null || _ret === undefined ? undefined : _ret.readable)
+      } else {
+        ret = makeAsyncIterable(ret)
+      }
+      ret = stream(ret, {
+        signal
+      })
+      if (reading) {
+        if (!isIterable(ret, true)) {
+          throw new ERR_INVALID_RETURN_VALUE('AsyncIterable', `transform[${i - 1}]`, ret)
+        }
+      } else {
+        var _ret2
+        if (!PassThrough) {
+          PassThrough = __nccwpck_require__(2839)
+        }
+
+        // If the last argument to pipeline is not a stream
+        // we must create a proxy stream so that pipeline(...)
+        // always returns a stream which can be further
+        // composed through `.pipe(stream)`.
+
+        const pt = new PassThrough({
+          objectMode: true
+        })
+
+        // Handle Promises/A+ spec, `then` could be a getter that throws on
+        // second use.
+        const then = (_ret2 = ret) === null || _ret2 === undefined ? undefined : _ret2.then
+        if (typeof then === 'function') {
+          finishCount++
+          then.call(
+            ret,
+            (val) => {
+              value = val
+              if (val != null) {
+                pt.write(val)
+              }
+              if (end) {
+                pt.end()
+              }
+              process.nextTick(finish)
+            },
+            (err) => {
+              pt.destroy(err)
+              process.nextTick(finish, err)
+            }
+          )
+        } else if (isIterable(ret, true)) {
+          finishCount++
+          pumpToNode(ret, pt, finish, {
+            end
+          })
+        } else if (isReadableStream(ret) || isTransformStream(ret)) {
+          const toRead = ret.readable || ret
+          finishCount++
+          pumpToNode(toRead, pt, finish, {
+            end
+          })
+        } else {
+          throw new ERR_INVALID_RETURN_VALUE('AsyncIterable or Promise', 'destination', ret)
+        }
+        ret = pt
+        const { destroy, cleanup } = destroyer(ret, false, true)
+        destroys.push(destroy)
+        if (isLastStream) {
+          lastStreamCleanup.push(cleanup)
+        }
+      }
+    } else if (isNodeStream(stream)) {
+      if (isReadableNodeStream(ret)) {
+        finishCount += 2
+        const cleanup = pipe(ret, stream, finish, {
+          end
+        })
+        if (isReadable(stream) && isLastStream) {
+          lastStreamCleanup.push(cleanup)
+        }
+      } else if (isTransformStream(ret) || isReadableStream(ret)) {
+        const toRead = ret.readable || ret
+        finishCount++
+        pumpToNode(toRead, stream, finish, {
+          end
+        })
+      } else if (isIterable(ret)) {
+        finishCount++
+        pumpToNode(ret, stream, finish, {
+          end
+        })
+      } else {
+        throw new ERR_INVALID_ARG_TYPE(
+          'val',
+          ['Readable', 'Iterable', 'AsyncIterable', 'ReadableStream', 'TransformStream'],
+          ret
+        )
+      }
+      ret = stream
+    } else if (isWebStream(stream)) {
+      if (isReadableNodeStream(ret)) {
+        finishCount++
+        pumpToWeb(makeAsyncIterable(ret), stream, finish, {
+          end
+        })
+      } else if (isReadableStream(ret) || isIterable(ret)) {
+        finishCount++
+        pumpToWeb(ret, stream, finish, {
+          end
+        })
+      } else if (isTransformStream(ret)) {
+        finishCount++
+        pumpToWeb(ret.readable, stream, finish, {
+          end
+        })
+      } else {
+        throw new ERR_INVALID_ARG_TYPE(
+          'val',
+          ['Readable', 'Iterable', 'AsyncIterable', 'ReadableStream', 'TransformStream'],
+          ret
+        )
+      }
+      ret = stream
+    } else {
+      ret = Duplex.from(stream)
+    }
+  }
+  if (
+    (signal !== null && signal !== undefined && signal.aborted) ||
+    (outerSignal !== null && outerSignal !== undefined && outerSignal.aborted)
+  ) {
+    process.nextTick(abort)
+  }
+  return ret
+}
+function pipe(src, dst, finish, { end }) {
+  let ended = false
+  dst.on('close', () => {
+    if (!ended) {
+      // Finish if the destination closes before the source has completed.
+      finish(new ERR_STREAM_PREMATURE_CLOSE())
+    }
+  })
+  src.pipe(dst, {
+    end: false
+  }) // If end is true we already will have a listener to end dst.
+
+  if (end) {
+    // Compat. Before node v10.12.0 stdio used to throw an error so
+    // pipe() did/does not end() stdio destinations.
+    // Now they allow it but "secretly" don't close the underlying fd.
+
+    function endFn() {
+      ended = true
+      dst.end()
+    }
+    if (isReadableFinished(src)) {
+      // End the destination if the source has already ended.
+      process.nextTick(endFn)
+    } else {
+      src.once('end', endFn)
+    }
+  } else {
+    finish()
+  }
+  eos(
+    src,
+    {
+      readable: true,
+      writable: false
+    },
+    (err) => {
+      const rState = src._readableState
+      if (
+        err &&
+        err.code === 'ERR_STREAM_PREMATURE_CLOSE' &&
+        rState &&
+        rState.ended &&
+        !rState.errored &&
+        !rState.errorEmitted
+      ) {
+        // Some readable streams will emit 'close' before 'end'. However, since
+        // this is on the readable side 'end' should still be emitted if the
+        // stream has been ended and no error emitted. This should be allowed in
+        // favor of backwards compatibility. Since the stream is piped to a
+        // destination this should not result in any observable difference.
+        // We don't need to check if this is a writable premature close since
+        // eos will only fail with premature close on the reading side for
+        // duplex streams.
+        src.once('end', finish).once('error', finish)
+      } else {
+        finish(err)
+      }
+    }
+  )
+  return eos(
+    dst,
+    {
+      readable: false,
+      writable: true
+    },
+    finish
+  )
+}
+module.exports = {
+  pipelineImpl,
+  pipeline
+}
+
+
+/***/ }),
+
+/***/ 7920:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+/* replacement start */
+
+const process = __nccwpck_require__(5676)
+
+/* replacement end */
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -25684,366 +26124,402 @@ PassThrough.prototype._transform = function (chunk, encoding, cb) {
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+;('use strict')
+const {
+  ArrayPrototypeIndexOf,
+  NumberIsInteger,
+  NumberIsNaN,
+  NumberParseInt,
+  ObjectDefineProperties,
+  ObjectKeys,
+  ObjectSetPrototypeOf,
+  Promise,
+  SafeSet,
+  SymbolAsyncDispose,
+  SymbolAsyncIterator,
+  Symbol
+} = __nccwpck_require__(9629)
+module.exports = Readable
+Readable.ReadableState = ReadableState
+const { EventEmitter: EE } = __nccwpck_require__(2361)
+const { Stream, prependListener } = __nccwpck_require__(9792)
+const { Buffer } = __nccwpck_require__(4300)
+const { addAbortSignal } = __nccwpck_require__(289)
+const eos = __nccwpck_require__(6080)
+let debug = (__nccwpck_require__(6959).debuglog)('stream', (fn) => {
+  debug = fn
+})
+const BufferList = __nccwpck_require__(6522)
+const destroyImpl = __nccwpck_require__(7049)
+const { getHighWaterMark, getDefaultHighWaterMark } = __nccwpck_require__(9948)
+const {
+  aggregateTwoErrors,
+  codes: {
+    ERR_INVALID_ARG_TYPE,
+    ERR_METHOD_NOT_IMPLEMENTED,
+    ERR_OUT_OF_RANGE,
+    ERR_STREAM_PUSH_AFTER_EOF,
+    ERR_STREAM_UNSHIFT_AFTER_END_EVENT
+  },
+  AbortError
+} = __nccwpck_require__(529)
+const { validateObject } = __nccwpck_require__(669)
+const kPaused = Symbol('kPaused')
+const { StringDecoder } = __nccwpck_require__(1576)
+const from = __nccwpck_require__(9082)
+ObjectSetPrototypeOf(Readable.prototype, Stream.prototype)
+ObjectSetPrototypeOf(Readable, Stream)
+const nop = () => {}
+const { errorOrDestroy } = destroyImpl
+const kObjectMode = 1 << 0
+const kEnded = 1 << 1
+const kEndEmitted = 1 << 2
+const kReading = 1 << 3
+const kConstructed = 1 << 4
+const kSync = 1 << 5
+const kNeedReadable = 1 << 6
+const kEmittedReadable = 1 << 7
+const kReadableListening = 1 << 8
+const kResumeScheduled = 1 << 9
+const kErrorEmitted = 1 << 10
+const kEmitClose = 1 << 11
+const kAutoDestroy = 1 << 12
+const kDestroyed = 1 << 13
+const kClosed = 1 << 14
+const kCloseEmitted = 1 << 15
+const kMultiAwaitDrain = 1 << 16
+const kReadingMore = 1 << 17
+const kDataEmitted = 1 << 18
 
-
-module.exports = Readable;
-
-/*<replacement>*/
-var Duplex;
-/*</replacement>*/
-
-Readable.ReadableState = ReadableState;
-
-/*<replacement>*/
-var EE = (__nccwpck_require__(2361).EventEmitter);
-var EElistenerCount = function EElistenerCount(emitter, type) {
-  return emitter.listeners(type).length;
-};
-/*</replacement>*/
-
-/*<replacement>*/
-var Stream = __nccwpck_require__(2387);
-/*</replacement>*/
-
-var Buffer = (__nccwpck_require__(4300).Buffer);
-var OurUint8Array = (typeof global !== 'undefined' ? global : typeof window !== 'undefined' ? window : typeof self !== 'undefined' ? self : {}).Uint8Array || function () {};
-function _uint8ArrayToBuffer(chunk) {
-  return Buffer.from(chunk);
+// TODO(benjamingr) it is likely slower to do it this way than with free functions
+function makeBitMapDescriptor(bit) {
+  return {
+    enumerable: false,
+    get() {
+      return (this.state & bit) !== 0
+    },
+    set(value) {
+      if (value) this.state |= bit
+      else this.state &= ~bit
+    }
+  }
 }
-function _isUint8Array(obj) {
-  return Buffer.isBuffer(obj) || obj instanceof OurUint8Array;
-}
-
-/*<replacement>*/
-var debugUtil = __nccwpck_require__(3837);
-var debug;
-if (debugUtil && debugUtil.debuglog) {
-  debug = debugUtil.debuglog('stream');
-} else {
-  debug = function debug() {};
-}
-/*</replacement>*/
-
-var BufferList = __nccwpck_require__(6522);
-var destroyImpl = __nccwpck_require__(7049);
-var _require = __nccwpck_require__(9948),
-  getHighWaterMark = _require.getHighWaterMark;
-var _require$codes = (__nccwpck_require__(7214)/* .codes */ .q),
-  ERR_INVALID_ARG_TYPE = _require$codes.ERR_INVALID_ARG_TYPE,
-  ERR_STREAM_PUSH_AFTER_EOF = _require$codes.ERR_STREAM_PUSH_AFTER_EOF,
-  ERR_METHOD_NOT_IMPLEMENTED = _require$codes.ERR_METHOD_NOT_IMPLEMENTED,
-  ERR_STREAM_UNSHIFT_AFTER_END_EVENT = _require$codes.ERR_STREAM_UNSHIFT_AFTER_END_EVENT;
-
-// Lazy loaded to improve the startup performance.
-var StringDecoder;
-var createReadableStreamAsyncIterator;
-var from;
-__nccwpck_require__(4124)(Readable, Stream);
-var errorOrDestroy = destroyImpl.errorOrDestroy;
-var kProxyEvents = ['error', 'close', 'destroy', 'pause', 'resume'];
-function prependListener(emitter, event, fn) {
-  // Sadly this is not cacheable as some libraries bundle their own
-  // event emitter implementation with them.
-  if (typeof emitter.prependListener === 'function') return emitter.prependListener(event, fn);
-
-  // This is a hack to make sure that our error handler is attached before any
-  // userland ones.  NEVER DO THIS. This is here only because this code needs
-  // to continue to work with older versions of Node.js that do not include
-  // the prependListener() method. The goal is to eventually remove this hack.
-  if (!emitter._events || !emitter._events[event]) emitter.on(event, fn);else if (Array.isArray(emitter._events[event])) emitter._events[event].unshift(fn);else emitter._events[event] = [fn, emitter._events[event]];
-}
+ObjectDefineProperties(ReadableState.prototype, {
+  objectMode: makeBitMapDescriptor(kObjectMode),
+  ended: makeBitMapDescriptor(kEnded),
+  endEmitted: makeBitMapDescriptor(kEndEmitted),
+  reading: makeBitMapDescriptor(kReading),
+  // Stream is still being constructed and cannot be
+  // destroyed until construction finished or failed.
+  // Async construction is opt in, therefore we start as
+  // constructed.
+  constructed: makeBitMapDescriptor(kConstructed),
+  // A flag to be able to tell if the event 'readable'/'data' is emitted
+  // immediately, or on a later tick.  We set this to true at first, because
+  // any actions that shouldn't happen until "later" should generally also
+  // not happen before the first read call.
+  sync: makeBitMapDescriptor(kSync),
+  // Whenever we return null, then we set a flag to say
+  // that we're awaiting a 'readable' event emission.
+  needReadable: makeBitMapDescriptor(kNeedReadable),
+  emittedReadable: makeBitMapDescriptor(kEmittedReadable),
+  readableListening: makeBitMapDescriptor(kReadableListening),
+  resumeScheduled: makeBitMapDescriptor(kResumeScheduled),
+  // True if the error was already emitted and should not be thrown again.
+  errorEmitted: makeBitMapDescriptor(kErrorEmitted),
+  emitClose: makeBitMapDescriptor(kEmitClose),
+  autoDestroy: makeBitMapDescriptor(kAutoDestroy),
+  // Has it been destroyed.
+  destroyed: makeBitMapDescriptor(kDestroyed),
+  // Indicates whether the stream has finished destroying.
+  closed: makeBitMapDescriptor(kClosed),
+  // True if close has been emitted or would have been emitted
+  // depending on emitClose.
+  closeEmitted: makeBitMapDescriptor(kCloseEmitted),
+  multiAwaitDrain: makeBitMapDescriptor(kMultiAwaitDrain),
+  // If true, a maybeReadMore has been scheduled.
+  readingMore: makeBitMapDescriptor(kReadingMore),
+  dataEmitted: makeBitMapDescriptor(kDataEmitted)
+})
 function ReadableState(options, stream, isDuplex) {
-  Duplex = Duplex || __nccwpck_require__(1359);
-  options = options || {};
-
   // Duplex streams are both readable and writable, but share
   // the same options object.
   // However, some cases require setting options to different
   // values for the readable and the writable sides of the duplex stream.
   // These options can be provided separately as readableXXX and writableXXX.
-  if (typeof isDuplex !== 'boolean') isDuplex = stream instanceof Duplex;
+  if (typeof isDuplex !== 'boolean') isDuplex = stream instanceof __nccwpck_require__(2613)
 
-  // object stream flag. Used to make read(n) ignore n and to
-  // make all the buffer merging and length checks go away
-  this.objectMode = !!options.objectMode;
-  if (isDuplex) this.objectMode = this.objectMode || !!options.readableObjectMode;
+  // Bit map field to store ReadableState more effciently with 1 bit per field
+  // instead of a V8 slot per field.
+  this.state = kEmitClose | kAutoDestroy | kConstructed | kSync
+  // Object stream flag. Used to make read(n) ignore n and to
+  // make all the buffer merging and length checks go away.
+  if (options && options.objectMode) this.state |= kObjectMode
+  if (isDuplex && options && options.readableObjectMode) this.state |= kObjectMode
 
-  // the point at which it stops calling _read() to fill the buffer
+  // The point at which it stops calling _read() to fill the buffer
   // Note: 0 is a valid value, means "don't call _read preemptively ever"
-  this.highWaterMark = getHighWaterMark(this, options, 'readableHighWaterMark', isDuplex);
+  this.highWaterMark = options
+    ? getHighWaterMark(this, options, 'readableHighWaterMark', isDuplex)
+    : getDefaultHighWaterMark(false)
 
   // A linked list is used to store data chunks instead of an array because the
   // linked list can remove elements from the beginning faster than
-  // array.shift()
-  this.buffer = new BufferList();
-  this.length = 0;
-  this.pipes = null;
-  this.pipesCount = 0;
-  this.flowing = null;
-  this.ended = false;
-  this.endEmitted = false;
-  this.reading = false;
-
-  // a flag to be able to tell if the event 'readable'/'data' is emitted
-  // immediately, or on a later tick.  We set this to true at first, because
-  // any actions that shouldn't happen until "later" should generally also
-  // not happen before the first read call.
-  this.sync = true;
-
-  // whenever we return null, then we set a flag to say
-  // that we're awaiting a 'readable' event emission.
-  this.needReadable = false;
-  this.emittedReadable = false;
-  this.readableListening = false;
-  this.resumeScheduled = false;
-  this.paused = true;
+  // array.shift().
+  this.buffer = new BufferList()
+  this.length = 0
+  this.pipes = []
+  this.flowing = null
+  this[kPaused] = null
 
   // Should close be emitted on destroy. Defaults to true.
-  this.emitClose = options.emitClose !== false;
+  if (options && options.emitClose === false) this.state &= ~kEmitClose
 
-  // Should .destroy() be called after 'end' (and potentially 'finish')
-  this.autoDestroy = !!options.autoDestroy;
+  // Should .destroy() be called after 'end' (and potentially 'finish').
+  if (options && options.autoDestroy === false) this.state &= ~kAutoDestroy
 
-  // has it been destroyed
-  this.destroyed = false;
+  // Indicates whether the stream has errored. When true no further
+  // _read calls, 'data' or 'readable' events should occur. This is needed
+  // since when autoDestroy is disabled we need a way to tell whether the
+  // stream has failed.
+  this.errored = null
 
   // Crypto is kind of old and crusty.  Historically, its default string
   // encoding is 'binary' so we have to make this configurable.
   // Everything else in the universe uses 'utf8', though.
-  this.defaultEncoding = options.defaultEncoding || 'utf8';
+  this.defaultEncoding = (options && options.defaultEncoding) || 'utf8'
 
-  // the number of writers that are awaiting a drain event in .pipe()s
-  this.awaitDrain = 0;
-
-  // if true, a maybeReadMore has been scheduled
-  this.readingMore = false;
-  this.decoder = null;
-  this.encoding = null;
-  if (options.encoding) {
-    if (!StringDecoder) StringDecoder = (__nccwpck_require__(4841)/* .StringDecoder */ .s);
-    this.decoder = new StringDecoder(options.encoding);
-    this.encoding = options.encoding;
+  // Ref the piped dest which we need a drain event on it
+  // type: null | Writable | Set<Writable>.
+  this.awaitDrainWriters = null
+  this.decoder = null
+  this.encoding = null
+  if (options && options.encoding) {
+    this.decoder = new StringDecoder(options.encoding)
+    this.encoding = options.encoding
   }
 }
 function Readable(options) {
-  Duplex = Duplex || __nccwpck_require__(1359);
-  if (!(this instanceof Readable)) return new Readable(options);
+  if (!(this instanceof Readable)) return new Readable(options)
 
   // Checking for a Stream.Duplex instance is faster here instead of inside
-  // the ReadableState constructor, at least with V8 6.5
-  var isDuplex = this instanceof Duplex;
-  this._readableState = new ReadableState(options, this, isDuplex);
-
-  // legacy
-  this.readable = true;
+  // the ReadableState constructor, at least with V8 6.5.
+  const isDuplex = this instanceof __nccwpck_require__(2613)
+  this._readableState = new ReadableState(options, this, isDuplex)
   if (options) {
-    if (typeof options.read === 'function') this._read = options.read;
-    if (typeof options.destroy === 'function') this._destroy = options.destroy;
+    if (typeof options.read === 'function') this._read = options.read
+    if (typeof options.destroy === 'function') this._destroy = options.destroy
+    if (typeof options.construct === 'function') this._construct = options.construct
+    if (options.signal && !isDuplex) addAbortSignal(options.signal, this)
   }
-  Stream.call(this);
+  Stream.call(this, options)
+  destroyImpl.construct(this, () => {
+    if (this._readableState.needReadable) {
+      maybeReadMore(this, this._readableState)
+    }
+  })
 }
-Object.defineProperty(Readable.prototype, 'destroyed', {
-  // making it explicit this property is not enumerable
-  // because otherwise some prototype manipulation in
-  // userland will fail
-  enumerable: false,
-  get: function get() {
-    if (this._readableState === undefined) {
-      return false;
-    }
-    return this._readableState.destroyed;
-  },
-  set: function set(value) {
-    // we ignore the value if the stream
-    // has not been initialized yet
-    if (!this._readableState) {
-      return;
-    }
-
-    // backward compatibility, the user is explicitly
-    // managing destroyed
-    this._readableState.destroyed = value;
-  }
-});
-Readable.prototype.destroy = destroyImpl.destroy;
-Readable.prototype._undestroy = destroyImpl.undestroy;
+Readable.prototype.destroy = destroyImpl.destroy
+Readable.prototype._undestroy = destroyImpl.undestroy
 Readable.prototype._destroy = function (err, cb) {
-  cb(err);
-};
+  cb(err)
+}
+Readable.prototype[EE.captureRejectionSymbol] = function (err) {
+  this.destroy(err)
+}
+Readable.prototype[SymbolAsyncDispose] = function () {
+  let error
+  if (!this.destroyed) {
+    error = this.readableEnded ? null : new AbortError()
+    this.destroy(error)
+  }
+  return new Promise((resolve, reject) => eos(this, (err) => (err && err !== error ? reject(err) : resolve(null))))
+}
 
 // Manually shove something into the read() buffer.
 // This returns true if the highWaterMark has not been hit yet,
 // similar to how Writable.write() returns true if you should
 // write() some more.
 Readable.prototype.push = function (chunk, encoding) {
-  var state = this._readableState;
-  var skipChunkCheck;
-  if (!state.objectMode) {
-    if (typeof chunk === 'string') {
-      encoding = encoding || state.defaultEncoding;
-      if (encoding !== state.encoding) {
-        chunk = Buffer.from(chunk, encoding);
-        encoding = '';
-      }
-      skipChunkCheck = true;
-    }
-  } else {
-    skipChunkCheck = true;
-  }
-  return readableAddChunk(this, chunk, encoding, false, skipChunkCheck);
-};
+  return readableAddChunk(this, chunk, encoding, false)
+}
 
-// Unshift should *always* be something directly out of read()
-Readable.prototype.unshift = function (chunk) {
-  return readableAddChunk(this, chunk, null, true, false);
-};
-function readableAddChunk(stream, chunk, encoding, addToFront, skipChunkCheck) {
-  debug('readableAddChunk', chunk);
-  var state = stream._readableState;
-  if (chunk === null) {
-    state.reading = false;
-    onEofChunk(stream, state);
-  } else {
-    var er;
-    if (!skipChunkCheck) er = chunkInvalid(state, chunk);
-    if (er) {
-      errorOrDestroy(stream, er);
-    } else if (state.objectMode || chunk && chunk.length > 0) {
-      if (typeof chunk !== 'string' && !state.objectMode && Object.getPrototypeOf(chunk) !== Buffer.prototype) {
-        chunk = _uint8ArrayToBuffer(chunk);
-      }
-      if (addToFront) {
-        if (state.endEmitted) errorOrDestroy(stream, new ERR_STREAM_UNSHIFT_AFTER_END_EVENT());else addChunk(stream, state, chunk, true);
-      } else if (state.ended) {
-        errorOrDestroy(stream, new ERR_STREAM_PUSH_AFTER_EOF());
-      } else if (state.destroyed) {
-        return false;
-      } else {
-        state.reading = false;
-        if (state.decoder && !encoding) {
-          chunk = state.decoder.write(chunk);
-          if (state.objectMode || chunk.length !== 0) addChunk(stream, state, chunk, false);else maybeReadMore(stream, state);
+// Unshift should *always* be something directly out of read().
+Readable.prototype.unshift = function (chunk, encoding) {
+  return readableAddChunk(this, chunk, encoding, true)
+}
+function readableAddChunk(stream, chunk, encoding, addToFront) {
+  debug('readableAddChunk', chunk)
+  const state = stream._readableState
+  let err
+  if ((state.state & kObjectMode) === 0) {
+    if (typeof chunk === 'string') {
+      encoding = encoding || state.defaultEncoding
+      if (state.encoding !== encoding) {
+        if (addToFront && state.encoding) {
+          // When unshifting, if state.encoding is set, we have to save
+          // the string in the BufferList with the state encoding.
+          chunk = Buffer.from(chunk, encoding).toString(state.encoding)
         } else {
-          addChunk(stream, state, chunk, false);
+          chunk = Buffer.from(chunk, encoding)
+          encoding = ''
         }
       }
-    } else if (!addToFront) {
-      state.reading = false;
-      maybeReadMore(stream, state);
+    } else if (chunk instanceof Buffer) {
+      encoding = ''
+    } else if (Stream._isUint8Array(chunk)) {
+      chunk = Stream._uint8ArrayToBuffer(chunk)
+      encoding = ''
+    } else if (chunk != null) {
+      err = new ERR_INVALID_ARG_TYPE('chunk', ['string', 'Buffer', 'Uint8Array'], chunk)
     }
+  }
+  if (err) {
+    errorOrDestroy(stream, err)
+  } else if (chunk === null) {
+    state.state &= ~kReading
+    onEofChunk(stream, state)
+  } else if ((state.state & kObjectMode) !== 0 || (chunk && chunk.length > 0)) {
+    if (addToFront) {
+      if ((state.state & kEndEmitted) !== 0) errorOrDestroy(stream, new ERR_STREAM_UNSHIFT_AFTER_END_EVENT())
+      else if (state.destroyed || state.errored) return false
+      else addChunk(stream, state, chunk, true)
+    } else if (state.ended) {
+      errorOrDestroy(stream, new ERR_STREAM_PUSH_AFTER_EOF())
+    } else if (state.destroyed || state.errored) {
+      return false
+    } else {
+      state.state &= ~kReading
+      if (state.decoder && !encoding) {
+        chunk = state.decoder.write(chunk)
+        if (state.objectMode || chunk.length !== 0) addChunk(stream, state, chunk, false)
+        else maybeReadMore(stream, state)
+      } else {
+        addChunk(stream, state, chunk, false)
+      }
+    }
+  } else if (!addToFront) {
+    state.state &= ~kReading
+    maybeReadMore(stream, state)
   }
 
   // We can push more data if we are below the highWaterMark.
   // Also, if we have no data yet, we can stand some more bytes.
   // This is to work around cases where hwm=0, such as the repl.
-  return !state.ended && (state.length < state.highWaterMark || state.length === 0);
+  return !state.ended && (state.length < state.highWaterMark || state.length === 0)
 }
 function addChunk(stream, state, chunk, addToFront) {
-  if (state.flowing && state.length === 0 && !state.sync) {
-    state.awaitDrain = 0;
-    stream.emit('data', chunk);
+  if (state.flowing && state.length === 0 && !state.sync && stream.listenerCount('data') > 0) {
+    // Use the guard to avoid creating `Set()` repeatedly
+    // when we have multiple pipes.
+    if ((state.state & kMultiAwaitDrain) !== 0) {
+      state.awaitDrainWriters.clear()
+    } else {
+      state.awaitDrainWriters = null
+    }
+    state.dataEmitted = true
+    stream.emit('data', chunk)
   } else {
-    // update the buffer info.
-    state.length += state.objectMode ? 1 : chunk.length;
-    if (addToFront) state.buffer.unshift(chunk);else state.buffer.push(chunk);
-    if (state.needReadable) emitReadable(stream);
+    // Update the buffer info.
+    state.length += state.objectMode ? 1 : chunk.length
+    if (addToFront) state.buffer.unshift(chunk)
+    else state.buffer.push(chunk)
+    if ((state.state & kNeedReadable) !== 0) emitReadable(stream)
   }
-  maybeReadMore(stream, state);
-}
-function chunkInvalid(state, chunk) {
-  var er;
-  if (!_isUint8Array(chunk) && typeof chunk !== 'string' && chunk !== undefined && !state.objectMode) {
-    er = new ERR_INVALID_ARG_TYPE('chunk', ['string', 'Buffer', 'Uint8Array'], chunk);
-  }
-  return er;
+  maybeReadMore(stream, state)
 }
 Readable.prototype.isPaused = function () {
-  return this._readableState.flowing === false;
-};
+  const state = this._readableState
+  return state[kPaused] === true || state.flowing === false
+}
 
-// backwards compatibility.
+// Backwards compatibility.
 Readable.prototype.setEncoding = function (enc) {
-  if (!StringDecoder) StringDecoder = (__nccwpck_require__(4841)/* .StringDecoder */ .s);
-  var decoder = new StringDecoder(enc);
-  this._readableState.decoder = decoder;
-  // If setEncoding(null), decoder.encoding equals utf8
-  this._readableState.encoding = this._readableState.decoder.encoding;
-
+  const decoder = new StringDecoder(enc)
+  this._readableState.decoder = decoder
+  // If setEncoding(null), decoder.encoding equals utf8.
+  this._readableState.encoding = this._readableState.decoder.encoding
+  const buffer = this._readableState.buffer
   // Iterate over current buffer to convert already stored Buffers:
-  var p = this._readableState.buffer.head;
-  var content = '';
-  while (p !== null) {
-    content += decoder.write(p.data);
-    p = p.next;
+  let content = ''
+  for (const data of buffer) {
+    content += decoder.write(data)
   }
-  this._readableState.buffer.clear();
-  if (content !== '') this._readableState.buffer.push(content);
-  this._readableState.length = content.length;
-  return this;
-};
+  buffer.clear()
+  if (content !== '') buffer.push(content)
+  this._readableState.length = content.length
+  return this
+}
 
-// Don't raise the hwm > 1GB
-var MAX_HWM = 0x40000000;
+// Don't raise the hwm > 1GB.
+const MAX_HWM = 0x40000000
 function computeNewHighWaterMark(n) {
-  if (n >= MAX_HWM) {
-    // TODO(ronag): Throw ERR_VALUE_OUT_OF_RANGE.
-    n = MAX_HWM;
+  if (n > MAX_HWM) {
+    throw new ERR_OUT_OF_RANGE('size', '<= 1GiB', n)
   } else {
     // Get the next highest power of 2 to prevent increasing hwm excessively in
-    // tiny amounts
-    n--;
-    n |= n >>> 1;
-    n |= n >>> 2;
-    n |= n >>> 4;
-    n |= n >>> 8;
-    n |= n >>> 16;
-    n++;
+    // tiny amounts.
+    n--
+    n |= n >>> 1
+    n |= n >>> 2
+    n |= n >>> 4
+    n |= n >>> 8
+    n |= n >>> 16
+    n++
   }
-  return n;
+  return n
 }
 
 // This function is designed to be inlinable, so please take care when making
 // changes to the function body.
 function howMuchToRead(n, state) {
-  if (n <= 0 || state.length === 0 && state.ended) return 0;
-  if (state.objectMode) return 1;
-  if (n !== n) {
-    // Only flow one buffer at a time
-    if (state.flowing && state.length) return state.buffer.head.data.length;else return state.length;
+  if (n <= 0 || (state.length === 0 && state.ended)) return 0
+  if ((state.state & kObjectMode) !== 0) return 1
+  if (NumberIsNaN(n)) {
+    // Only flow one buffer at a time.
+    if (state.flowing && state.length) return state.buffer.first().length
+    return state.length
   }
-  // If we're asking for more than the current hwm, then raise the hwm.
-  if (n > state.highWaterMark) state.highWaterMark = computeNewHighWaterMark(n);
-  if (n <= state.length) return n;
-  // Don't have enough
-  if (!state.ended) {
-    state.needReadable = true;
-    return 0;
-  }
-  return state.length;
+  if (n <= state.length) return n
+  return state.ended ? state.length : 0
 }
 
-// you can override either this method, or the async _read(n) below.
+// You can override either this method, or the async _read(n) below.
 Readable.prototype.read = function (n) {
-  debug('read', n);
-  n = parseInt(n, 10);
-  var state = this._readableState;
-  var nOrig = n;
-  if (n !== 0) state.emittedReadable = false;
+  debug('read', n)
+  // Same as parseInt(undefined, 10), however V8 7.3 performance regressed
+  // in this scenario, so we are doing it manually.
+  if (n === undefined) {
+    n = NaN
+  } else if (!NumberIsInteger(n)) {
+    n = NumberParseInt(n, 10)
+  }
+  const state = this._readableState
+  const nOrig = n
 
-  // if we're doing read(0) to trigger a readable event, but we
+  // If we're asking for more than the current hwm, then raise the hwm.
+  if (n > state.highWaterMark) state.highWaterMark = computeNewHighWaterMark(n)
+  if (n !== 0) state.state &= ~kEmittedReadable
+
+  // If we're doing read(0) to trigger a readable event, but we
   // already have a bunch of data in the buffer, then just trigger
   // the 'readable' event and move on.
-  if (n === 0 && state.needReadable && ((state.highWaterMark !== 0 ? state.length >= state.highWaterMark : state.length > 0) || state.ended)) {
-    debug('read: emitReadable', state.length, state.ended);
-    if (state.length === 0 && state.ended) endReadable(this);else emitReadable(this);
-    return null;
+  if (
+    n === 0 &&
+    state.needReadable &&
+    ((state.highWaterMark !== 0 ? state.length >= state.highWaterMark : state.length > 0) || state.ended)
+  ) {
+    debug('read: emitReadable', state.length, state.ended)
+    if (state.length === 0 && state.ended) endReadable(this)
+    else emitReadable(this)
+    return null
   }
-  n = howMuchToRead(n, state);
+  n = howMuchToRead(n, state)
 
-  // if we've ended, and we're now clear, then finish it up.
+  // If we've ended, and we're now clear, then finish it up.
   if (n === 0 && state.ended) {
-    if (state.length === 0) endReadable(this);
-    return null;
+    if (state.length === 0) endReadable(this)
+    return null
   }
 
   // All the actual chunk generation logic needs to be
@@ -26069,76 +26545,90 @@ Readable.prototype.read = function (n) {
   // 3. Actually pull the requested chunks out of the buffer and return.
 
   // if we need a readable event, then we need to do some reading.
-  var doRead = state.needReadable;
-  debug('need readable', doRead);
+  let doRead = (state.state & kNeedReadable) !== 0
+  debug('need readable', doRead)
 
-  // if we currently have less than the highWaterMark, then also read some
+  // If we currently have less than the highWaterMark, then also read some.
   if (state.length === 0 || state.length - n < state.highWaterMark) {
-    doRead = true;
-    debug('length less than watermark', doRead);
+    doRead = true
+    debug('length less than watermark', doRead)
   }
 
-  // however, if we've ended, then there's no point, and if we're already
-  // reading, then it's unnecessary.
-  if (state.ended || state.reading) {
-    doRead = false;
-    debug('reading or ended', doRead);
+  // However, if we've ended, then there's no point, if we're already
+  // reading, then it's unnecessary, if we're constructing we have to wait,
+  // and if we're destroyed or errored, then it's not allowed,
+  if (state.ended || state.reading || state.destroyed || state.errored || !state.constructed) {
+    doRead = false
+    debug('reading, ended or constructing', doRead)
   } else if (doRead) {
-    debug('do read');
-    state.reading = true;
-    state.sync = true;
-    // if the length is currently zero, then we *need* a readable event.
-    if (state.length === 0) state.needReadable = true;
-    // call internal read method
-    this._read(state.highWaterMark);
-    state.sync = false;
+    debug('do read')
+    state.state |= kReading | kSync
+    // If the length is currently zero, then we *need* a readable event.
+    if (state.length === 0) state.state |= kNeedReadable
+
+    // Call internal read method
+    try {
+      this._read(state.highWaterMark)
+    } catch (err) {
+      errorOrDestroy(this, err)
+    }
+    state.state &= ~kSync
+
     // If _read pushed data synchronously, then `reading` will be false,
     // and we need to re-evaluate how much data we can return to the user.
-    if (!state.reading) n = howMuchToRead(nOrig, state);
+    if (!state.reading) n = howMuchToRead(nOrig, state)
   }
-  var ret;
-  if (n > 0) ret = fromList(n, state);else ret = null;
+  let ret
+  if (n > 0) ret = fromList(n, state)
+  else ret = null
   if (ret === null) {
-    state.needReadable = state.length <= state.highWaterMark;
-    n = 0;
+    state.needReadable = state.length <= state.highWaterMark
+    n = 0
   } else {
-    state.length -= n;
-    state.awaitDrain = 0;
+    state.length -= n
+    if (state.multiAwaitDrain) {
+      state.awaitDrainWriters.clear()
+    } else {
+      state.awaitDrainWriters = null
+    }
   }
   if (state.length === 0) {
     // If we have nothing in the buffer, then we want to know
     // as soon as we *do* get something into the buffer.
-    if (!state.ended) state.needReadable = true;
+    if (!state.ended) state.needReadable = true
 
     // If we tried to read() past the EOF, then emit end on the next tick.
-    if (nOrig !== n && state.ended) endReadable(this);
+    if (nOrig !== n && state.ended) endReadable(this)
   }
-  if (ret !== null) this.emit('data', ret);
-  return ret;
-};
+  if (ret !== null && !state.errorEmitted && !state.closeEmitted) {
+    state.dataEmitted = true
+    this.emit('data', ret)
+  }
+  return ret
+}
 function onEofChunk(stream, state) {
-  debug('onEofChunk');
-  if (state.ended) return;
+  debug('onEofChunk')
+  if (state.ended) return
   if (state.decoder) {
-    var chunk = state.decoder.end();
+    const chunk = state.decoder.end()
     if (chunk && chunk.length) {
-      state.buffer.push(chunk);
-      state.length += state.objectMode ? 1 : chunk.length;
+      state.buffer.push(chunk)
+      state.length += state.objectMode ? 1 : chunk.length
     }
   }
-  state.ended = true;
+  state.ended = true
   if (state.sync) {
-    // if we are sync, wait until next tick to emit the data.
+    // If we are sync, wait until next tick to emit the data.
     // Otherwise we risk emitting data in the flow()
-    // the readable code triggers during a read() call
-    emitReadable(stream);
+    // the readable code triggers during a read() call.
+    emitReadable(stream)
   } else {
-    // emit 'readable' now to make sure it gets picked up.
-    state.needReadable = false;
-    if (!state.emittedReadable) {
-      state.emittedReadable = true;
-      emitReadable_(stream);
-    }
+    // Emit 'readable' now to make sure it gets picked up.
+    state.needReadable = false
+    state.emittedReadable = true
+    // We have to emit readable now that we are EOF. Modules
+    // in the ecosystem (e.g. dicer) rely on this event being sync.
+    emitReadable_(stream)
   }
 }
 
@@ -26146,43 +26636,43 @@ function onEofChunk(stream, state) {
 // another read() call => stack overflow.  This way, it might trigger
 // a nextTick recursion warning, but that's not so bad.
 function emitReadable(stream) {
-  var state = stream._readableState;
-  debug('emitReadable', state.needReadable, state.emittedReadable);
-  state.needReadable = false;
+  const state = stream._readableState
+  debug('emitReadable', state.needReadable, state.emittedReadable)
+  state.needReadable = false
   if (!state.emittedReadable) {
-    debug('emitReadable', state.flowing);
-    state.emittedReadable = true;
-    process.nextTick(emitReadable_, stream);
+    debug('emitReadable', state.flowing)
+    state.emittedReadable = true
+    process.nextTick(emitReadable_, stream)
   }
 }
 function emitReadable_(stream) {
-  var state = stream._readableState;
-  debug('emitReadable_', state.destroyed, state.length, state.ended);
-  if (!state.destroyed && (state.length || state.ended)) {
-    stream.emit('readable');
-    state.emittedReadable = false;
+  const state = stream._readableState
+  debug('emitReadable_', state.destroyed, state.length, state.ended)
+  if (!state.destroyed && !state.errored && (state.length || state.ended)) {
+    stream.emit('readable')
+    state.emittedReadable = false
   }
 
-  // The stream needs another readable event if
+  // The stream needs another readable event if:
   // 1. It is not flowing, as the flow mechanism will take
   //    care of it.
   // 2. It is not ended.
   // 3. It is below the highWaterMark, so we can schedule
   //    another readable later.
-  state.needReadable = !state.flowing && !state.ended && state.length <= state.highWaterMark;
-  flow(stream);
+  state.needReadable = !state.flowing && !state.ended && state.length <= state.highWaterMark
+  flow(stream)
 }
 
-// at this point, the user has presumably seen the 'readable' event,
+// At this point, the user has presumably seen the 'readable' event,
 // and called read() to consume some data.  that may have triggered
 // in turn another _read(n) call, in which case reading = true if
 // it's in progress.
 // However, if we're not ended, or reading, and the length < hwm,
 // then go ahead and try to read some more preemptively.
 function maybeReadMore(stream, state) {
-  if (!state.readingMore) {
-    state.readingMore = true;
-    process.nextTick(maybeReadMore_, stream, state);
+  if (!state.readingMore && state.constructed) {
+    state.readingMore = true
+    process.nextTick(maybeReadMore_, stream, state)
   }
 }
 function maybeReadMore_(stream, state) {
@@ -26204,236 +26694,249 @@ function maybeReadMore_(stream, state) {
   // conditions prevent the data from being read:
   // - The stream has ended (state.ended).
   // - There is already a pending 'read' operation (state.reading). This is a
-  //   case where the the stream has called the implementation defined _read()
+  //   case where the stream has called the implementation defined _read()
   //   method, but they are processing the call asynchronously and have _not_
   //   called push() with new data. In this case we skip performing more
   //   read()s. The execution ends in this method again after the _read() ends
   //   up calling push() with more data.
-  while (!state.reading && !state.ended && (state.length < state.highWaterMark || state.flowing && state.length === 0)) {
-    var len = state.length;
-    debug('maybeReadMore read 0');
-    stream.read(0);
+  while (
+    !state.reading &&
+    !state.ended &&
+    (state.length < state.highWaterMark || (state.flowing && state.length === 0))
+  ) {
+    const len = state.length
+    debug('maybeReadMore read 0')
+    stream.read(0)
     if (len === state.length)
-      // didn't get any data, stop spinning.
-      break;
+      // Didn't get any data, stop spinning.
+      break
   }
-  state.readingMore = false;
+  state.readingMore = false
 }
 
-// abstract method.  to be overridden in specific implementation classes.
+// Abstract method.  to be overridden in specific implementation classes.
 // call cb(er, data) where data is <= n in length.
 // for virtual (non-string, non-buffer) streams, "length" is somewhat
 // arbitrary, and perhaps not very meaningful.
 Readable.prototype._read = function (n) {
-  errorOrDestroy(this, new ERR_METHOD_NOT_IMPLEMENTED('_read()'));
-};
+  throw new ERR_METHOD_NOT_IMPLEMENTED('_read()')
+}
 Readable.prototype.pipe = function (dest, pipeOpts) {
-  var src = this;
-  var state = this._readableState;
-  switch (state.pipesCount) {
-    case 0:
-      state.pipes = dest;
-      break;
-    case 1:
-      state.pipes = [state.pipes, dest];
-      break;
-    default:
-      state.pipes.push(dest);
-      break;
+  const src = this
+  const state = this._readableState
+  if (state.pipes.length === 1) {
+    if (!state.multiAwaitDrain) {
+      state.multiAwaitDrain = true
+      state.awaitDrainWriters = new SafeSet(state.awaitDrainWriters ? [state.awaitDrainWriters] : [])
+    }
   }
-  state.pipesCount += 1;
-  debug('pipe count=%d opts=%j', state.pipesCount, pipeOpts);
-  var doEnd = (!pipeOpts || pipeOpts.end !== false) && dest !== process.stdout && dest !== process.stderr;
-  var endFn = doEnd ? onend : unpipe;
-  if (state.endEmitted) process.nextTick(endFn);else src.once('end', endFn);
-  dest.on('unpipe', onunpipe);
+  state.pipes.push(dest)
+  debug('pipe count=%d opts=%j', state.pipes.length, pipeOpts)
+  const doEnd = (!pipeOpts || pipeOpts.end !== false) && dest !== process.stdout && dest !== process.stderr
+  const endFn = doEnd ? onend : unpipe
+  if (state.endEmitted) process.nextTick(endFn)
+  else src.once('end', endFn)
+  dest.on('unpipe', onunpipe)
   function onunpipe(readable, unpipeInfo) {
-    debug('onunpipe');
+    debug('onunpipe')
     if (readable === src) {
       if (unpipeInfo && unpipeInfo.hasUnpiped === false) {
-        unpipeInfo.hasUnpiped = true;
-        cleanup();
+        unpipeInfo.hasUnpiped = true
+        cleanup()
       }
     }
   }
   function onend() {
-    debug('onend');
-    dest.end();
+    debug('onend')
+    dest.end()
   }
-
-  // when the dest drains, it reduces the awaitDrain counter
-  // on the source.  This would be more elegant with a .once()
-  // handler in flow(), but adding and removing repeatedly is
-  // too slow.
-  var ondrain = pipeOnDrain(src);
-  dest.on('drain', ondrain);
-  var cleanedUp = false;
+  let ondrain
+  let cleanedUp = false
   function cleanup() {
-    debug('cleanup');
-    // cleanup event handlers once the pipe is broken
-    dest.removeListener('close', onclose);
-    dest.removeListener('finish', onfinish);
-    dest.removeListener('drain', ondrain);
-    dest.removeListener('error', onerror);
-    dest.removeListener('unpipe', onunpipe);
-    src.removeListener('end', onend);
-    src.removeListener('end', unpipe);
-    src.removeListener('data', ondata);
-    cleanedUp = true;
+    debug('cleanup')
+    // Cleanup event handlers once the pipe is broken.
+    dest.removeListener('close', onclose)
+    dest.removeListener('finish', onfinish)
+    if (ondrain) {
+      dest.removeListener('drain', ondrain)
+    }
+    dest.removeListener('error', onerror)
+    dest.removeListener('unpipe', onunpipe)
+    src.removeListener('end', onend)
+    src.removeListener('end', unpipe)
+    src.removeListener('data', ondata)
+    cleanedUp = true
 
-    // if the reader is waiting for a drain event from this
+    // If the reader is waiting for a drain event from this
     // specific writer, then it would cause it to never start
     // flowing again.
     // So, if this is awaiting a drain, then we just call it now.
     // If we don't know, then assume that we are waiting for one.
-    if (state.awaitDrain && (!dest._writableState || dest._writableState.needDrain)) ondrain();
+    if (ondrain && state.awaitDrainWriters && (!dest._writableState || dest._writableState.needDrain)) ondrain()
   }
-  src.on('data', ondata);
-  function ondata(chunk) {
-    debug('ondata');
-    var ret = dest.write(chunk);
-    debug('dest.write', ret);
-    if (ret === false) {
-      // If the user unpiped during `dest.write()`, it is possible
-      // to get stuck in a permanently paused state if that write
-      // also returned false.
-      // => Check whether `dest` is still a piping destination.
-      if ((state.pipesCount === 1 && state.pipes === dest || state.pipesCount > 1 && indexOf(state.pipes, dest) !== -1) && !cleanedUp) {
-        debug('false write response, pause', state.awaitDrain);
-        state.awaitDrain++;
+  function pause() {
+    // If the user unpiped during `dest.write()`, it is possible
+    // to get stuck in a permanently paused state if that write
+    // also returned false.
+    // => Check whether `dest` is still a piping destination.
+    if (!cleanedUp) {
+      if (state.pipes.length === 1 && state.pipes[0] === dest) {
+        debug('false write response, pause', 0)
+        state.awaitDrainWriters = dest
+        state.multiAwaitDrain = false
+      } else if (state.pipes.length > 1 && state.pipes.includes(dest)) {
+        debug('false write response, pause', state.awaitDrainWriters.size)
+        state.awaitDrainWriters.add(dest)
       }
-      src.pause();
+      src.pause()
+    }
+    if (!ondrain) {
+      // When the dest drains, it reduces the awaitDrain counter
+      // on the source.  This would be more elegant with a .once()
+      // handler in flow(), but adding and removing repeatedly is
+      // too slow.
+      ondrain = pipeOnDrain(src, dest)
+      dest.on('drain', ondrain)
+    }
+  }
+  src.on('data', ondata)
+  function ondata(chunk) {
+    debug('ondata')
+    const ret = dest.write(chunk)
+    debug('dest.write', ret)
+    if (ret === false) {
+      pause()
     }
   }
 
-  // if the dest has an error, then stop piping into it.
-  // however, don't suppress the throwing behavior for this.
+  // If the dest has an error, then stop piping into it.
+  // However, don't suppress the throwing behavior for this.
   function onerror(er) {
-    debug('onerror', er);
-    unpipe();
-    dest.removeListener('error', onerror);
-    if (EElistenerCount(dest, 'error') === 0) errorOrDestroy(dest, er);
+    debug('onerror', er)
+    unpipe()
+    dest.removeListener('error', onerror)
+    if (dest.listenerCount('error') === 0) {
+      const s = dest._writableState || dest._readableState
+      if (s && !s.errorEmitted) {
+        // User incorrectly emitted 'error' directly on the stream.
+        errorOrDestroy(dest, er)
+      } else {
+        dest.emit('error', er)
+      }
+    }
   }
 
   // Make sure our error handler is attached before userland ones.
-  prependListener(dest, 'error', onerror);
+  prependListener(dest, 'error', onerror)
 
   // Both close and finish should trigger unpipe, but only once.
   function onclose() {
-    dest.removeListener('finish', onfinish);
-    unpipe();
+    dest.removeListener('finish', onfinish)
+    unpipe()
   }
-  dest.once('close', onclose);
+  dest.once('close', onclose)
   function onfinish() {
-    debug('onfinish');
-    dest.removeListener('close', onclose);
-    unpipe();
+    debug('onfinish')
+    dest.removeListener('close', onclose)
+    unpipe()
   }
-  dest.once('finish', onfinish);
+  dest.once('finish', onfinish)
   function unpipe() {
-    debug('unpipe');
-    src.unpipe(dest);
+    debug('unpipe')
+    src.unpipe(dest)
   }
 
-  // tell the dest that it's being piped to
-  dest.emit('pipe', src);
+  // Tell the dest that it's being piped to.
+  dest.emit('pipe', src)
 
-  // start the flow if it hasn't been started already.
-  if (!state.flowing) {
-    debug('pipe resume');
-    src.resume();
+  // Start the flow if it hasn't been started already.
+
+  if (dest.writableNeedDrain === true) {
+    pause()
+  } else if (!state.flowing) {
+    debug('pipe resume')
+    src.resume()
   }
-  return dest;
-};
-function pipeOnDrain(src) {
+  return dest
+}
+function pipeOnDrain(src, dest) {
   return function pipeOnDrainFunctionResult() {
-    var state = src._readableState;
-    debug('pipeOnDrain', state.awaitDrain);
-    if (state.awaitDrain) state.awaitDrain--;
-    if (state.awaitDrain === 0 && EElistenerCount(src, 'data')) {
-      state.flowing = true;
-      flow(src);
+    const state = src._readableState
+
+    // `ondrain` will call directly,
+    // `this` maybe not a reference to dest,
+    // so we use the real dest here.
+    if (state.awaitDrainWriters === dest) {
+      debug('pipeOnDrain', 1)
+      state.awaitDrainWriters = null
+    } else if (state.multiAwaitDrain) {
+      debug('pipeOnDrain', state.awaitDrainWriters.size)
+      state.awaitDrainWriters.delete(dest)
     }
-  };
+    if ((!state.awaitDrainWriters || state.awaitDrainWriters.size === 0) && src.listenerCount('data')) {
+      src.resume()
+    }
+  }
 }
 Readable.prototype.unpipe = function (dest) {
-  var state = this._readableState;
-  var unpipeInfo = {
+  const state = this._readableState
+  const unpipeInfo = {
     hasUnpiped: false
-  };
-
-  // if we're not piping anywhere, then do nothing.
-  if (state.pipesCount === 0) return this;
-
-  // just one destination.  most common case.
-  if (state.pipesCount === 1) {
-    // passed in one, but it's not the right one.
-    if (dest && dest !== state.pipes) return this;
-    if (!dest) dest = state.pipes;
-
-    // got a match.
-    state.pipes = null;
-    state.pipesCount = 0;
-    state.flowing = false;
-    if (dest) dest.emit('unpipe', this, unpipeInfo);
-    return this;
   }
 
-  // slow case. multiple pipe destinations.
-
+  // If we're not piping anywhere, then do nothing.
+  if (state.pipes.length === 0) return this
   if (!dest) {
     // remove all.
-    var dests = state.pipes;
-    var len = state.pipesCount;
-    state.pipes = null;
-    state.pipesCount = 0;
-    state.flowing = false;
-    for (var i = 0; i < len; i++) dests[i].emit('unpipe', this, {
-      hasUnpiped: false
-    });
-    return this;
+    const dests = state.pipes
+    state.pipes = []
+    this.pause()
+    for (let i = 0; i < dests.length; i++)
+      dests[i].emit('unpipe', this, {
+        hasUnpiped: false
+      })
+    return this
   }
 
-  // try to find the right one.
-  var index = indexOf(state.pipes, dest);
-  if (index === -1) return this;
-  state.pipes.splice(index, 1);
-  state.pipesCount -= 1;
-  if (state.pipesCount === 1) state.pipes = state.pipes[0];
-  dest.emit('unpipe', this, unpipeInfo);
-  return this;
-};
+  // Try to find the right one.
+  const index = ArrayPrototypeIndexOf(state.pipes, dest)
+  if (index === -1) return this
+  state.pipes.splice(index, 1)
+  if (state.pipes.length === 0) this.pause()
+  dest.emit('unpipe', this, unpipeInfo)
+  return this
+}
 
-// set up data events if they are asked for
-// Ensure readable listeners eventually get something
+// Set up data events if they are asked for
+// Ensure readable listeners eventually get something.
 Readable.prototype.on = function (ev, fn) {
-  var res = Stream.prototype.on.call(this, ev, fn);
-  var state = this._readableState;
+  const res = Stream.prototype.on.call(this, ev, fn)
+  const state = this._readableState
   if (ev === 'data') {
-    // update readableListening so that resume() may be a no-op
+    // Update readableListening so that resume() may be a no-op
     // a few lines down. This is needed to support once('readable').
-    state.readableListening = this.listenerCount('readable') > 0;
+    state.readableListening = this.listenerCount('readable') > 0
 
-    // Try start flowing on next tick if stream isn't explicitly paused
-    if (state.flowing !== false) this.resume();
+    // Try start flowing on next tick if stream isn't explicitly paused.
+    if (state.flowing !== false) this.resume()
   } else if (ev === 'readable') {
     if (!state.endEmitted && !state.readableListening) {
-      state.readableListening = state.needReadable = true;
-      state.flowing = false;
-      state.emittedReadable = false;
-      debug('on readable', state.length, state.reading);
+      state.readableListening = state.needReadable = true
+      state.flowing = false
+      state.emittedReadable = false
+      debug('on readable', state.length, state.reading)
       if (state.length) {
-        emitReadable(this);
+        emitReadable(this)
       } else if (!state.reading) {
-        process.nextTick(nReadingNextTick, this);
+        process.nextTick(nReadingNextTick, this)
       }
     }
   }
-  return res;
-};
-Readable.prototype.addListener = Readable.prototype.on;
+  return res
+}
+Readable.prototype.addListener = Readable.prototype.on
 Readable.prototype.removeListener = function (ev, fn) {
-  var res = Stream.prototype.removeListener.call(this, ev, fn);
+  const res = Stream.prototype.removeListener.call(this, ev, fn)
   if (ev === 'readable') {
     // We need to check if there is someone still listening to
     // readable and reset the state. However this needs to happen
@@ -26441,12 +26944,13 @@ Readable.prototype.removeListener = function (ev, fn) {
     // support once('readable', fn) cycles. This means that calling
     // resume within the same tick will have no
     // effect.
-    process.nextTick(updateReadableListening, this);
+    process.nextTick(updateReadableListening, this)
   }
-  return res;
-};
+  return res
+}
+Readable.prototype.off = Readable.prototype.removeListener
 Readable.prototype.removeAllListeners = function (ev) {
-  var res = Stream.prototype.removeAllListeners.apply(this, arguments);
+  const res = Stream.prototype.removeAllListeners.apply(this, arguments)
   if (ev === 'readable' || ev === undefined) {
     // We need to check if there is someone still listening to
     // readable and reset the state. However this needs to happen
@@ -26454,246 +26958,486 @@ Readable.prototype.removeAllListeners = function (ev) {
     // support once('readable', fn) cycles. This means that calling
     // resume within the same tick will have no
     // effect.
-    process.nextTick(updateReadableListening, this);
+    process.nextTick(updateReadableListening, this)
   }
-  return res;
-};
+  return res
+}
 function updateReadableListening(self) {
-  var state = self._readableState;
-  state.readableListening = self.listenerCount('readable') > 0;
-  if (state.resumeScheduled && !state.paused) {
-    // flowing needs to be set to true now, otherwise
+  const state = self._readableState
+  state.readableListening = self.listenerCount('readable') > 0
+  if (state.resumeScheduled && state[kPaused] === false) {
+    // Flowing needs to be set to true now, otherwise
     // the upcoming resume will not flow.
-    state.flowing = true;
+    state.flowing = true
 
-    // crude way to check if we should resume
+    // Crude way to check if we should resume.
   } else if (self.listenerCount('data') > 0) {
-    self.resume();
+    self.resume()
+  } else if (!state.readableListening) {
+    state.flowing = null
   }
 }
 function nReadingNextTick(self) {
-  debug('readable nexttick read 0');
-  self.read(0);
+  debug('readable nexttick read 0')
+  self.read(0)
 }
 
 // pause() and resume() are remnants of the legacy readable stream API
 // If the user uses them, then switch into old mode.
 Readable.prototype.resume = function () {
-  var state = this._readableState;
+  const state = this._readableState
   if (!state.flowing) {
-    debug('resume');
-    // we flow only if there is no one listening
+    debug('resume')
+    // We flow only if there is no one listening
     // for readable, but we still have to call
-    // resume()
-    state.flowing = !state.readableListening;
-    resume(this, state);
+    // resume().
+    state.flowing = !state.readableListening
+    resume(this, state)
   }
-  state.paused = false;
-  return this;
-};
+  state[kPaused] = false
+  return this
+}
 function resume(stream, state) {
   if (!state.resumeScheduled) {
-    state.resumeScheduled = true;
-    process.nextTick(resume_, stream, state);
+    state.resumeScheduled = true
+    process.nextTick(resume_, stream, state)
   }
 }
 function resume_(stream, state) {
-  debug('resume', state.reading);
+  debug('resume', state.reading)
   if (!state.reading) {
-    stream.read(0);
+    stream.read(0)
   }
-  state.resumeScheduled = false;
-  stream.emit('resume');
-  flow(stream);
-  if (state.flowing && !state.reading) stream.read(0);
+  state.resumeScheduled = false
+  stream.emit('resume')
+  flow(stream)
+  if (state.flowing && !state.reading) stream.read(0)
 }
 Readable.prototype.pause = function () {
-  debug('call pause flowing=%j', this._readableState.flowing);
+  debug('call pause flowing=%j', this._readableState.flowing)
   if (this._readableState.flowing !== false) {
-    debug('pause');
-    this._readableState.flowing = false;
-    this.emit('pause');
+    debug('pause')
+    this._readableState.flowing = false
+    this.emit('pause')
   }
-  this._readableState.paused = true;
-  return this;
-};
+  this._readableState[kPaused] = true
+  return this
+}
 function flow(stream) {
-  var state = stream._readableState;
-  debug('flow', state.flowing);
+  const state = stream._readableState
+  debug('flow', state.flowing)
   while (state.flowing && stream.read() !== null);
 }
 
-// wrap an old-style stream as the async data source.
+// Wrap an old-style stream as the async data source.
 // This is *not* part of the readable stream interface.
 // It is an ugly unfortunate mess of history.
 Readable.prototype.wrap = function (stream) {
-  var _this = this;
-  var state = this._readableState;
-  var paused = false;
-  stream.on('end', function () {
-    debug('wrapped end');
-    if (state.decoder && !state.ended) {
-      var chunk = state.decoder.end();
-      if (chunk && chunk.length) _this.push(chunk);
-    }
-    _this.push(null);
-  });
-  stream.on('data', function (chunk) {
-    debug('wrapped data');
-    if (state.decoder) chunk = state.decoder.write(chunk);
+  let paused = false
 
-    // don't skip over falsy values in objectMode
-    if (state.objectMode && (chunk === null || chunk === undefined)) return;else if (!state.objectMode && (!chunk || !chunk.length)) return;
-    var ret = _this.push(chunk);
-    if (!ret) {
-      paused = true;
-      stream.pause();
-    }
-  });
+  // TODO (ronag): Should this.destroy(err) emit
+  // 'error' on the wrapped stream? Would require
+  // a static factory method, e.g. Readable.wrap(stream).
 
-  // proxy all the other methods.
-  // important when wrapping filters and duplexes.
-  for (var i in stream) {
+  stream.on('data', (chunk) => {
+    if (!this.push(chunk) && stream.pause) {
+      paused = true
+      stream.pause()
+    }
+  })
+  stream.on('end', () => {
+    this.push(null)
+  })
+  stream.on('error', (err) => {
+    errorOrDestroy(this, err)
+  })
+  stream.on('close', () => {
+    this.destroy()
+  })
+  stream.on('destroy', () => {
+    this.destroy()
+  })
+  this._read = () => {
+    if (paused && stream.resume) {
+      paused = false
+      stream.resume()
+    }
+  }
+
+  // Proxy all the other methods. Important when wrapping filters and duplexes.
+  const streamKeys = ObjectKeys(stream)
+  for (let j = 1; j < streamKeys.length; j++) {
+    const i = streamKeys[j]
     if (this[i] === undefined && typeof stream[i] === 'function') {
-      this[i] = function methodWrap(method) {
-        return function methodWrapReturnFunction() {
-          return stream[method].apply(stream, arguments);
-        };
-      }(i);
+      this[i] = stream[i].bind(stream)
     }
   }
-
-  // proxy certain important events.
-  for (var n = 0; n < kProxyEvents.length; n++) {
-    stream.on(kProxyEvents[n], this.emit.bind(this, kProxyEvents[n]));
-  }
-
-  // when we try to consume some more bytes, simply unpause the
-  // underlying stream.
-  this._read = function (n) {
-    debug('wrapped _read', n);
-    if (paused) {
-      paused = false;
-      stream.resume();
-    }
-  };
-  return this;
-};
-if (typeof Symbol === 'function') {
-  Readable.prototype[Symbol.asyncIterator] = function () {
-    if (createReadableStreamAsyncIterator === undefined) {
-      createReadableStreamAsyncIterator = __nccwpck_require__(3306);
-    }
-    return createReadableStreamAsyncIterator(this);
-  };
+  return this
 }
-Object.defineProperty(Readable.prototype, 'readableHighWaterMark', {
-  // making it explicit this property is not enumerable
-  // because otherwise some prototype manipulation in
-  // userland will fail
-  enumerable: false,
-  get: function get() {
-    return this._readableState.highWaterMark;
+Readable.prototype[SymbolAsyncIterator] = function () {
+  return streamToAsyncIterator(this)
+}
+Readable.prototype.iterator = function (options) {
+  if (options !== undefined) {
+    validateObject(options, 'options')
   }
-});
-Object.defineProperty(Readable.prototype, 'readableBuffer', {
-  // making it explicit this property is not enumerable
-  // because otherwise some prototype manipulation in
-  // userland will fail
-  enumerable: false,
-  get: function get() {
-    return this._readableState && this._readableState.buffer;
+  return streamToAsyncIterator(this, options)
+}
+function streamToAsyncIterator(stream, options) {
+  if (typeof stream.read !== 'function') {
+    stream = Readable.wrap(stream, {
+      objectMode: true
+    })
   }
-});
-Object.defineProperty(Readable.prototype, 'readableFlowing', {
-  // making it explicit this property is not enumerable
-  // because otherwise some prototype manipulation in
-  // userland will fail
-  enumerable: false,
-  get: function get() {
-    return this._readableState.flowing;
-  },
-  set: function set(state) {
-    if (this._readableState) {
-      this._readableState.flowing = state;
+  const iter = createAsyncIterator(stream, options)
+  iter.stream = stream
+  return iter
+}
+async function* createAsyncIterator(stream, options) {
+  let callback = nop
+  function next(resolve) {
+    if (this === stream) {
+      callback()
+      callback = nop
+    } else {
+      callback = resolve
     }
   }
-});
-
-// exposed for testing purposes only.
-Readable._fromList = fromList;
-Object.defineProperty(Readable.prototype, 'readableLength', {
-  // making it explicit this property is not enumerable
-  // because otherwise some prototype manipulation in
-  // userland will fail
-  enumerable: false,
-  get: function get() {
-    return this._readableState.length;
+  stream.on('readable', next)
+  let error
+  const cleanup = eos(
+    stream,
+    {
+      writable: false
+    },
+    (err) => {
+      error = err ? aggregateTwoErrors(error, err) : null
+      callback()
+      callback = nop
+    }
+  )
+  try {
+    while (true) {
+      const chunk = stream.destroyed ? null : stream.read()
+      if (chunk !== null) {
+        yield chunk
+      } else if (error) {
+        throw error
+      } else if (error === null) {
+        return
+      } else {
+        await new Promise(next)
+      }
+    }
+  } catch (err) {
+    error = aggregateTwoErrors(error, err)
+    throw error
+  } finally {
+    if (
+      (error || (options === null || options === undefined ? undefined : options.destroyOnReturn) !== false) &&
+      (error === undefined || stream._readableState.autoDestroy)
+    ) {
+      destroyImpl.destroyer(stream, null)
+    } else {
+      stream.off('readable', next)
+      cleanup()
+    }
   }
-});
+}
+
+// Making it explicit these properties are not enumerable
+// because otherwise some prototype manipulation in
+// userland will fail.
+ObjectDefineProperties(Readable.prototype, {
+  readable: {
+    __proto__: null,
+    get() {
+      const r = this._readableState
+      // r.readable === false means that this is part of a Duplex stream
+      // where the readable side was disabled upon construction.
+      // Compat. The user might manually disable readable side through
+      // deprecated setter.
+      return !!r && r.readable !== false && !r.destroyed && !r.errorEmitted && !r.endEmitted
+    },
+    set(val) {
+      // Backwards compat.
+      if (this._readableState) {
+        this._readableState.readable = !!val
+      }
+    }
+  },
+  readableDidRead: {
+    __proto__: null,
+    enumerable: false,
+    get: function () {
+      return this._readableState.dataEmitted
+    }
+  },
+  readableAborted: {
+    __proto__: null,
+    enumerable: false,
+    get: function () {
+      return !!(
+        this._readableState.readable !== false &&
+        (this._readableState.destroyed || this._readableState.errored) &&
+        !this._readableState.endEmitted
+      )
+    }
+  },
+  readableHighWaterMark: {
+    __proto__: null,
+    enumerable: false,
+    get: function () {
+      return this._readableState.highWaterMark
+    }
+  },
+  readableBuffer: {
+    __proto__: null,
+    enumerable: false,
+    get: function () {
+      return this._readableState && this._readableState.buffer
+    }
+  },
+  readableFlowing: {
+    __proto__: null,
+    enumerable: false,
+    get: function () {
+      return this._readableState.flowing
+    },
+    set: function (state) {
+      if (this._readableState) {
+        this._readableState.flowing = state
+      }
+    }
+  },
+  readableLength: {
+    __proto__: null,
+    enumerable: false,
+    get() {
+      return this._readableState.length
+    }
+  },
+  readableObjectMode: {
+    __proto__: null,
+    enumerable: false,
+    get() {
+      return this._readableState ? this._readableState.objectMode : false
+    }
+  },
+  readableEncoding: {
+    __proto__: null,
+    enumerable: false,
+    get() {
+      return this._readableState ? this._readableState.encoding : null
+    }
+  },
+  errored: {
+    __proto__: null,
+    enumerable: false,
+    get() {
+      return this._readableState ? this._readableState.errored : null
+    }
+  },
+  closed: {
+    __proto__: null,
+    get() {
+      return this._readableState ? this._readableState.closed : false
+    }
+  },
+  destroyed: {
+    __proto__: null,
+    enumerable: false,
+    get() {
+      return this._readableState ? this._readableState.destroyed : false
+    },
+    set(value) {
+      // We ignore the value if the stream
+      // has not been initialized yet.
+      if (!this._readableState) {
+        return
+      }
+
+      // Backward compatibility, the user is explicitly
+      // managing destroyed.
+      this._readableState.destroyed = value
+    }
+  },
+  readableEnded: {
+    __proto__: null,
+    enumerable: false,
+    get() {
+      return this._readableState ? this._readableState.endEmitted : false
+    }
+  }
+})
+ObjectDefineProperties(ReadableState.prototype, {
+  // Legacy getter for `pipesCount`.
+  pipesCount: {
+    __proto__: null,
+    get() {
+      return this.pipes.length
+    }
+  },
+  // Legacy property for `paused`.
+  paused: {
+    __proto__: null,
+    get() {
+      return this[kPaused] !== false
+    },
+    set(value) {
+      this[kPaused] = !!value
+    }
+  }
+})
+
+// Exposed for testing purposes only.
+Readable._fromList = fromList
 
 // Pluck off n bytes from an array of buffers.
 // Length is the combined lengths of all the buffers in the list.
 // This function is designed to be inlinable, so please take care when making
 // changes to the function body.
 function fromList(n, state) {
-  // nothing buffered
-  if (state.length === 0) return null;
-  var ret;
-  if (state.objectMode) ret = state.buffer.shift();else if (!n || n >= state.length) {
-    // read it all, truncate the list
-    if (state.decoder) ret = state.buffer.join('');else if (state.buffer.length === 1) ret = state.buffer.first();else ret = state.buffer.concat(state.length);
-    state.buffer.clear();
+  // nothing buffered.
+  if (state.length === 0) return null
+  let ret
+  if (state.objectMode) ret = state.buffer.shift()
+  else if (!n || n >= state.length) {
+    // Read it all, truncate the list.
+    if (state.decoder) ret = state.buffer.join('')
+    else if (state.buffer.length === 1) ret = state.buffer.first()
+    else ret = state.buffer.concat(state.length)
+    state.buffer.clear()
   } else {
-    // read part of list
-    ret = state.buffer.consume(n, state.decoder);
+    // read part of list.
+    ret = state.buffer.consume(n, state.decoder)
   }
-  return ret;
+  return ret
 }
 function endReadable(stream) {
-  var state = stream._readableState;
-  debug('endReadable', state.endEmitted);
+  const state = stream._readableState
+  debug('endReadable', state.endEmitted)
   if (!state.endEmitted) {
-    state.ended = true;
-    process.nextTick(endReadableNT, state, stream);
+    state.ended = true
+    process.nextTick(endReadableNT, state, stream)
   }
 }
 function endReadableNT(state, stream) {
-  debug('endReadableNT', state.endEmitted, state.length);
+  debug('endReadableNT', state.endEmitted, state.length)
 
   // Check that we didn't get one last unshift.
-  if (!state.endEmitted && state.length === 0) {
-    state.endEmitted = true;
-    stream.readable = false;
-    stream.emit('end');
-    if (state.autoDestroy) {
+  if (!state.errored && !state.closeEmitted && !state.endEmitted && state.length === 0) {
+    state.endEmitted = true
+    stream.emit('end')
+    if (stream.writable && stream.allowHalfOpen === false) {
+      process.nextTick(endWritableNT, stream)
+    } else if (state.autoDestroy) {
       // In case of duplex streams we need a way to detect
-      // if the writable side is ready for autoDestroy as well
-      var wState = stream._writableState;
-      if (!wState || wState.autoDestroy && wState.finished) {
-        stream.destroy();
+      // if the writable side is ready for autoDestroy as well.
+      const wState = stream._writableState
+      const autoDestroy =
+        !wState ||
+        (wState.autoDestroy &&
+          // We don't expect the writable to ever 'finish'
+          // if writable is explicitly set to false.
+          (wState.finished || wState.writable === false))
+      if (autoDestroy) {
+        stream.destroy()
       }
     }
   }
 }
-if (typeof Symbol === 'function') {
-  Readable.from = function (iterable, opts) {
-    if (from === undefined) {
-      from = __nccwpck_require__(9082);
-    }
-    return from(Readable, iterable, opts);
-  };
-}
-function indexOf(xs, x) {
-  for (var i = 0, l = xs.length; i < l; i++) {
-    if (xs[i] === x) return i;
+function endWritableNT(stream) {
+  const writable = stream.writable && !stream.writableEnded && !stream.destroyed
+  if (writable) {
+    stream.end()
   }
-  return -1;
 }
+Readable.from = function (iterable, opts) {
+  return from(Readable, iterable, opts)
+}
+let webStreamsAdapters
+
+// Lazy to avoid circular references
+function lazyWebStreams() {
+  if (webStreamsAdapters === undefined) webStreamsAdapters = {}
+  return webStreamsAdapters
+}
+Readable.fromWeb = function (readableStream, options) {
+  return lazyWebStreams().newStreamReadableFromReadableStream(readableStream, options)
+}
+Readable.toWeb = function (streamReadable, options) {
+  return lazyWebStreams().newReadableStreamFromStreamReadable(streamReadable, options)
+}
+Readable.wrap = function (src, options) {
+  var _ref, _src$readableObjectMo
+  return new Readable({
+    objectMode:
+      (_ref =
+        (_src$readableObjectMo = src.readableObjectMode) !== null && _src$readableObjectMo !== undefined
+          ? _src$readableObjectMo
+          : src.objectMode) !== null && _ref !== undefined
+        ? _ref
+        : true,
+    ...options,
+    destroy(err, callback) {
+      destroyImpl.destroyer(src, err)
+      callback(err)
+    }
+  }).wrap(src)
+}
+
 
 /***/ }),
 
-/***/ 4415:
+/***/ 9948:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+const { MathFloor, NumberIsInteger } = __nccwpck_require__(9629)
+const { validateInteger } = __nccwpck_require__(669)
+const { ERR_INVALID_ARG_VALUE } = (__nccwpck_require__(529).codes)
+let defaultHighWaterMarkBytes = 16 * 1024
+let defaultHighWaterMarkObjectMode = 16
+function highWaterMarkFrom(options, isDuplex, duplexKey) {
+  return options.highWaterMark != null ? options.highWaterMark : isDuplex ? options[duplexKey] : null
+}
+function getDefaultHighWaterMark(objectMode) {
+  return objectMode ? defaultHighWaterMarkObjectMode : defaultHighWaterMarkBytes
+}
+function setDefaultHighWaterMark(objectMode, value) {
+  validateInteger(value, 'value', 0)
+  if (objectMode) {
+    defaultHighWaterMarkObjectMode = value
+  } else {
+    defaultHighWaterMarkBytes = value
+  }
+}
+function getHighWaterMark(state, options, duplexKey, isDuplex) {
+  const hwm = highWaterMarkFrom(options, isDuplex, duplexKey)
+  if (hwm != null) {
+    if (!NumberIsInteger(hwm) || hwm < 0) {
+      const name = isDuplex ? `options.${duplexKey}` : 'options.highWaterMark'
+      throw new ERR_INVALID_ARG_VALUE(name, hwm)
+    }
+    return MathFloor(hwm)
+  }
+
+  // Default value
+  return getDefaultHighWaterMark(state.objectMode)
+}
+module.exports = {
+  getHighWaterMark,
+  getDefaultHighWaterMark,
+  setDefaultHighWaterMark
+}
+
+
+/***/ }),
+
+/***/ 6941:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -26762,138 +27506,470 @@ function indexOf(xs, x) {
 
 
 
-module.exports = Transform;
-var _require$codes = (__nccwpck_require__(7214)/* .codes */ .q),
-  ERR_METHOD_NOT_IMPLEMENTED = _require$codes.ERR_METHOD_NOT_IMPLEMENTED,
-  ERR_MULTIPLE_CALLBACK = _require$codes.ERR_MULTIPLE_CALLBACK,
-  ERR_TRANSFORM_ALREADY_TRANSFORMING = _require$codes.ERR_TRANSFORM_ALREADY_TRANSFORMING,
-  ERR_TRANSFORM_WITH_LENGTH_0 = _require$codes.ERR_TRANSFORM_WITH_LENGTH_0;
-var Duplex = __nccwpck_require__(1359);
-__nccwpck_require__(4124)(Transform, Duplex);
-function afterTransform(er, data) {
-  var ts = this._transformState;
-  ts.transforming = false;
-  var cb = ts.writecb;
-  if (cb === null) {
-    return this.emit('error', new ERR_MULTIPLE_CALLBACK());
-  }
-  ts.writechunk = null;
-  ts.writecb = null;
-  if (data != null)
-    // single equals check for both `null` and `undefined`
-    this.push(data);
-  cb(er);
-  var rs = this._readableState;
-  rs.reading = false;
-  if (rs.needReadable || rs.length < rs.highWaterMark) {
-    this._read(rs.highWaterMark);
-  }
-}
+const { ObjectSetPrototypeOf, Symbol } = __nccwpck_require__(9629)
+module.exports = Transform
+const { ERR_METHOD_NOT_IMPLEMENTED } = (__nccwpck_require__(529).codes)
+const Duplex = __nccwpck_require__(2613)
+const { getHighWaterMark } = __nccwpck_require__(9948)
+ObjectSetPrototypeOf(Transform.prototype, Duplex.prototype)
+ObjectSetPrototypeOf(Transform, Duplex)
+const kCallback = Symbol('kCallback')
 function Transform(options) {
-  if (!(this instanceof Transform)) return new Transform(options);
-  Duplex.call(this, options);
-  this._transformState = {
-    afterTransform: afterTransform.bind(this),
-    needTransform: false,
-    transforming: false,
-    writecb: null,
-    writechunk: null,
-    writeencoding: null
-  };
+  if (!(this instanceof Transform)) return new Transform(options)
 
-  // start out asking for a readable event once data is transformed.
-  this._readableState.needReadable = true;
+  // TODO (ronag): This should preferably always be
+  // applied but would be semver-major. Or even better;
+  // make Transform a Readable with the Writable interface.
+  const readableHighWaterMark = options ? getHighWaterMark(this, options, 'readableHighWaterMark', true) : null
+  if (readableHighWaterMark === 0) {
+    // A Duplex will buffer both on the writable and readable side while
+    // a Transform just wants to buffer hwm number of elements. To avoid
+    // buffering twice we disable buffering on the writable side.
+    options = {
+      ...options,
+      highWaterMark: null,
+      readableHighWaterMark,
+      // TODO (ronag): 0 is not optimal since we have
+      // a "bug" where we check needDrain before calling _write and not after.
+      // Refs: https://github.com/nodejs/node/pull/32887
+      // Refs: https://github.com/nodejs/node/pull/35941
+      writableHighWaterMark: options.writableHighWaterMark || 0
+    }
+  }
+  Duplex.call(this, options)
 
-  // we have implemented the _read method, and done the other things
+  // We have implemented the _read method, and done the other things
   // that Readable wants before the first _read call, so unset the
   // sync guard flag.
-  this._readableState.sync = false;
+  this._readableState.sync = false
+  this[kCallback] = null
   if (options) {
-    if (typeof options.transform === 'function') this._transform = options.transform;
-    if (typeof options.flush === 'function') this._flush = options.flush;
+    if (typeof options.transform === 'function') this._transform = options.transform
+    if (typeof options.flush === 'function') this._flush = options.flush
   }
 
   // When the writable side finishes, then flush out anything remaining.
-  this.on('prefinish', prefinish);
+  // Backwards compat. Some Transform streams incorrectly implement _final
+  // instead of or in addition to _flush. By using 'prefinish' instead of
+  // implementing _final we continue supporting this unfortunate use case.
+  this.on('prefinish', prefinish)
+}
+function final(cb) {
+  if (typeof this._flush === 'function' && !this.destroyed) {
+    this._flush((er, data) => {
+      if (er) {
+        if (cb) {
+          cb(er)
+        } else {
+          this.destroy(er)
+        }
+        return
+      }
+      if (data != null) {
+        this.push(data)
+      }
+      this.push(null)
+      if (cb) {
+        cb()
+      }
+    })
+  } else {
+    this.push(null)
+    if (cb) {
+      cb()
+    }
+  }
 }
 function prefinish() {
-  var _this = this;
-  if (typeof this._flush === 'function' && !this._readableState.destroyed) {
-    this._flush(function (er, data) {
-      done(_this, er, data);
-    });
-  } else {
-    done(this, null, null);
+  if (this._final !== final) {
+    final.call(this)
   }
 }
-Transform.prototype.push = function (chunk, encoding) {
-  this._transformState.needTransform = false;
-  return Duplex.prototype.push.call(this, chunk, encoding);
-};
-
-// This is the part where you do stuff!
-// override this function in implementation classes.
-// 'chunk' is an input chunk.
-//
-// Call `push(newChunk)` to pass along transformed output
-// to the readable side.  You may call 'push' zero or more times.
-//
-// Call `cb(err)` when you are done with this chunk.  If you pass
-// an error, then that'll put the hurt on the whole operation.  If you
-// never call cb(), then you'll never get another chunk.
-Transform.prototype._transform = function (chunk, encoding, cb) {
-  cb(new ERR_METHOD_NOT_IMPLEMENTED('_transform()'));
-};
-Transform.prototype._write = function (chunk, encoding, cb) {
-  var ts = this._transformState;
-  ts.writecb = cb;
-  ts.writechunk = chunk;
-  ts.writeencoding = encoding;
-  if (!ts.transforming) {
-    var rs = this._readableState;
-    if (ts.needTransform || rs.needReadable || rs.length < rs.highWaterMark) this._read(rs.highWaterMark);
-  }
-};
-
-// Doesn't matter what the args are here.
-// _transform does all the work.
-// That we got here means that the readable side wants more data.
-Transform.prototype._read = function (n) {
-  var ts = this._transformState;
-  if (ts.writechunk !== null && !ts.transforming) {
-    ts.transforming = true;
-    this._transform(ts.writechunk, ts.writeencoding, ts.afterTransform);
-  } else {
-    // mark that we need a transform, so that any data that comes in
-    // will get processed, now that we've asked for it.
-    ts.needTransform = true;
-  }
-};
-Transform.prototype._destroy = function (err, cb) {
-  Duplex.prototype._destroy.call(this, err, function (err2) {
-    cb(err2);
-  });
-};
-function done(stream, er, data) {
-  if (er) return stream.emit('error', er);
-  if (data != null)
-    // single equals check for both `null` and `undefined`
-    stream.push(data);
-
-  // TODO(BridgeAR): Write a test for these two error cases
-  // if there's nothing in the write buffer, then that means
-  // that nothing more will ever be provided
-  if (stream._writableState.length) throw new ERR_TRANSFORM_WITH_LENGTH_0();
-  if (stream._transformState.transforming) throw new ERR_TRANSFORM_ALREADY_TRANSFORMING();
-  return stream.push(null);
+Transform.prototype._final = final
+Transform.prototype._transform = function (chunk, encoding, callback) {
+  throw new ERR_METHOD_NOT_IMPLEMENTED('_transform()')
 }
+Transform.prototype._write = function (chunk, encoding, callback) {
+  const rState = this._readableState
+  const wState = this._writableState
+  const length = rState.length
+  this._transform(chunk, encoding, (err, val) => {
+    if (err) {
+      callback(err)
+      return
+    }
+    if (val != null) {
+      this.push(val)
+    }
+    if (
+      wState.ended ||
+      // Backwards compat.
+      length === rState.length ||
+      // Backwards compat.
+      rState.length < rState.highWaterMark
+    ) {
+      callback()
+    } else {
+      this[kCallback] = callback
+    }
+  })
+}
+Transform.prototype._read = function () {
+  if (this[kCallback]) {
+    const callback = this[kCallback]
+    this[kCallback] = null
+    callback()
+  }
+}
+
 
 /***/ }),
 
-/***/ 6993:
+/***/ 7981:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
+
+
+const { SymbolAsyncIterator, SymbolIterator, SymbolFor } = __nccwpck_require__(9629)
+
+// We need to use SymbolFor to make these globally available
+// for interopt with readable-stream, i.e. readable-stream
+// and node core needs to be able to read/write private state
+// from each other for proper interoperability.
+const kIsDestroyed = SymbolFor('nodejs.stream.destroyed')
+const kIsErrored = SymbolFor('nodejs.stream.errored')
+const kIsReadable = SymbolFor('nodejs.stream.readable')
+const kIsWritable = SymbolFor('nodejs.stream.writable')
+const kIsDisturbed = SymbolFor('nodejs.stream.disturbed')
+const kIsClosedPromise = SymbolFor('nodejs.webstream.isClosedPromise')
+const kControllerErrorFunction = SymbolFor('nodejs.webstream.controllerErrorFunction')
+function isReadableNodeStream(obj, strict = false) {
+  var _obj$_readableState
+  return !!(
+    (
+      obj &&
+      typeof obj.pipe === 'function' &&
+      typeof obj.on === 'function' &&
+      (!strict || (typeof obj.pause === 'function' && typeof obj.resume === 'function')) &&
+      (!obj._writableState ||
+        ((_obj$_readableState = obj._readableState) === null || _obj$_readableState === undefined
+          ? undefined
+          : _obj$_readableState.readable) !== false) &&
+      // Duplex
+      (!obj._writableState || obj._readableState)
+    ) // Writable has .pipe.
+  )
+}
+
+function isWritableNodeStream(obj) {
+  var _obj$_writableState
+  return !!(
+    (
+      obj &&
+      typeof obj.write === 'function' &&
+      typeof obj.on === 'function' &&
+      (!obj._readableState ||
+        ((_obj$_writableState = obj._writableState) === null || _obj$_writableState === undefined
+          ? undefined
+          : _obj$_writableState.writable) !== false)
+    ) // Duplex
+  )
+}
+
+function isDuplexNodeStream(obj) {
+  return !!(
+    obj &&
+    typeof obj.pipe === 'function' &&
+    obj._readableState &&
+    typeof obj.on === 'function' &&
+    typeof obj.write === 'function'
+  )
+}
+function isNodeStream(obj) {
+  return (
+    obj &&
+    (obj._readableState ||
+      obj._writableState ||
+      (typeof obj.write === 'function' && typeof obj.on === 'function') ||
+      (typeof obj.pipe === 'function' && typeof obj.on === 'function'))
+  )
+}
+function isReadableStream(obj) {
+  return !!(
+    obj &&
+    !isNodeStream(obj) &&
+    typeof obj.pipeThrough === 'function' &&
+    typeof obj.getReader === 'function' &&
+    typeof obj.cancel === 'function'
+  )
+}
+function isWritableStream(obj) {
+  return !!(obj && !isNodeStream(obj) && typeof obj.getWriter === 'function' && typeof obj.abort === 'function')
+}
+function isTransformStream(obj) {
+  return !!(obj && !isNodeStream(obj) && typeof obj.readable === 'object' && typeof obj.writable === 'object')
+}
+function isWebStream(obj) {
+  return isReadableStream(obj) || isWritableStream(obj) || isTransformStream(obj)
+}
+function isIterable(obj, isAsync) {
+  if (obj == null) return false
+  if (isAsync === true) return typeof obj[SymbolAsyncIterator] === 'function'
+  if (isAsync === false) return typeof obj[SymbolIterator] === 'function'
+  return typeof obj[SymbolAsyncIterator] === 'function' || typeof obj[SymbolIterator] === 'function'
+}
+function isDestroyed(stream) {
+  if (!isNodeStream(stream)) return null
+  const wState = stream._writableState
+  const rState = stream._readableState
+  const state = wState || rState
+  return !!(stream.destroyed || stream[kIsDestroyed] || (state !== null && state !== undefined && state.destroyed))
+}
+
+// Have been end():d.
+function isWritableEnded(stream) {
+  if (!isWritableNodeStream(stream)) return null
+  if (stream.writableEnded === true) return true
+  const wState = stream._writableState
+  if (wState !== null && wState !== undefined && wState.errored) return false
+  if (typeof (wState === null || wState === undefined ? undefined : wState.ended) !== 'boolean') return null
+  return wState.ended
+}
+
+// Have emitted 'finish'.
+function isWritableFinished(stream, strict) {
+  if (!isWritableNodeStream(stream)) return null
+  if (stream.writableFinished === true) return true
+  const wState = stream._writableState
+  if (wState !== null && wState !== undefined && wState.errored) return false
+  if (typeof (wState === null || wState === undefined ? undefined : wState.finished) !== 'boolean') return null
+  return !!(wState.finished || (strict === false && wState.ended === true && wState.length === 0))
+}
+
+// Have been push(null):d.
+function isReadableEnded(stream) {
+  if (!isReadableNodeStream(stream)) return null
+  if (stream.readableEnded === true) return true
+  const rState = stream._readableState
+  if (!rState || rState.errored) return false
+  if (typeof (rState === null || rState === undefined ? undefined : rState.ended) !== 'boolean') return null
+  return rState.ended
+}
+
+// Have emitted 'end'.
+function isReadableFinished(stream, strict) {
+  if (!isReadableNodeStream(stream)) return null
+  const rState = stream._readableState
+  if (rState !== null && rState !== undefined && rState.errored) return false
+  if (typeof (rState === null || rState === undefined ? undefined : rState.endEmitted) !== 'boolean') return null
+  return !!(rState.endEmitted || (strict === false && rState.ended === true && rState.length === 0))
+}
+function isReadable(stream) {
+  if (stream && stream[kIsReadable] != null) return stream[kIsReadable]
+  if (typeof (stream === null || stream === undefined ? undefined : stream.readable) !== 'boolean') return null
+  if (isDestroyed(stream)) return false
+  return isReadableNodeStream(stream) && stream.readable && !isReadableFinished(stream)
+}
+function isWritable(stream) {
+  if (stream && stream[kIsWritable] != null) return stream[kIsWritable]
+  if (typeof (stream === null || stream === undefined ? undefined : stream.writable) !== 'boolean') return null
+  if (isDestroyed(stream)) return false
+  return isWritableNodeStream(stream) && stream.writable && !isWritableEnded(stream)
+}
+function isFinished(stream, opts) {
+  if (!isNodeStream(stream)) {
+    return null
+  }
+  if (isDestroyed(stream)) {
+    return true
+  }
+  if ((opts === null || opts === undefined ? undefined : opts.readable) !== false && isReadable(stream)) {
+    return false
+  }
+  if ((opts === null || opts === undefined ? undefined : opts.writable) !== false && isWritable(stream)) {
+    return false
+  }
+  return true
+}
+function isWritableErrored(stream) {
+  var _stream$_writableStat, _stream$_writableStat2
+  if (!isNodeStream(stream)) {
+    return null
+  }
+  if (stream.writableErrored) {
+    return stream.writableErrored
+  }
+  return (_stream$_writableStat =
+    (_stream$_writableStat2 = stream._writableState) === null || _stream$_writableStat2 === undefined
+      ? undefined
+      : _stream$_writableStat2.errored) !== null && _stream$_writableStat !== undefined
+    ? _stream$_writableStat
+    : null
+}
+function isReadableErrored(stream) {
+  var _stream$_readableStat, _stream$_readableStat2
+  if (!isNodeStream(stream)) {
+    return null
+  }
+  if (stream.readableErrored) {
+    return stream.readableErrored
+  }
+  return (_stream$_readableStat =
+    (_stream$_readableStat2 = stream._readableState) === null || _stream$_readableStat2 === undefined
+      ? undefined
+      : _stream$_readableStat2.errored) !== null && _stream$_readableStat !== undefined
+    ? _stream$_readableStat
+    : null
+}
+function isClosed(stream) {
+  if (!isNodeStream(stream)) {
+    return null
+  }
+  if (typeof stream.closed === 'boolean') {
+    return stream.closed
+  }
+  const wState = stream._writableState
+  const rState = stream._readableState
+  if (
+    typeof (wState === null || wState === undefined ? undefined : wState.closed) === 'boolean' ||
+    typeof (rState === null || rState === undefined ? undefined : rState.closed) === 'boolean'
+  ) {
+    return (
+      (wState === null || wState === undefined ? undefined : wState.closed) ||
+      (rState === null || rState === undefined ? undefined : rState.closed)
+    )
+  }
+  if (typeof stream._closed === 'boolean' && isOutgoingMessage(stream)) {
+    return stream._closed
+  }
+  return null
+}
+function isOutgoingMessage(stream) {
+  return (
+    typeof stream._closed === 'boolean' &&
+    typeof stream._defaultKeepAlive === 'boolean' &&
+    typeof stream._removedConnection === 'boolean' &&
+    typeof stream._removedContLen === 'boolean'
+  )
+}
+function isServerResponse(stream) {
+  return typeof stream._sent100 === 'boolean' && isOutgoingMessage(stream)
+}
+function isServerRequest(stream) {
+  var _stream$req
+  return (
+    typeof stream._consuming === 'boolean' &&
+    typeof stream._dumped === 'boolean' &&
+    ((_stream$req = stream.req) === null || _stream$req === undefined ? undefined : _stream$req.upgradeOrConnect) ===
+      undefined
+  )
+}
+function willEmitClose(stream) {
+  if (!isNodeStream(stream)) return null
+  const wState = stream._writableState
+  const rState = stream._readableState
+  const state = wState || rState
+  return (
+    (!state && isServerResponse(stream)) || !!(state && state.autoDestroy && state.emitClose && state.closed === false)
+  )
+}
+function isDisturbed(stream) {
+  var _stream$kIsDisturbed
+  return !!(
+    stream &&
+    ((_stream$kIsDisturbed = stream[kIsDisturbed]) !== null && _stream$kIsDisturbed !== undefined
+      ? _stream$kIsDisturbed
+      : stream.readableDidRead || stream.readableAborted)
+  )
+}
+function isErrored(stream) {
+  var _ref,
+    _ref2,
+    _ref3,
+    _ref4,
+    _ref5,
+    _stream$kIsErrored,
+    _stream$_readableStat3,
+    _stream$_writableStat3,
+    _stream$_readableStat4,
+    _stream$_writableStat4
+  return !!(
+    stream &&
+    ((_ref =
+      (_ref2 =
+        (_ref3 =
+          (_ref4 =
+            (_ref5 =
+              (_stream$kIsErrored = stream[kIsErrored]) !== null && _stream$kIsErrored !== undefined
+                ? _stream$kIsErrored
+                : stream.readableErrored) !== null && _ref5 !== undefined
+              ? _ref5
+              : stream.writableErrored) !== null && _ref4 !== undefined
+            ? _ref4
+            : (_stream$_readableStat3 = stream._readableState) === null || _stream$_readableStat3 === undefined
+            ? undefined
+            : _stream$_readableStat3.errorEmitted) !== null && _ref3 !== undefined
+          ? _ref3
+          : (_stream$_writableStat3 = stream._writableState) === null || _stream$_writableStat3 === undefined
+          ? undefined
+          : _stream$_writableStat3.errorEmitted) !== null && _ref2 !== undefined
+        ? _ref2
+        : (_stream$_readableStat4 = stream._readableState) === null || _stream$_readableStat4 === undefined
+        ? undefined
+        : _stream$_readableStat4.errored) !== null && _ref !== undefined
+      ? _ref
+      : (_stream$_writableStat4 = stream._writableState) === null || _stream$_writableStat4 === undefined
+      ? undefined
+      : _stream$_writableStat4.errored)
+  )
+}
+module.exports = {
+  isDestroyed,
+  kIsDestroyed,
+  isDisturbed,
+  kIsDisturbed,
+  isErrored,
+  kIsErrored,
+  isReadable,
+  kIsReadable,
+  kIsClosedPromise,
+  kControllerErrorFunction,
+  kIsWritable,
+  isClosed,
+  isDuplexNodeStream,
+  isFinished,
+  isIterable,
+  isReadableNodeStream,
+  isReadableStream,
+  isReadableEnded,
+  isReadableFinished,
+  isReadableErrored,
+  isNodeStream,
+  isWebStream,
+  isWritable,
+  isWritableNodeStream,
+  isWritableStream,
+  isWritableEnded,
+  isWritableFinished,
+  isWritableErrored,
+  isServerRequest,
+  isServerResponse,
+  willEmitClose,
+  isTransformStream
+}
+
+
+/***/ }),
+
+/***/ 8488:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+/* replacement start */
+
+const process = __nccwpck_require__(5676)
+
+/* replacement end */
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -26919,214 +27995,176 @@ function done(stream, er, data) {
 // Implement an async ._write(chunk, encoding, cb), and it'll handle all
 // the drain event emission and buffering.
 
-
-
-module.exports = Writable;
-
-/* <replacement> */
-function WriteReq(chunk, encoding, cb) {
-  this.chunk = chunk;
-  this.encoding = encoding;
-  this.callback = cb;
-  this.next = null;
-}
-
-// It seems a linked list but it is not
-// there will be only 2 of these for each stream
-function CorkedRequest(state) {
-  var _this = this;
-  this.next = null;
-  this.entry = null;
-  this.finish = function () {
-    onCorkedFinish(_this, state);
-  };
-}
-/* </replacement> */
-
-/*<replacement>*/
-var Duplex;
-/*</replacement>*/
-
-Writable.WritableState = WritableState;
-
-/*<replacement>*/
-var internalUtil = {
-  deprecate: __nccwpck_require__(7127)
-};
-/*</replacement>*/
-
-/*<replacement>*/
-var Stream = __nccwpck_require__(2387);
-/*</replacement>*/
-
-var Buffer = (__nccwpck_require__(4300).Buffer);
-var OurUint8Array = (typeof global !== 'undefined' ? global : typeof window !== 'undefined' ? window : typeof self !== 'undefined' ? self : {}).Uint8Array || function () {};
-function _uint8ArrayToBuffer(chunk) {
-  return Buffer.from(chunk);
-}
-function _isUint8Array(obj) {
-  return Buffer.isBuffer(obj) || obj instanceof OurUint8Array;
-}
-var destroyImpl = __nccwpck_require__(7049);
-var _require = __nccwpck_require__(9948),
-  getHighWaterMark = _require.getHighWaterMark;
-var _require$codes = (__nccwpck_require__(7214)/* .codes */ .q),
-  ERR_INVALID_ARG_TYPE = _require$codes.ERR_INVALID_ARG_TYPE,
-  ERR_METHOD_NOT_IMPLEMENTED = _require$codes.ERR_METHOD_NOT_IMPLEMENTED,
-  ERR_MULTIPLE_CALLBACK = _require$codes.ERR_MULTIPLE_CALLBACK,
-  ERR_STREAM_CANNOT_PIPE = _require$codes.ERR_STREAM_CANNOT_PIPE,
-  ERR_STREAM_DESTROYED = _require$codes.ERR_STREAM_DESTROYED,
-  ERR_STREAM_NULL_VALUES = _require$codes.ERR_STREAM_NULL_VALUES,
-  ERR_STREAM_WRITE_AFTER_END = _require$codes.ERR_STREAM_WRITE_AFTER_END,
-  ERR_UNKNOWN_ENCODING = _require$codes.ERR_UNKNOWN_ENCODING;
-var errorOrDestroy = destroyImpl.errorOrDestroy;
-__nccwpck_require__(4124)(Writable, Stream);
+;('use strict')
+const {
+  ArrayPrototypeSlice,
+  Error,
+  FunctionPrototypeSymbolHasInstance,
+  ObjectDefineProperty,
+  ObjectDefineProperties,
+  ObjectSetPrototypeOf,
+  StringPrototypeToLowerCase,
+  Symbol,
+  SymbolHasInstance
+} = __nccwpck_require__(9629)
+module.exports = Writable
+Writable.WritableState = WritableState
+const { EventEmitter: EE } = __nccwpck_require__(2361)
+const Stream = (__nccwpck_require__(9792).Stream)
+const { Buffer } = __nccwpck_require__(4300)
+const destroyImpl = __nccwpck_require__(7049)
+const { addAbortSignal } = __nccwpck_require__(289)
+const { getHighWaterMark, getDefaultHighWaterMark } = __nccwpck_require__(9948)
+const {
+  ERR_INVALID_ARG_TYPE,
+  ERR_METHOD_NOT_IMPLEMENTED,
+  ERR_MULTIPLE_CALLBACK,
+  ERR_STREAM_CANNOT_PIPE,
+  ERR_STREAM_DESTROYED,
+  ERR_STREAM_ALREADY_FINISHED,
+  ERR_STREAM_NULL_VALUES,
+  ERR_STREAM_WRITE_AFTER_END,
+  ERR_UNKNOWN_ENCODING
+} = (__nccwpck_require__(529).codes)
+const { errorOrDestroy } = destroyImpl
+ObjectSetPrototypeOf(Writable.prototype, Stream.prototype)
+ObjectSetPrototypeOf(Writable, Stream)
 function nop() {}
+const kOnFinished = Symbol('kOnFinished')
 function WritableState(options, stream, isDuplex) {
-  Duplex = Duplex || __nccwpck_require__(1359);
-  options = options || {};
-
   // Duplex streams are both readable and writable, but share
   // the same options object.
   // However, some cases require setting options to different
   // values for the readable and the writable sides of the duplex stream,
   // e.g. options.readableObjectMode vs. options.writableObjectMode, etc.
-  if (typeof isDuplex !== 'boolean') isDuplex = stream instanceof Duplex;
+  if (typeof isDuplex !== 'boolean') isDuplex = stream instanceof __nccwpck_require__(2613)
 
-  // object stream flag to indicate whether or not this stream
+  // Object stream flag to indicate whether or not this stream
   // contains buffers or objects.
-  this.objectMode = !!options.objectMode;
-  if (isDuplex) this.objectMode = this.objectMode || !!options.writableObjectMode;
+  this.objectMode = !!(options && options.objectMode)
+  if (isDuplex) this.objectMode = this.objectMode || !!(options && options.writableObjectMode)
 
-  // the point at which write() starts returning false
+  // The point at which write() starts returning false
   // Note: 0 is a valid value, means that we always return false if
-  // the entire buffer is not flushed immediately on write()
-  this.highWaterMark = getHighWaterMark(this, options, 'writableHighWaterMark', isDuplex);
+  // the entire buffer is not flushed immediately on write().
+  this.highWaterMark = options
+    ? getHighWaterMark(this, options, 'writableHighWaterMark', isDuplex)
+    : getDefaultHighWaterMark(false)
 
-  // if _final has been called
-  this.finalCalled = false;
+  // if _final has been called.
+  this.finalCalled = false
 
   // drain event flag.
-  this.needDrain = false;
-  // at the start of calling end()
-  this.ending = false;
-  // when end() has been called, and returned
-  this.ended = false;
-  // when 'finish' is emitted
-  this.finished = false;
+  this.needDrain = false
+  // At the start of calling end()
+  this.ending = false
+  // When end() has been called, and returned.
+  this.ended = false
+  // When 'finish' is emitted.
+  this.finished = false
 
-  // has it been destroyed
-  this.destroyed = false;
+  // Has it been destroyed
+  this.destroyed = false
 
-  // should we decode strings into buffers before passing to _write?
+  // Should we decode strings into buffers before passing to _write?
   // this is here so that some node-core streams can optimize string
   // handling at a lower level.
-  var noDecode = options.decodeStrings === false;
-  this.decodeStrings = !noDecode;
+  const noDecode = !!(options && options.decodeStrings === false)
+  this.decodeStrings = !noDecode
 
   // Crypto is kind of old and crusty.  Historically, its default string
   // encoding is 'binary' so we have to make this configurable.
   // Everything else in the universe uses 'utf8', though.
-  this.defaultEncoding = options.defaultEncoding || 'utf8';
+  this.defaultEncoding = (options && options.defaultEncoding) || 'utf8'
 
-  // not an actual buffer we keep track of, but a measurement
+  // Not an actual buffer we keep track of, but a measurement
   // of how much we're waiting to get pushed to some underlying
   // socket or file.
-  this.length = 0;
+  this.length = 0
 
-  // a flag to see when we're in the middle of a write.
-  this.writing = false;
+  // A flag to see when we're in the middle of a write.
+  this.writing = false
 
-  // when true all writes will be buffered until .uncork() call
-  this.corked = 0;
+  // When true all writes will be buffered until .uncork() call.
+  this.corked = 0
 
-  // a flag to be able to tell if the onwrite cb is called immediately,
+  // A flag to be able to tell if the onwrite cb is called immediately,
   // or on a later tick.  We set this to true at first, because any
   // actions that shouldn't happen until "later" should generally also
   // not happen before the first write call.
-  this.sync = true;
+  this.sync = true
 
-  // a flag to know if we're processing previously buffered items, which
+  // A flag to know if we're processing previously buffered items, which
   // may call the _write() callback in the same tick, so that we don't
   // end up in an overlapped onwrite situation.
-  this.bufferProcessing = false;
+  this.bufferProcessing = false
 
-  // the callback that's passed to _write(chunk,cb)
-  this.onwrite = function (er) {
-    onwrite(stream, er);
-  };
+  // The callback that's passed to _write(chunk, cb).
+  this.onwrite = onwrite.bind(undefined, stream)
 
-  // the callback that the user supplies to write(chunk,encoding,cb)
-  this.writecb = null;
+  // The callback that the user supplies to write(chunk, encoding, cb).
+  this.writecb = null
 
-  // the amount that is being written when _write is called.
-  this.writelen = 0;
-  this.bufferedRequest = null;
-  this.lastBufferedRequest = null;
+  // The amount that is being written when _write is called.
+  this.writelen = 0
 
-  // number of pending user-supplied write callbacks
-  // this must be 0 before 'finish' can be emitted
-  this.pendingcb = 0;
+  // Storage for data passed to the afterWrite() callback in case of
+  // synchronous _write() completion.
+  this.afterWriteTickInfo = null
+  resetBuffer(this)
 
-  // emit prefinish if the only thing we're waiting for is _write cbs
-  // This is relevant for synchronous Transform streams
-  this.prefinished = false;
+  // Number of pending user-supplied write callbacks
+  // this must be 0 before 'finish' can be emitted.
+  this.pendingcb = 0
 
-  // True if the error was already emitted and should not be thrown again
-  this.errorEmitted = false;
+  // Stream is still being constructed and cannot be
+  // destroyed until construction finished or failed.
+  // Async construction is opt in, therefore we start as
+  // constructed.
+  this.constructed = true
+
+  // Emit prefinish if the only thing we're waiting for is _write cbs
+  // This is relevant for synchronous Transform streams.
+  this.prefinished = false
+
+  // True if the error was already emitted and should not be thrown again.
+  this.errorEmitted = false
 
   // Should close be emitted on destroy. Defaults to true.
-  this.emitClose = options.emitClose !== false;
+  this.emitClose = !options || options.emitClose !== false
 
-  // Should .destroy() be called after 'finish' (and potentially 'end')
-  this.autoDestroy = !!options.autoDestroy;
+  // Should .destroy() be called after 'finish' (and potentially 'end').
+  this.autoDestroy = !options || options.autoDestroy !== false
 
-  // count buffered requests
-  this.bufferedRequestCount = 0;
+  // Indicates whether the stream has errored. When true all write() calls
+  // should return false. This is needed since when autoDestroy
+  // is disabled we need a way to tell whether the stream has failed.
+  this.errored = null
 
-  // allocate the first CorkedRequest, there is always
-  // one allocated and free to use, and we maintain at most two
-  this.corkedRequestsFree = new CorkedRequest(this);
+  // Indicates whether the stream has finished destroying.
+  this.closed = false
+
+  // True if close has been emitted or would have been emitted
+  // depending on emitClose.
+  this.closeEmitted = false
+  this[kOnFinished] = []
+}
+function resetBuffer(state) {
+  state.buffered = []
+  state.bufferedIndex = 0
+  state.allBuffers = true
+  state.allNoop = true
 }
 WritableState.prototype.getBuffer = function getBuffer() {
-  var current = this.bufferedRequest;
-  var out = [];
-  while (current) {
-    out.push(current);
-    current = current.next;
-  }
-  return out;
-};
-(function () {
-  try {
-    Object.defineProperty(WritableState.prototype, 'buffer', {
-      get: internalUtil.deprecate(function writableStateBufferGetter() {
-        return this.getBuffer();
-      }, '_writableState.buffer is deprecated. Use _writableState.getBuffer ' + 'instead.', 'DEP0003')
-    });
-  } catch (_) {}
-})();
-
-// Test _writableState for inheritance to account for Duplex streams,
-// whose prototype chain only points to Readable.
-var realHasInstance;
-if (typeof Symbol === 'function' && Symbol.hasInstance && typeof Function.prototype[Symbol.hasInstance] === 'function') {
-  realHasInstance = Function.prototype[Symbol.hasInstance];
-  Object.defineProperty(Writable, Symbol.hasInstance, {
-    value: function value(object) {
-      if (realHasInstance.call(this, object)) return true;
-      if (this !== Writable) return false;
-      return object && object._writableState instanceof WritableState;
-    }
-  });
-} else {
-  realHasInstance = function realHasInstance(object) {
-    return object instanceof this;
-  };
+  return ArrayPrototypeSlice(this.buffered, this.bufferedIndex)
 }
+ObjectDefineProperty(WritableState.prototype, 'bufferedRequestCount', {
+  __proto__: null,
+  get() {
+    return this.buffered.length - this.bufferedIndex
+  }
+})
 function Writable(options) {
-  Duplex = Duplex || __nccwpck_require__(1359);
-
   // Writable ctor is applied to Duplexes, too.
   // `realHasInstance` is necessary because using plain `instanceof`
   // would return false, as no `_writableState` property is attached.
@@ -27136,1189 +28174,2095 @@ function Writable(options) {
   // `_writableState` that would lead to infinite recursion.
 
   // Checking for a Stream.Duplex instance is faster here instead of inside
-  // the WritableState constructor, at least with V8 6.5
-  var isDuplex = this instanceof Duplex;
-  if (!isDuplex && !realHasInstance.call(Writable, this)) return new Writable(options);
-  this._writableState = new WritableState(options, this, isDuplex);
-
-  // legacy.
-  this.writable = true;
+  // the WritableState constructor, at least with V8 6.5.
+  const isDuplex = this instanceof __nccwpck_require__(2613)
+  if (!isDuplex && !FunctionPrototypeSymbolHasInstance(Writable, this)) return new Writable(options)
+  this._writableState = new WritableState(options, this, isDuplex)
   if (options) {
-    if (typeof options.write === 'function') this._write = options.write;
-    if (typeof options.writev === 'function') this._writev = options.writev;
-    if (typeof options.destroy === 'function') this._destroy = options.destroy;
-    if (typeof options.final === 'function') this._final = options.final;
+    if (typeof options.write === 'function') this._write = options.write
+    if (typeof options.writev === 'function') this._writev = options.writev
+    if (typeof options.destroy === 'function') this._destroy = options.destroy
+    if (typeof options.final === 'function') this._final = options.final
+    if (typeof options.construct === 'function') this._construct = options.construct
+    if (options.signal) addAbortSignal(options.signal, this)
   }
-  Stream.call(this);
+  Stream.call(this, options)
+  destroyImpl.construct(this, () => {
+    const state = this._writableState
+    if (!state.writing) {
+      clearBuffer(this, state)
+    }
+    finishMaybe(this, state)
+  })
 }
+ObjectDefineProperty(Writable, SymbolHasInstance, {
+  __proto__: null,
+  value: function (object) {
+    if (FunctionPrototypeSymbolHasInstance(this, object)) return true
+    if (this !== Writable) return false
+    return object && object._writableState instanceof WritableState
+  }
+})
 
 // Otherwise people can pipe Writable streams, which is just wrong.
 Writable.prototype.pipe = function () {
-  errorOrDestroy(this, new ERR_STREAM_CANNOT_PIPE());
-};
-function writeAfterEnd(stream, cb) {
-  var er = new ERR_STREAM_WRITE_AFTER_END();
-  // TODO: defer error events consistently everywhere, not just the cb
-  errorOrDestroy(stream, er);
-  process.nextTick(cb, er);
+  errorOrDestroy(this, new ERR_STREAM_CANNOT_PIPE())
 }
-
-// Checks that a user-supplied chunk is valid, especially for the particular
-// mode the stream is in. Currently this means that `null` is never accepted
-// and undefined/non-string values are only allowed in object mode.
-function validChunk(stream, state, chunk, cb) {
-  var er;
+function _write(stream, chunk, encoding, cb) {
+  const state = stream._writableState
+  if (typeof encoding === 'function') {
+    cb = encoding
+    encoding = state.defaultEncoding
+  } else {
+    if (!encoding) encoding = state.defaultEncoding
+    else if (encoding !== 'buffer' && !Buffer.isEncoding(encoding)) throw new ERR_UNKNOWN_ENCODING(encoding)
+    if (typeof cb !== 'function') cb = nop
+  }
   if (chunk === null) {
-    er = new ERR_STREAM_NULL_VALUES();
-  } else if (typeof chunk !== 'string' && !state.objectMode) {
-    er = new ERR_INVALID_ARG_TYPE('chunk', ['string', 'Buffer'], chunk);
+    throw new ERR_STREAM_NULL_VALUES()
+  } else if (!state.objectMode) {
+    if (typeof chunk === 'string') {
+      if (state.decodeStrings !== false) {
+        chunk = Buffer.from(chunk, encoding)
+        encoding = 'buffer'
+      }
+    } else if (chunk instanceof Buffer) {
+      encoding = 'buffer'
+    } else if (Stream._isUint8Array(chunk)) {
+      chunk = Stream._uint8ArrayToBuffer(chunk)
+      encoding = 'buffer'
+    } else {
+      throw new ERR_INVALID_ARG_TYPE('chunk', ['string', 'Buffer', 'Uint8Array'], chunk)
+    }
   }
-  if (er) {
-    errorOrDestroy(stream, er);
-    process.nextTick(cb, er);
-    return false;
+  let err
+  if (state.ending) {
+    err = new ERR_STREAM_WRITE_AFTER_END()
+  } else if (state.destroyed) {
+    err = new ERR_STREAM_DESTROYED('write')
   }
-  return true;
+  if (err) {
+    process.nextTick(cb, err)
+    errorOrDestroy(stream, err, true)
+    return err
+  }
+  state.pendingcb++
+  return writeOrBuffer(stream, state, chunk, encoding, cb)
 }
 Writable.prototype.write = function (chunk, encoding, cb) {
-  var state = this._writableState;
-  var ret = false;
-  var isBuf = !state.objectMode && _isUint8Array(chunk);
-  if (isBuf && !Buffer.isBuffer(chunk)) {
-    chunk = _uint8ArrayToBuffer(chunk);
-  }
-  if (typeof encoding === 'function') {
-    cb = encoding;
-    encoding = null;
-  }
-  if (isBuf) encoding = 'buffer';else if (!encoding) encoding = state.defaultEncoding;
-  if (typeof cb !== 'function') cb = nop;
-  if (state.ending) writeAfterEnd(this, cb);else if (isBuf || validChunk(this, state, chunk, cb)) {
-    state.pendingcb++;
-    ret = writeOrBuffer(this, state, isBuf, chunk, encoding, cb);
-  }
-  return ret;
-};
+  return _write(this, chunk, encoding, cb) === true
+}
 Writable.prototype.cork = function () {
-  this._writableState.corked++;
-};
+  this._writableState.corked++
+}
 Writable.prototype.uncork = function () {
-  var state = this._writableState;
+  const state = this._writableState
   if (state.corked) {
-    state.corked--;
-    if (!state.writing && !state.corked && !state.bufferProcessing && state.bufferedRequest) clearBuffer(this, state);
+    state.corked--
+    if (!state.writing) clearBuffer(this, state)
   }
-};
+}
 Writable.prototype.setDefaultEncoding = function setDefaultEncoding(encoding) {
   // node::ParseEncoding() requires lower case.
-  if (typeof encoding === 'string') encoding = encoding.toLowerCase();
-  if (!(['hex', 'utf8', 'utf-8', 'ascii', 'binary', 'base64', 'ucs2', 'ucs-2', 'utf16le', 'utf-16le', 'raw'].indexOf((encoding + '').toLowerCase()) > -1)) throw new ERR_UNKNOWN_ENCODING(encoding);
-  this._writableState.defaultEncoding = encoding;
-  return this;
-};
-Object.defineProperty(Writable.prototype, 'writableBuffer', {
-  // making it explicit this property is not enumerable
-  // because otherwise some prototype manipulation in
-  // userland will fail
-  enumerable: false,
-  get: function get() {
-    return this._writableState && this._writableState.getBuffer();
-  }
-});
-function decodeChunk(state, chunk, encoding) {
-  if (!state.objectMode && state.decodeStrings !== false && typeof chunk === 'string') {
-    chunk = Buffer.from(chunk, encoding);
-  }
-  return chunk;
+  if (typeof encoding === 'string') encoding = StringPrototypeToLowerCase(encoding)
+  if (!Buffer.isEncoding(encoding)) throw new ERR_UNKNOWN_ENCODING(encoding)
+  this._writableState.defaultEncoding = encoding
+  return this
 }
-Object.defineProperty(Writable.prototype, 'writableHighWaterMark', {
-  // making it explicit this property is not enumerable
-  // because otherwise some prototype manipulation in
-  // userland will fail
-  enumerable: false,
-  get: function get() {
-    return this._writableState.highWaterMark;
-  }
-});
 
-// if we're already writing something, then just put this
+// If we're already writing something, then just put this
 // in the queue, and wait our turn.  Otherwise, call _write
 // If we return false, then we need a drain event, so set that flag.
-function writeOrBuffer(stream, state, isBuf, chunk, encoding, cb) {
-  if (!isBuf) {
-    var newChunk = decodeChunk(state, chunk, encoding);
-    if (chunk !== newChunk) {
-      isBuf = true;
-      encoding = 'buffer';
-      chunk = newChunk;
+function writeOrBuffer(stream, state, chunk, encoding, callback) {
+  const len = state.objectMode ? 1 : chunk.length
+  state.length += len
+
+  // stream._write resets state.length
+  const ret = state.length < state.highWaterMark
+  // We must ensure that previous needDrain will not be reset to false.
+  if (!ret) state.needDrain = true
+  if (state.writing || state.corked || state.errored || !state.constructed) {
+    state.buffered.push({
+      chunk,
+      encoding,
+      callback
+    })
+    if (state.allBuffers && encoding !== 'buffer') {
+      state.allBuffers = false
     }
-  }
-  var len = state.objectMode ? 1 : chunk.length;
-  state.length += len;
-  var ret = state.length < state.highWaterMark;
-  // we must ensure that previous needDrain will not be reset to false.
-  if (!ret) state.needDrain = true;
-  if (state.writing || state.corked) {
-    var last = state.lastBufferedRequest;
-    state.lastBufferedRequest = {
-      chunk: chunk,
-      encoding: encoding,
-      isBuf: isBuf,
-      callback: cb,
-      next: null
-    };
-    if (last) {
-      last.next = state.lastBufferedRequest;
-    } else {
-      state.bufferedRequest = state.lastBufferedRequest;
+    if (state.allNoop && callback !== nop) {
+      state.allNoop = false
     }
-    state.bufferedRequestCount += 1;
   } else {
-    doWrite(stream, state, false, len, chunk, encoding, cb);
+    state.writelen = len
+    state.writecb = callback
+    state.writing = true
+    state.sync = true
+    stream._write(chunk, encoding, state.onwrite)
+    state.sync = false
   }
-  return ret;
+
+  // Return false if errored or destroyed in order to break
+  // any synchronous while(stream.write(data)) loops.
+  return ret && !state.errored && !state.destroyed
 }
 function doWrite(stream, state, writev, len, chunk, encoding, cb) {
-  state.writelen = len;
-  state.writecb = cb;
-  state.writing = true;
-  state.sync = true;
-  if (state.destroyed) state.onwrite(new ERR_STREAM_DESTROYED('write'));else if (writev) stream._writev(chunk, state.onwrite);else stream._write(chunk, encoding, state.onwrite);
-  state.sync = false;
+  state.writelen = len
+  state.writecb = cb
+  state.writing = true
+  state.sync = true
+  if (state.destroyed) state.onwrite(new ERR_STREAM_DESTROYED('write'))
+  else if (writev) stream._writev(chunk, state.onwrite)
+  else stream._write(chunk, encoding, state.onwrite)
+  state.sync = false
 }
-function onwriteError(stream, state, sync, er, cb) {
-  --state.pendingcb;
-  if (sync) {
-    // defer the callback if we are being called synchronously
-    // to avoid piling up things on the stack
-    process.nextTick(cb, er);
-    // this can emit finish, and it will always happen
-    // after error
-    process.nextTick(finishMaybe, stream, state);
-    stream._writableState.errorEmitted = true;
-    errorOrDestroy(stream, er);
-  } else {
-    // the caller expect this to happen before if
-    // it is async
-    cb(er);
-    stream._writableState.errorEmitted = true;
-    errorOrDestroy(stream, er);
-    // this can emit finish, but finish must
-    // always follow error
-    finishMaybe(stream, state);
-  }
-}
-function onwriteStateUpdate(state) {
-  state.writing = false;
-  state.writecb = null;
-  state.length -= state.writelen;
-  state.writelen = 0;
+function onwriteError(stream, state, er, cb) {
+  --state.pendingcb
+  cb(er)
+  // Ensure callbacks are invoked even when autoDestroy is
+  // not enabled. Passing `er` here doesn't make sense since
+  // it's related to one specific write, not to the buffered
+  // writes.
+  errorBuffer(state)
+  // This can emit error, but error must always follow cb.
+  errorOrDestroy(stream, er)
 }
 function onwrite(stream, er) {
-  var state = stream._writableState;
-  var sync = state.sync;
-  var cb = state.writecb;
-  if (typeof cb !== 'function') throw new ERR_MULTIPLE_CALLBACK();
-  onwriteStateUpdate(state);
-  if (er) onwriteError(stream, state, sync, er, cb);else {
-    // Check if we're actually ready to finish, but don't emit yet
-    var finished = needFinish(state) || stream.destroyed;
-    if (!finished && !state.corked && !state.bufferProcessing && state.bufferedRequest) {
-      clearBuffer(stream, state);
+  const state = stream._writableState
+  const sync = state.sync
+  const cb = state.writecb
+  if (typeof cb !== 'function') {
+    errorOrDestroy(stream, new ERR_MULTIPLE_CALLBACK())
+    return
+  }
+  state.writing = false
+  state.writecb = null
+  state.length -= state.writelen
+  state.writelen = 0
+  if (er) {
+    // Avoid V8 leak, https://github.com/nodejs/node/pull/34103#issuecomment-652002364
+    er.stack // eslint-disable-line no-unused-expressions
+
+    if (!state.errored) {
+      state.errored = er
+    }
+
+    // In case of duplex streams we need to notify the readable side of the
+    // error.
+    if (stream._readableState && !stream._readableState.errored) {
+      stream._readableState.errored = er
     }
     if (sync) {
-      process.nextTick(afterWrite, stream, state, finished, cb);
+      process.nextTick(onwriteError, stream, state, er, cb)
     } else {
-      afterWrite(stream, state, finished, cb);
+      onwriteError(stream, state, er, cb)
     }
-  }
-}
-function afterWrite(stream, state, finished, cb) {
-  if (!finished) onwriteDrain(stream, state);
-  state.pendingcb--;
-  cb();
-  finishMaybe(stream, state);
-}
-
-// Must force callback to be called on nextTick, so that we don't
-// emit 'drain' before the write() consumer gets the 'false' return
-// value, and has a chance to attach a 'drain' listener.
-function onwriteDrain(stream, state) {
-  if (state.length === 0 && state.needDrain) {
-    state.needDrain = false;
-    stream.emit('drain');
-  }
-}
-
-// if there's something in the buffer waiting, then process it
-function clearBuffer(stream, state) {
-  state.bufferProcessing = true;
-  var entry = state.bufferedRequest;
-  if (stream._writev && entry && entry.next) {
-    // Fast case, write everything using _writev()
-    var l = state.bufferedRequestCount;
-    var buffer = new Array(l);
-    var holder = state.corkedRequestsFree;
-    holder.entry = entry;
-    var count = 0;
-    var allBuffers = true;
-    while (entry) {
-      buffer[count] = entry;
-      if (!entry.isBuf) allBuffers = false;
-      entry = entry.next;
-      count += 1;
-    }
-    buffer.allBuffers = allBuffers;
-    doWrite(stream, state, true, state.length, buffer, '', holder.finish);
-
-    // doWrite is almost always async, defer these to save a bit of time
-    // as the hot path ends with doWrite
-    state.pendingcb++;
-    state.lastBufferedRequest = null;
-    if (holder.next) {
-      state.corkedRequestsFree = holder.next;
-      holder.next = null;
-    } else {
-      state.corkedRequestsFree = new CorkedRequest(state);
-    }
-    state.bufferedRequestCount = 0;
   } else {
-    // Slow case, write chunks one-by-one
-    while (entry) {
-      var chunk = entry.chunk;
-      var encoding = entry.encoding;
-      var cb = entry.callback;
-      var len = state.objectMode ? 1 : chunk.length;
-      doWrite(stream, state, false, len, chunk, encoding, cb);
-      entry = entry.next;
-      state.bufferedRequestCount--;
-      // if we didn't call the onwrite immediately, then
-      // it means that we need to wait until it does.
-      // also, that means that the chunk and cb are currently
-      // being processed, so move the buffer counter past them.
-      if (state.writing) {
-        break;
-      }
+    if (state.buffered.length > state.bufferedIndex) {
+      clearBuffer(stream, state)
     }
-    if (entry === null) state.lastBufferedRequest = null;
+    if (sync) {
+      // It is a common case that the callback passed to .write() is always
+      // the same. In that case, we do not schedule a new nextTick(), but
+      // rather just increase a counter, to improve performance and avoid
+      // memory allocations.
+      if (state.afterWriteTickInfo !== null && state.afterWriteTickInfo.cb === cb) {
+        state.afterWriteTickInfo.count++
+      } else {
+        state.afterWriteTickInfo = {
+          count: 1,
+          cb,
+          stream,
+          state
+        }
+        process.nextTick(afterWriteTick, state.afterWriteTickInfo)
+      }
+    } else {
+      afterWrite(stream, state, 1, cb)
+    }
   }
-  state.bufferedRequest = entry;
-  state.bufferProcessing = false;
+}
+function afterWriteTick({ stream, state, count, cb }) {
+  state.afterWriteTickInfo = null
+  return afterWrite(stream, state, count, cb)
+}
+function afterWrite(stream, state, count, cb) {
+  const needDrain = !state.ending && !stream.destroyed && state.length === 0 && state.needDrain
+  if (needDrain) {
+    state.needDrain = false
+    stream.emit('drain')
+  }
+  while (count-- > 0) {
+    state.pendingcb--
+    cb()
+  }
+  if (state.destroyed) {
+    errorBuffer(state)
+  }
+  finishMaybe(stream, state)
+}
+
+// If there's something in the buffer waiting, then invoke callbacks.
+function errorBuffer(state) {
+  if (state.writing) {
+    return
+  }
+  for (let n = state.bufferedIndex; n < state.buffered.length; ++n) {
+    var _state$errored
+    const { chunk, callback } = state.buffered[n]
+    const len = state.objectMode ? 1 : chunk.length
+    state.length -= len
+    callback(
+      (_state$errored = state.errored) !== null && _state$errored !== undefined
+        ? _state$errored
+        : new ERR_STREAM_DESTROYED('write')
+    )
+  }
+  const onfinishCallbacks = state[kOnFinished].splice(0)
+  for (let i = 0; i < onfinishCallbacks.length; i++) {
+    var _state$errored2
+    onfinishCallbacks[i](
+      (_state$errored2 = state.errored) !== null && _state$errored2 !== undefined
+        ? _state$errored2
+        : new ERR_STREAM_DESTROYED('end')
+    )
+  }
+  resetBuffer(state)
+}
+
+// If there's something in the buffer waiting, then process it.
+function clearBuffer(stream, state) {
+  if (state.corked || state.bufferProcessing || state.destroyed || !state.constructed) {
+    return
+  }
+  const { buffered, bufferedIndex, objectMode } = state
+  const bufferedLength = buffered.length - bufferedIndex
+  if (!bufferedLength) {
+    return
+  }
+  let i = bufferedIndex
+  state.bufferProcessing = true
+  if (bufferedLength > 1 && stream._writev) {
+    state.pendingcb -= bufferedLength - 1
+    const callback = state.allNoop
+      ? nop
+      : (err) => {
+          for (let n = i; n < buffered.length; ++n) {
+            buffered[n].callback(err)
+          }
+        }
+    // Make a copy of `buffered` if it's going to be used by `callback` above,
+    // since `doWrite` will mutate the array.
+    const chunks = state.allNoop && i === 0 ? buffered : ArrayPrototypeSlice(buffered, i)
+    chunks.allBuffers = state.allBuffers
+    doWrite(stream, state, true, state.length, chunks, '', callback)
+    resetBuffer(state)
+  } else {
+    do {
+      const { chunk, encoding, callback } = buffered[i]
+      buffered[i++] = null
+      const len = objectMode ? 1 : chunk.length
+      doWrite(stream, state, false, len, chunk, encoding, callback)
+    } while (i < buffered.length && !state.writing)
+    if (i === buffered.length) {
+      resetBuffer(state)
+    } else if (i > 256) {
+      buffered.splice(0, i)
+      state.bufferedIndex = 0
+    } else {
+      state.bufferedIndex = i
+    }
+  }
+  state.bufferProcessing = false
 }
 Writable.prototype._write = function (chunk, encoding, cb) {
-  cb(new ERR_METHOD_NOT_IMPLEMENTED('_write()'));
-};
-Writable.prototype._writev = null;
+  if (this._writev) {
+    this._writev(
+      [
+        {
+          chunk,
+          encoding
+        }
+      ],
+      cb
+    )
+  } else {
+    throw new ERR_METHOD_NOT_IMPLEMENTED('_write()')
+  }
+}
+Writable.prototype._writev = null
 Writable.prototype.end = function (chunk, encoding, cb) {
-  var state = this._writableState;
+  const state = this._writableState
   if (typeof chunk === 'function') {
-    cb = chunk;
-    chunk = null;
-    encoding = null;
+    cb = chunk
+    chunk = null
+    encoding = null
   } else if (typeof encoding === 'function') {
-    cb = encoding;
-    encoding = null;
+    cb = encoding
+    encoding = null
   }
-  if (chunk !== null && chunk !== undefined) this.write(chunk, encoding);
+  let err
+  if (chunk !== null && chunk !== undefined) {
+    const ret = _write(this, chunk, encoding)
+    if (ret instanceof Error) {
+      err = ret
+    }
+  }
 
-  // .end() fully uncorks
+  // .end() fully uncorks.
   if (state.corked) {
-    state.corked = 1;
-    this.uncork();
+    state.corked = 1
+    this.uncork()
   }
+  if (err) {
+    // Do nothing...
+  } else if (!state.errored && !state.ending) {
+    // This is forgiving in terms of unnecessary calls to end() and can hide
+    // logic errors. However, usually such errors are harmless and causing a
+    // hard error can be disproportionately destructive. It is not always
+    // trivial for the user to determine whether end() needs to be called
+    // or not.
 
-  // ignore unnecessary end() calls.
-  if (!state.ending) endWritable(this, state, cb);
-  return this;
-};
-Object.defineProperty(Writable.prototype, 'writableLength', {
-  // making it explicit this property is not enumerable
-  // because otherwise some prototype manipulation in
-  // userland will fail
-  enumerable: false,
-  get: function get() {
-    return this._writableState.length;
+    state.ending = true
+    finishMaybe(this, state, true)
+    state.ended = true
+  } else if (state.finished) {
+    err = new ERR_STREAM_ALREADY_FINISHED('end')
+  } else if (state.destroyed) {
+    err = new ERR_STREAM_DESTROYED('end')
   }
-});
+  if (typeof cb === 'function') {
+    if (err || state.finished) {
+      process.nextTick(cb, err)
+    } else {
+      state[kOnFinished].push(cb)
+    }
+  }
+  return this
+}
 function needFinish(state) {
-  return state.ending && state.length === 0 && state.bufferedRequest === null && !state.finished && !state.writing;
+  return (
+    state.ending &&
+    !state.destroyed &&
+    state.constructed &&
+    state.length === 0 &&
+    !state.errored &&
+    state.buffered.length === 0 &&
+    !state.finished &&
+    !state.writing &&
+    !state.errorEmitted &&
+    !state.closeEmitted
+  )
 }
 function callFinal(stream, state) {
-  stream._final(function (err) {
-    state.pendingcb--;
-    if (err) {
-      errorOrDestroy(stream, err);
+  let called = false
+  function onFinish(err) {
+    if (called) {
+      errorOrDestroy(stream, err !== null && err !== undefined ? err : ERR_MULTIPLE_CALLBACK())
+      return
     }
-    state.prefinished = true;
-    stream.emit('prefinish');
-    finishMaybe(stream, state);
-  });
+    called = true
+    state.pendingcb--
+    if (err) {
+      const onfinishCallbacks = state[kOnFinished].splice(0)
+      for (let i = 0; i < onfinishCallbacks.length; i++) {
+        onfinishCallbacks[i](err)
+      }
+      errorOrDestroy(stream, err, state.sync)
+    } else if (needFinish(state)) {
+      state.prefinished = true
+      stream.emit('prefinish')
+      // Backwards compat. Don't check state.sync here.
+      // Some streams assume 'finish' will be emitted
+      // asynchronously relative to _final callback.
+      state.pendingcb++
+      process.nextTick(finish, stream, state)
+    }
+  }
+  state.sync = true
+  state.pendingcb++
+  try {
+    stream._final(onFinish)
+  } catch (err) {
+    onFinish(err)
+  }
+  state.sync = false
 }
 function prefinish(stream, state) {
   if (!state.prefinished && !state.finalCalled) {
     if (typeof stream._final === 'function' && !state.destroyed) {
-      state.pendingcb++;
-      state.finalCalled = true;
-      process.nextTick(callFinal, stream, state);
+      state.finalCalled = true
+      callFinal(stream, state)
     } else {
-      state.prefinished = true;
-      stream.emit('prefinish');
+      state.prefinished = true
+      stream.emit('prefinish')
     }
   }
 }
-function finishMaybe(stream, state) {
-  var need = needFinish(state);
-  if (need) {
-    prefinish(stream, state);
+function finishMaybe(stream, state, sync) {
+  if (needFinish(state)) {
+    prefinish(stream, state)
     if (state.pendingcb === 0) {
-      state.finished = true;
-      stream.emit('finish');
-      if (state.autoDestroy) {
-        // In case of duplex streams we need a way to detect
-        // if the readable side is ready for autoDestroy as well
-        var rState = stream._readableState;
-        if (!rState || rState.autoDestroy && rState.endEmitted) {
-          stream.destroy();
-        }
+      if (sync) {
+        state.pendingcb++
+        process.nextTick(
+          (stream, state) => {
+            if (needFinish(state)) {
+              finish(stream, state)
+            } else {
+              state.pendingcb--
+            }
+          },
+          stream,
+          state
+        )
+      } else if (needFinish(state)) {
+        state.pendingcb++
+        finish(stream, state)
       }
     }
   }
-  return need;
 }
-function endWritable(stream, state, cb) {
-  state.ending = true;
-  finishMaybe(stream, state);
-  if (cb) {
-    if (state.finished) process.nextTick(cb);else stream.once('finish', cb);
+function finish(stream, state) {
+  state.pendingcb--
+  state.finished = true
+  const onfinishCallbacks = state[kOnFinished].splice(0)
+  for (let i = 0; i < onfinishCallbacks.length; i++) {
+    onfinishCallbacks[i]()
   }
-  state.ended = true;
-  stream.writable = false;
-}
-function onCorkedFinish(corkReq, state, err) {
-  var entry = corkReq.entry;
-  corkReq.entry = null;
-  while (entry) {
-    var cb = entry.callback;
-    state.pendingcb--;
-    cb(err);
-    entry = entry.next;
-  }
-
-  // reuse the free corkReq.
-  state.corkedRequestsFree.next = corkReq;
-}
-Object.defineProperty(Writable.prototype, 'destroyed', {
-  // making it explicit this property is not enumerable
-  // because otherwise some prototype manipulation in
-  // userland will fail
-  enumerable: false,
-  get: function get() {
-    if (this._writableState === undefined) {
-      return false;
+  stream.emit('finish')
+  if (state.autoDestroy) {
+    // In case of duplex streams we need a way to detect
+    // if the readable side is ready for autoDestroy as well.
+    const rState = stream._readableState
+    const autoDestroy =
+      !rState ||
+      (rState.autoDestroy &&
+        // We don't expect the readable to ever 'end'
+        // if readable is explicitly set to false.
+        (rState.endEmitted || rState.readable === false))
+    if (autoDestroy) {
+      stream.destroy()
     }
-    return this._writableState.destroyed;
+  }
+}
+ObjectDefineProperties(Writable.prototype, {
+  closed: {
+    __proto__: null,
+    get() {
+      return this._writableState ? this._writableState.closed : false
+    }
   },
-  set: function set(value) {
-    // we ignore the value if the stream
-    // has not been initialized yet
-    if (!this._writableState) {
-      return;
-    }
-
-    // backward compatibility, the user is explicitly
-    // managing destroyed
-    this._writableState.destroyed = value;
-  }
-});
-Writable.prototype.destroy = destroyImpl.destroy;
-Writable.prototype._undestroy = destroyImpl.undestroy;
-Writable.prototype._destroy = function (err, cb) {
-  cb(err);
-};
-
-/***/ }),
-
-/***/ 3306:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-"use strict";
-
-
-var _Object$setPrototypeO;
-function _defineProperty(obj, key, value) { key = _toPropertyKey(key); if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return typeof key === "symbol" ? key : String(key); }
-function _toPrimitive(input, hint) { if (typeof input !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (typeof res !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
-var finished = __nccwpck_require__(6080);
-var kLastResolve = Symbol('lastResolve');
-var kLastReject = Symbol('lastReject');
-var kError = Symbol('error');
-var kEnded = Symbol('ended');
-var kLastPromise = Symbol('lastPromise');
-var kHandlePromise = Symbol('handlePromise');
-var kStream = Symbol('stream');
-function createIterResult(value, done) {
-  return {
-    value: value,
-    done: done
-  };
-}
-function readAndResolve(iter) {
-  var resolve = iter[kLastResolve];
-  if (resolve !== null) {
-    var data = iter[kStream].read();
-    // we defer if data is null
-    // we can be expecting either 'end' or
-    // 'error'
-    if (data !== null) {
-      iter[kLastPromise] = null;
-      iter[kLastResolve] = null;
-      iter[kLastReject] = null;
-      resolve(createIterResult(data, false));
-    }
-  }
-}
-function onReadable(iter) {
-  // we wait for the next tick, because it might
-  // emit an error with process.nextTick
-  process.nextTick(readAndResolve, iter);
-}
-function wrapForNext(lastPromise, iter) {
-  return function (resolve, reject) {
-    lastPromise.then(function () {
-      if (iter[kEnded]) {
-        resolve(createIterResult(undefined, true));
-        return;
-      }
-      iter[kHandlePromise](resolve, reject);
-    }, reject);
-  };
-}
-var AsyncIteratorPrototype = Object.getPrototypeOf(function () {});
-var ReadableStreamAsyncIteratorPrototype = Object.setPrototypeOf((_Object$setPrototypeO = {
-  get stream() {
-    return this[kStream];
-  },
-  next: function next() {
-    var _this = this;
-    // if we have detected an error in the meanwhile
-    // reject straight away
-    var error = this[kError];
-    if (error !== null) {
-      return Promise.reject(error);
-    }
-    if (this[kEnded]) {
-      return Promise.resolve(createIterResult(undefined, true));
-    }
-    if (this[kStream].destroyed) {
-      // We need to defer via nextTick because if .destroy(err) is
-      // called, the error will be emitted via nextTick, and
-      // we cannot guarantee that there is no error lingering around
-      // waiting to be emitted.
-      return new Promise(function (resolve, reject) {
-        process.nextTick(function () {
-          if (_this[kError]) {
-            reject(_this[kError]);
-          } else {
-            resolve(createIterResult(undefined, true));
-          }
-        });
-      });
-    }
-
-    // if we have multiple next() calls
-    // we will wait for the previous Promise to finish
-    // this logic is optimized to support for await loops,
-    // where next() is only called once at a time
-    var lastPromise = this[kLastPromise];
-    var promise;
-    if (lastPromise) {
-      promise = new Promise(wrapForNext(lastPromise, this));
-    } else {
-      // fast path needed to support multiple this.push()
-      // without triggering the next() queue
-      var data = this[kStream].read();
-      if (data !== null) {
-        return Promise.resolve(createIterResult(data, false));
-      }
-      promise = new Promise(this[kHandlePromise]);
-    }
-    this[kLastPromise] = promise;
-    return promise;
-  }
-}, _defineProperty(_Object$setPrototypeO, Symbol.asyncIterator, function () {
-  return this;
-}), _defineProperty(_Object$setPrototypeO, "return", function _return() {
-  var _this2 = this;
-  // destroy(err, cb) is a private API
-  // we can guarantee we have that here, because we control the
-  // Readable class this is attached to
-  return new Promise(function (resolve, reject) {
-    _this2[kStream].destroy(null, function (err) {
-      if (err) {
-        reject(err);
-        return;
-      }
-      resolve(createIterResult(undefined, true));
-    });
-  });
-}), _Object$setPrototypeO), AsyncIteratorPrototype);
-var createReadableStreamAsyncIterator = function createReadableStreamAsyncIterator(stream) {
-  var _Object$create;
-  var iterator = Object.create(ReadableStreamAsyncIteratorPrototype, (_Object$create = {}, _defineProperty(_Object$create, kStream, {
-    value: stream,
-    writable: true
-  }), _defineProperty(_Object$create, kLastResolve, {
-    value: null,
-    writable: true
-  }), _defineProperty(_Object$create, kLastReject, {
-    value: null,
-    writable: true
-  }), _defineProperty(_Object$create, kError, {
-    value: null,
-    writable: true
-  }), _defineProperty(_Object$create, kEnded, {
-    value: stream._readableState.endEmitted,
-    writable: true
-  }), _defineProperty(_Object$create, kHandlePromise, {
-    value: function value(resolve, reject) {
-      var data = iterator[kStream].read();
-      if (data) {
-        iterator[kLastPromise] = null;
-        iterator[kLastResolve] = null;
-        iterator[kLastReject] = null;
-        resolve(createIterResult(data, false));
-      } else {
-        iterator[kLastResolve] = resolve;
-        iterator[kLastReject] = reject;
-      }
+  destroyed: {
+    __proto__: null,
+    get() {
+      return this._writableState ? this._writableState.destroyed : false
     },
-    writable: true
-  }), _Object$create));
-  iterator[kLastPromise] = null;
-  finished(stream, function (err) {
-    if (err && err.code !== 'ERR_STREAM_PREMATURE_CLOSE') {
-      var reject = iterator[kLastReject];
-      // reject if we are waiting for data in the Promise
-      // returned by next() and store the error
-      if (reject !== null) {
-        iterator[kLastPromise] = null;
-        iterator[kLastResolve] = null;
-        iterator[kLastReject] = null;
-        reject(err);
+    set(value) {
+      // Backward compatibility, the user is explicitly managing destroyed.
+      if (this._writableState) {
+        this._writableState.destroyed = value
       }
-      iterator[kError] = err;
-      return;
     }
-    var resolve = iterator[kLastResolve];
-    if (resolve !== null) {
-      iterator[kLastPromise] = null;
-      iterator[kLastResolve] = null;
-      iterator[kLastReject] = null;
-      resolve(createIterResult(undefined, true));
+  },
+  writable: {
+    __proto__: null,
+    get() {
+      const w = this._writableState
+      // w.writable === false means that this is part of a Duplex stream
+      // where the writable side was disabled upon construction.
+      // Compat. The user might manually disable writable side through
+      // deprecated setter.
+      return !!w && w.writable !== false && !w.destroyed && !w.errored && !w.ending && !w.ended
+    },
+    set(val) {
+      // Backwards compatible.
+      if (this._writableState) {
+        this._writableState.writable = !!val
+      }
     }
-    iterator[kEnded] = true;
-  });
-  stream.on('readable', onReadable.bind(null, iterator));
-  return iterator;
-};
-module.exports = createReadableStreamAsyncIterator;
+  },
+  writableFinished: {
+    __proto__: null,
+    get() {
+      return this._writableState ? this._writableState.finished : false
+    }
+  },
+  writableObjectMode: {
+    __proto__: null,
+    get() {
+      return this._writableState ? this._writableState.objectMode : false
+    }
+  },
+  writableBuffer: {
+    __proto__: null,
+    get() {
+      return this._writableState && this._writableState.getBuffer()
+    }
+  },
+  writableEnded: {
+    __proto__: null,
+    get() {
+      return this._writableState ? this._writableState.ending : false
+    }
+  },
+  writableNeedDrain: {
+    __proto__: null,
+    get() {
+      const wState = this._writableState
+      if (!wState) return false
+      return !wState.destroyed && !wState.ending && wState.needDrain
+    }
+  },
+  writableHighWaterMark: {
+    __proto__: null,
+    get() {
+      return this._writableState && this._writableState.highWaterMark
+    }
+  },
+  writableCorked: {
+    __proto__: null,
+    get() {
+      return this._writableState ? this._writableState.corked : 0
+    }
+  },
+  writableLength: {
+    __proto__: null,
+    get() {
+      return this._writableState && this._writableState.length
+    }
+  },
+  errored: {
+    __proto__: null,
+    enumerable: false,
+    get() {
+      return this._writableState ? this._writableState.errored : null
+    }
+  },
+  writableAborted: {
+    __proto__: null,
+    enumerable: false,
+    get: function () {
+      return !!(
+        this._writableState.writable !== false &&
+        (this._writableState.destroyed || this._writableState.errored) &&
+        !this._writableState.finished
+      )
+    }
+  }
+})
+const destroy = destroyImpl.destroy
+Writable.prototype.destroy = function (err, cb) {
+  const state = this._writableState
+
+  // Invoke pending callbacks.
+  if (!state.destroyed && (state.bufferedIndex < state.buffered.length || state[kOnFinished].length)) {
+    process.nextTick(errorBuffer, state)
+  }
+  destroy.call(this, err, cb)
+  return this
+}
+Writable.prototype._undestroy = destroyImpl.undestroy
+Writable.prototype._destroy = function (err, cb) {
+  cb(err)
+}
+Writable.prototype[EE.captureRejectionSymbol] = function (err) {
+  this.destroy(err)
+}
+let webStreamsAdapters
+
+// Lazy to avoid circular references
+function lazyWebStreams() {
+  if (webStreamsAdapters === undefined) webStreamsAdapters = {}
+  return webStreamsAdapters
+}
+Writable.fromWeb = function (writableStream, options) {
+  return lazyWebStreams().newStreamWritableFromWritableStream(writableStream, options)
+}
+Writable.toWeb = function (streamWritable) {
+  return lazyWebStreams().newWritableStreamFromStreamWritable(streamWritable)
+}
+
 
 /***/ }),
 
-/***/ 6522:
+/***/ 669:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+/* eslint jsdoc/require-jsdoc: "error" */
+
+
+
+const {
+  ArrayIsArray,
+  ArrayPrototypeIncludes,
+  ArrayPrototypeJoin,
+  ArrayPrototypeMap,
+  NumberIsInteger,
+  NumberIsNaN,
+  NumberMAX_SAFE_INTEGER,
+  NumberMIN_SAFE_INTEGER,
+  NumberParseInt,
+  ObjectPrototypeHasOwnProperty,
+  RegExpPrototypeExec,
+  String,
+  StringPrototypeToUpperCase,
+  StringPrototypeTrim
+} = __nccwpck_require__(9629)
+const {
+  hideStackFrames,
+  codes: { ERR_SOCKET_BAD_PORT, ERR_INVALID_ARG_TYPE, ERR_INVALID_ARG_VALUE, ERR_OUT_OF_RANGE, ERR_UNKNOWN_SIGNAL }
+} = __nccwpck_require__(529)
+const { normalizeEncoding } = __nccwpck_require__(6959)
+const { isAsyncFunction, isArrayBufferView } = (__nccwpck_require__(6959).types)
+const signals = {}
+
+/**
+ * @param {*} value
+ * @returns {boolean}
+ */
+function isInt32(value) {
+  return value === (value | 0)
+}
+
+/**
+ * @param {*} value
+ * @returns {boolean}
+ */
+function isUint32(value) {
+  return value === value >>> 0
+}
+const octalReg = /^[0-7]+$/
+const modeDesc = 'must be a 32-bit unsigned integer or an octal string'
+
+/**
+ * Parse and validate values that will be converted into mode_t (the S_*
+ * constants). Only valid numbers and octal strings are allowed. They could be
+ * converted to 32-bit unsigned integers or non-negative signed integers in the
+ * C++ land, but any value higher than 0o777 will result in platform-specific
+ * behaviors.
+ * @param {*} value Values to be validated
+ * @param {string} name Name of the argument
+ * @param {number} [def] If specified, will be returned for invalid values
+ * @returns {number}
+ */
+function parseFileMode(value, name, def) {
+  if (typeof value === 'undefined') {
+    value = def
+  }
+  if (typeof value === 'string') {
+    if (RegExpPrototypeExec(octalReg, value) === null) {
+      throw new ERR_INVALID_ARG_VALUE(name, value, modeDesc)
+    }
+    value = NumberParseInt(value, 8)
+  }
+  validateUint32(value, name)
+  return value
+}
+
+/**
+ * @callback validateInteger
+ * @param {*} value
+ * @param {string} name
+ * @param {number} [min]
+ * @param {number} [max]
+ * @returns {asserts value is number}
+ */
+
+/** @type {validateInteger} */
+const validateInteger = hideStackFrames((value, name, min = NumberMIN_SAFE_INTEGER, max = NumberMAX_SAFE_INTEGER) => {
+  if (typeof value !== 'number') throw new ERR_INVALID_ARG_TYPE(name, 'number', value)
+  if (!NumberIsInteger(value)) throw new ERR_OUT_OF_RANGE(name, 'an integer', value)
+  if (value < min || value > max) throw new ERR_OUT_OF_RANGE(name, `>= ${min} && <= ${max}`, value)
+})
+
+/**
+ * @callback validateInt32
+ * @param {*} value
+ * @param {string} name
+ * @param {number} [min]
+ * @param {number} [max]
+ * @returns {asserts value is number}
+ */
+
+/** @type {validateInt32} */
+const validateInt32 = hideStackFrames((value, name, min = -2147483648, max = 2147483647) => {
+  // The defaults for min and max correspond to the limits of 32-bit integers.
+  if (typeof value !== 'number') {
+    throw new ERR_INVALID_ARG_TYPE(name, 'number', value)
+  }
+  if (!NumberIsInteger(value)) {
+    throw new ERR_OUT_OF_RANGE(name, 'an integer', value)
+  }
+  if (value < min || value > max) {
+    throw new ERR_OUT_OF_RANGE(name, `>= ${min} && <= ${max}`, value)
+  }
+})
+
+/**
+ * @callback validateUint32
+ * @param {*} value
+ * @param {string} name
+ * @param {number|boolean} [positive=false]
+ * @returns {asserts value is number}
+ */
+
+/** @type {validateUint32} */
+const validateUint32 = hideStackFrames((value, name, positive = false) => {
+  if (typeof value !== 'number') {
+    throw new ERR_INVALID_ARG_TYPE(name, 'number', value)
+  }
+  if (!NumberIsInteger(value)) {
+    throw new ERR_OUT_OF_RANGE(name, 'an integer', value)
+  }
+  const min = positive ? 1 : 0
+  // 2 ** 32 === 4294967296
+  const max = 4294967295
+  if (value < min || value > max) {
+    throw new ERR_OUT_OF_RANGE(name, `>= ${min} && <= ${max}`, value)
+  }
+})
+
+/**
+ * @callback validateString
+ * @param {*} value
+ * @param {string} name
+ * @returns {asserts value is string}
+ */
+
+/** @type {validateString} */
+function validateString(value, name) {
+  if (typeof value !== 'string') throw new ERR_INVALID_ARG_TYPE(name, 'string', value)
+}
+
+/**
+ * @callback validateNumber
+ * @param {*} value
+ * @param {string} name
+ * @param {number} [min]
+ * @param {number} [max]
+ * @returns {asserts value is number}
+ */
+
+/** @type {validateNumber} */
+function validateNumber(value, name, min = undefined, max) {
+  if (typeof value !== 'number') throw new ERR_INVALID_ARG_TYPE(name, 'number', value)
+  if (
+    (min != null && value < min) ||
+    (max != null && value > max) ||
+    ((min != null || max != null) && NumberIsNaN(value))
+  ) {
+    throw new ERR_OUT_OF_RANGE(
+      name,
+      `${min != null ? `>= ${min}` : ''}${min != null && max != null ? ' && ' : ''}${max != null ? `<= ${max}` : ''}`,
+      value
+    )
+  }
+}
+
+/**
+ * @callback validateOneOf
+ * @template T
+ * @param {T} value
+ * @param {string} name
+ * @param {T[]} oneOf
+ */
+
+/** @type {validateOneOf} */
+const validateOneOf = hideStackFrames((value, name, oneOf) => {
+  if (!ArrayPrototypeIncludes(oneOf, value)) {
+    const allowed = ArrayPrototypeJoin(
+      ArrayPrototypeMap(oneOf, (v) => (typeof v === 'string' ? `'${v}'` : String(v))),
+      ', '
+    )
+    const reason = 'must be one of: ' + allowed
+    throw new ERR_INVALID_ARG_VALUE(name, value, reason)
+  }
+})
+
+/**
+ * @callback validateBoolean
+ * @param {*} value
+ * @param {string} name
+ * @returns {asserts value is boolean}
+ */
+
+/** @type {validateBoolean} */
+function validateBoolean(value, name) {
+  if (typeof value !== 'boolean') throw new ERR_INVALID_ARG_TYPE(name, 'boolean', value)
+}
+
+/**
+ * @param {any} options
+ * @param {string} key
+ * @param {boolean} defaultValue
+ * @returns {boolean}
+ */
+function getOwnPropertyValueOrDefault(options, key, defaultValue) {
+  return options == null || !ObjectPrototypeHasOwnProperty(options, key) ? defaultValue : options[key]
+}
+
+/**
+ * @callback validateObject
+ * @param {*} value
+ * @param {string} name
+ * @param {{
+ *   allowArray?: boolean,
+ *   allowFunction?: boolean,
+ *   nullable?: boolean
+ * }} [options]
+ */
+
+/** @type {validateObject} */
+const validateObject = hideStackFrames((value, name, options = null) => {
+  const allowArray = getOwnPropertyValueOrDefault(options, 'allowArray', false)
+  const allowFunction = getOwnPropertyValueOrDefault(options, 'allowFunction', false)
+  const nullable = getOwnPropertyValueOrDefault(options, 'nullable', false)
+  if (
+    (!nullable && value === null) ||
+    (!allowArray && ArrayIsArray(value)) ||
+    (typeof value !== 'object' && (!allowFunction || typeof value !== 'function'))
+  ) {
+    throw new ERR_INVALID_ARG_TYPE(name, 'Object', value)
+  }
+})
+
+/**
+ * @callback validateDictionary - We are using the Web IDL Standard definition
+ *                                of "dictionary" here, which means any value
+ *                                whose Type is either Undefined, Null, or
+ *                                Object (which includes functions).
+ * @param {*} value
+ * @param {string} name
+ * @see https://webidl.spec.whatwg.org/#es-dictionary
+ * @see https://tc39.es/ecma262/#table-typeof-operator-results
+ */
+
+/** @type {validateDictionary} */
+const validateDictionary = hideStackFrames((value, name) => {
+  if (value != null && typeof value !== 'object' && typeof value !== 'function') {
+    throw new ERR_INVALID_ARG_TYPE(name, 'a dictionary', value)
+  }
+})
+
+/**
+ * @callback validateArray
+ * @param {*} value
+ * @param {string} name
+ * @param {number} [minLength]
+ * @returns {asserts value is any[]}
+ */
+
+/** @type {validateArray} */
+const validateArray = hideStackFrames((value, name, minLength = 0) => {
+  if (!ArrayIsArray(value)) {
+    throw new ERR_INVALID_ARG_TYPE(name, 'Array', value)
+  }
+  if (value.length < minLength) {
+    const reason = `must be longer than ${minLength}`
+    throw new ERR_INVALID_ARG_VALUE(name, value, reason)
+  }
+})
+
+/**
+ * @callback validateStringArray
+ * @param {*} value
+ * @param {string} name
+ * @returns {asserts value is string[]}
+ */
+
+/** @type {validateStringArray} */
+function validateStringArray(value, name) {
+  validateArray(value, name)
+  for (let i = 0; i < value.length; i++) {
+    validateString(value[i], `${name}[${i}]`)
+  }
+}
+
+/**
+ * @callback validateBooleanArray
+ * @param {*} value
+ * @param {string} name
+ * @returns {asserts value is boolean[]}
+ */
+
+/** @type {validateBooleanArray} */
+function validateBooleanArray(value, name) {
+  validateArray(value, name)
+  for (let i = 0; i < value.length; i++) {
+    validateBoolean(value[i], `${name}[${i}]`)
+  }
+}
+
+/**
+ * @callback validateAbortSignalArray
+ * @param {*} value
+ * @param {string} name
+ * @returns {asserts value is AbortSignal[]}
+ */
+
+/** @type {validateAbortSignalArray} */
+function validateAbortSignalArray(value, name) {
+  validateArray(value, name)
+  for (let i = 0; i < value.length; i++) {
+    const signal = value[i]
+    const indexedName = `${name}[${i}]`
+    if (signal == null) {
+      throw new ERR_INVALID_ARG_TYPE(indexedName, 'AbortSignal', signal)
+    }
+    validateAbortSignal(signal, indexedName)
+  }
+}
+
+/**
+ * @param {*} signal
+ * @param {string} [name='signal']
+ * @returns {asserts signal is keyof signals}
+ */
+function validateSignalName(signal, name = 'signal') {
+  validateString(signal, name)
+  if (signals[signal] === undefined) {
+    if (signals[StringPrototypeToUpperCase(signal)] !== undefined) {
+      throw new ERR_UNKNOWN_SIGNAL(signal + ' (signals must use all capital letters)')
+    }
+    throw new ERR_UNKNOWN_SIGNAL(signal)
+  }
+}
+
+/**
+ * @callback validateBuffer
+ * @param {*} buffer
+ * @param {string} [name='buffer']
+ * @returns {asserts buffer is ArrayBufferView}
+ */
+
+/** @type {validateBuffer} */
+const validateBuffer = hideStackFrames((buffer, name = 'buffer') => {
+  if (!isArrayBufferView(buffer)) {
+    throw new ERR_INVALID_ARG_TYPE(name, ['Buffer', 'TypedArray', 'DataView'], buffer)
+  }
+})
+
+/**
+ * @param {string} data
+ * @param {string} encoding
+ */
+function validateEncoding(data, encoding) {
+  const normalizedEncoding = normalizeEncoding(encoding)
+  const length = data.length
+  if (normalizedEncoding === 'hex' && length % 2 !== 0) {
+    throw new ERR_INVALID_ARG_VALUE('encoding', encoding, `is invalid for data of length ${length}`)
+  }
+}
+
+/**
+ * Check that the port number is not NaN when coerced to a number,
+ * is an integer and that it falls within the legal range of port numbers.
+ * @param {*} port
+ * @param {string} [name='Port']
+ * @param {boolean} [allowZero=true]
+ * @returns {number}
+ */
+function validatePort(port, name = 'Port', allowZero = true) {
+  if (
+    (typeof port !== 'number' && typeof port !== 'string') ||
+    (typeof port === 'string' && StringPrototypeTrim(port).length === 0) ||
+    +port !== +port >>> 0 ||
+    port > 0xffff ||
+    (port === 0 && !allowZero)
+  ) {
+    throw new ERR_SOCKET_BAD_PORT(name, port, allowZero)
+  }
+  return port | 0
+}
+
+/**
+ * @callback validateAbortSignal
+ * @param {*} signal
+ * @param {string} name
+ */
+
+/** @type {validateAbortSignal} */
+const validateAbortSignal = hideStackFrames((signal, name) => {
+  if (signal !== undefined && (signal === null || typeof signal !== 'object' || !('aborted' in signal))) {
+    throw new ERR_INVALID_ARG_TYPE(name, 'AbortSignal', signal)
+  }
+})
+
+/**
+ * @callback validateFunction
+ * @param {*} value
+ * @param {string} name
+ * @returns {asserts value is Function}
+ */
+
+/** @type {validateFunction} */
+const validateFunction = hideStackFrames((value, name) => {
+  if (typeof value !== 'function') throw new ERR_INVALID_ARG_TYPE(name, 'Function', value)
+})
+
+/**
+ * @callback validatePlainFunction
+ * @param {*} value
+ * @param {string} name
+ * @returns {asserts value is Function}
+ */
+
+/** @type {validatePlainFunction} */
+const validatePlainFunction = hideStackFrames((value, name) => {
+  if (typeof value !== 'function' || isAsyncFunction(value)) throw new ERR_INVALID_ARG_TYPE(name, 'Function', value)
+})
+
+/**
+ * @callback validateUndefined
+ * @param {*} value
+ * @param {string} name
+ * @returns {asserts value is undefined}
+ */
+
+/** @type {validateUndefined} */
+const validateUndefined = hideStackFrames((value, name) => {
+  if (value !== undefined) throw new ERR_INVALID_ARG_TYPE(name, 'undefined', value)
+})
+
+/**
+ * @template T
+ * @param {T} value
+ * @param {string} name
+ * @param {T[]} union
+ */
+function validateUnion(value, name, union) {
+  if (!ArrayPrototypeIncludes(union, value)) {
+    throw new ERR_INVALID_ARG_TYPE(name, `('${ArrayPrototypeJoin(union, '|')}')`, value)
+  }
+}
+
+/*
+  The rules for the Link header field are described here:
+  https://www.rfc-editor.org/rfc/rfc8288.html#section-3
+
+  This regex validates any string surrounded by angle brackets
+  (not necessarily a valid URI reference) followed by zero or more
+  link-params separated by semicolons.
+*/
+const linkValueRegExp = /^(?:<[^>]*>)(?:\s*;\s*[^;"\s]+(?:=(")?[^;"\s]*\1)?)*$/
+
+/**
+ * @param {any} value
+ * @param {string} name
+ */
+function validateLinkHeaderFormat(value, name) {
+  if (typeof value === 'undefined' || !RegExpPrototypeExec(linkValueRegExp, value)) {
+    throw new ERR_INVALID_ARG_VALUE(
+      name,
+      value,
+      'must be an array or string of format "</styles.css>; rel=preload; as=style"'
+    )
+  }
+}
+
+/**
+ * @param {any} hints
+ * @return {string}
+ */
+function validateLinkHeaderValue(hints) {
+  if (typeof hints === 'string') {
+    validateLinkHeaderFormat(hints, 'hints')
+    return hints
+  } else if (ArrayIsArray(hints)) {
+    const hintsLength = hints.length
+    let result = ''
+    if (hintsLength === 0) {
+      return result
+    }
+    for (let i = 0; i < hintsLength; i++) {
+      const link = hints[i]
+      validateLinkHeaderFormat(link, 'hints')
+      result += link
+      if (i !== hintsLength - 1) {
+        result += ', '
+      }
+    }
+    return result
+  }
+  throw new ERR_INVALID_ARG_VALUE(
+    'hints',
+    hints,
+    'must be an array or string of format "</styles.css>; rel=preload; as=style"'
+  )
+}
+module.exports = {
+  isInt32,
+  isUint32,
+  parseFileMode,
+  validateArray,
+  validateStringArray,
+  validateBooleanArray,
+  validateAbortSignalArray,
+  validateBoolean,
+  validateBuffer,
+  validateDictionary,
+  validateEncoding,
+  validateFunction,
+  validateInt32,
+  validateInteger,
+  validateNumber,
+  validateObject,
+  validateOneOf,
+  validatePlainFunction,
+  validatePort,
+  validateSignalName,
+  validateString,
+  validateUint32,
+  validateUndefined,
+  validateUnion,
+  validateAbortSignal,
+  validateLinkHeaderValue
+}
+
+
+/***/ }),
+
+/***/ 529:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
 
 
-function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
-function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
-function _defineProperty(obj, key, value) { key = _toPropertyKey(key); if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
-function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return typeof key === "symbol" ? key : String(key); }
-function _toPrimitive(input, hint) { if (typeof input !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (typeof res !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
-var _require = __nccwpck_require__(4300),
-  Buffer = _require.Buffer;
-var _require2 = __nccwpck_require__(3837),
-  inspect = _require2.inspect;
-var custom = inspect && inspect.custom || 'inspect';
-function copyBuffer(src, target, offset) {
-  Buffer.prototype.copy.call(src, target, offset);
-}
-module.exports = /*#__PURE__*/function () {
-  function BufferList() {
-    _classCallCheck(this, BufferList);
-    this.head = null;
-    this.tail = null;
-    this.length = 0;
+const { format, inspect, AggregateError: CustomAggregateError } = __nccwpck_require__(6959)
+
+/*
+  This file is a reduced and adapted version of the main lib/internal/errors.js file defined at
+
+  https://github.com/nodejs/node/blob/master/lib/internal/errors.js
+
+  Don't try to replace with the original file and keep it up to date (starting from E(...) definitions)
+  with the upstream file.
+*/
+
+const AggregateError = globalThis.AggregateError || CustomAggregateError
+const kIsNodeError = Symbol('kIsNodeError')
+const kTypes = [
+  'string',
+  'function',
+  'number',
+  'object',
+  // Accept 'Function' and 'Object' as alternative to the lower cased version.
+  'Function',
+  'Object',
+  'boolean',
+  'bigint',
+  'symbol'
+]
+const classRegExp = /^([A-Z][a-z0-9]*)+$/
+const nodeInternalPrefix = '__node_internal_'
+const codes = {}
+function assert(value, message) {
+  if (!value) {
+    throw new codes.ERR_INTERNAL_ASSERTION(message)
   }
-  _createClass(BufferList, [{
-    key: "push",
-    value: function push(v) {
-      var entry = {
-        data: v,
-        next: null
-      };
-      if (this.length > 0) this.tail.next = entry;else this.head = entry;
-      this.tail = entry;
-      ++this.length;
-    }
-  }, {
-    key: "unshift",
-    value: function unshift(v) {
-      var entry = {
-        data: v,
-        next: this.head
-      };
-      if (this.length === 0) this.tail = entry;
-      this.head = entry;
-      ++this.length;
-    }
-  }, {
-    key: "shift",
-    value: function shift() {
-      if (this.length === 0) return;
-      var ret = this.head.data;
-      if (this.length === 1) this.head = this.tail = null;else this.head = this.head.next;
-      --this.length;
-      return ret;
-    }
-  }, {
-    key: "clear",
-    value: function clear() {
-      this.head = this.tail = null;
-      this.length = 0;
-    }
-  }, {
-    key: "join",
-    value: function join(s) {
-      if (this.length === 0) return '';
-      var p = this.head;
-      var ret = '' + p.data;
-      while (p = p.next) ret += s + p.data;
-      return ret;
-    }
-  }, {
-    key: "concat",
-    value: function concat(n) {
-      if (this.length === 0) return Buffer.alloc(0);
-      var ret = Buffer.allocUnsafe(n >>> 0);
-      var p = this.head;
-      var i = 0;
-      while (p) {
-        copyBuffer(p.data, ret, i);
-        i += p.data.length;
-        p = p.next;
-      }
-      return ret;
-    }
+}
 
-    // Consumes a specified amount of bytes or characters from the buffered data.
-  }, {
-    key: "consume",
-    value: function consume(n, hasStrings) {
-      var ret;
-      if (n < this.head.data.length) {
-        // `slice` is the same for buffers and strings.
-        ret = this.head.data.slice(0, n);
-        this.head.data = this.head.data.slice(n);
-      } else if (n === this.head.data.length) {
-        // First chunk is a perfect match.
-        ret = this.shift();
+// Only use this for integers! Decimal numbers do not work with this function.
+function addNumericalSeparator(val) {
+  let res = ''
+  let i = val.length
+  const start = val[0] === '-' ? 1 : 0
+  for (; i >= start + 4; i -= 3) {
+    res = `_${val.slice(i - 3, i)}${res}`
+  }
+  return `${val.slice(0, i)}${res}`
+}
+function getMessage(key, msg, args) {
+  if (typeof msg === 'function') {
+    assert(
+      msg.length <= args.length,
+      // Default options do not count.
+      `Code: ${key}; The provided arguments length (${args.length}) does not match the required ones (${msg.length}).`
+    )
+    return msg(...args)
+  }
+  const expectedLength = (msg.match(/%[dfijoOs]/g) || []).length
+  assert(
+    expectedLength === args.length,
+    `Code: ${key}; The provided arguments length (${args.length}) does not match the required ones (${expectedLength}).`
+  )
+  if (args.length === 0) {
+    return msg
+  }
+  return format(msg, ...args)
+}
+function E(code, message, Base) {
+  if (!Base) {
+    Base = Error
+  }
+  class NodeError extends Base {
+    constructor(...args) {
+      super(getMessage(code, message, args))
+    }
+    toString() {
+      return `${this.name} [${code}]: ${this.message}`
+    }
+  }
+  Object.defineProperties(NodeError.prototype, {
+    name: {
+      value: Base.name,
+      writable: true,
+      enumerable: false,
+      configurable: true
+    },
+    toString: {
+      value() {
+        return `${this.name} [${code}]: ${this.message}`
+      },
+      writable: true,
+      enumerable: false,
+      configurable: true
+    }
+  })
+  NodeError.prototype.code = code
+  NodeError.prototype[kIsNodeError] = true
+  codes[code] = NodeError
+}
+function hideStackFrames(fn) {
+  // We rename the functions that will be hidden to cut off the stacktrace
+  // at the outermost one
+  const hidden = nodeInternalPrefix + fn.name
+  Object.defineProperty(fn, 'name', {
+    value: hidden
+  })
+  return fn
+}
+function aggregateTwoErrors(innerError, outerError) {
+  if (innerError && outerError && innerError !== outerError) {
+    if (Array.isArray(outerError.errors)) {
+      // If `outerError` is already an `AggregateError`.
+      outerError.errors.push(innerError)
+      return outerError
+    }
+    const err = new AggregateError([outerError, innerError], outerError.message)
+    err.code = outerError.code
+    return err
+  }
+  return innerError || outerError
+}
+class AbortError extends Error {
+  constructor(message = 'The operation was aborted', options = undefined) {
+    if (options !== undefined && typeof options !== 'object') {
+      throw new codes.ERR_INVALID_ARG_TYPE('options', 'Object', options)
+    }
+    super(message, options)
+    this.code = 'ABORT_ERR'
+    this.name = 'AbortError'
+  }
+}
+E('ERR_ASSERTION', '%s', Error)
+E(
+  'ERR_INVALID_ARG_TYPE',
+  (name, expected, actual) => {
+    assert(typeof name === 'string', "'name' must be a string")
+    if (!Array.isArray(expected)) {
+      expected = [expected]
+    }
+    let msg = 'The '
+    if (name.endsWith(' argument')) {
+      // For cases like 'first argument'
+      msg += `${name} `
+    } else {
+      msg += `"${name}" ${name.includes('.') ? 'property' : 'argument'} `
+    }
+    msg += 'must be '
+    const types = []
+    const instances = []
+    const other = []
+    for (const value of expected) {
+      assert(typeof value === 'string', 'All expected entries have to be of type string')
+      if (kTypes.includes(value)) {
+        types.push(value.toLowerCase())
+      } else if (classRegExp.test(value)) {
+        instances.push(value)
       } else {
-        // Result spans more than one buffer.
-        ret = hasStrings ? this._getString(n) : this._getBuffer(n);
+        assert(value !== 'object', 'The value "object" should be written as "Object"')
+        other.push(value)
       }
-      return ret;
-    }
-  }, {
-    key: "first",
-    value: function first() {
-      return this.head.data;
     }
 
-    // Consumes a specified amount of characters from the buffered data.
-  }, {
-    key: "_getString",
-    value: function _getString(n) {
-      var p = this.head;
-      var c = 1;
-      var ret = p.data;
-      n -= ret.length;
-      while (p = p.next) {
-        var str = p.data;
-        var nb = n > str.length ? str.length : n;
-        if (nb === str.length) ret += str;else ret += str.slice(0, n);
-        n -= nb;
-        if (n === 0) {
-          if (nb === str.length) {
-            ++c;
-            if (p.next) this.head = p.next;else this.head = this.tail = null;
-          } else {
-            this.head = p;
-            p.data = str.slice(nb);
-          }
-          break;
+    // Special handle `object` in case other instances are allowed to outline
+    // the differences between each other.
+    if (instances.length > 0) {
+      const pos = types.indexOf('object')
+      if (pos !== -1) {
+        types.splice(types, pos, 1)
+        instances.push('Object')
+      }
+    }
+    if (types.length > 0) {
+      switch (types.length) {
+        case 1:
+          msg += `of type ${types[0]}`
+          break
+        case 2:
+          msg += `one of type ${types[0]} or ${types[1]}`
+          break
+        default: {
+          const last = types.pop()
+          msg += `one of type ${types.join(', ')}, or ${last}`
         }
-        ++c;
       }
-      this.length -= c;
-      return ret;
+      if (instances.length > 0 || other.length > 0) {
+        msg += ' or '
+      }
     }
-
-    // Consumes a specified amount of bytes from the buffered data.
-  }, {
-    key: "_getBuffer",
-    value: function _getBuffer(n) {
-      var ret = Buffer.allocUnsafe(n);
-      var p = this.head;
-      var c = 1;
-      p.data.copy(ret);
-      n -= p.data.length;
-      while (p = p.next) {
-        var buf = p.data;
-        var nb = n > buf.length ? buf.length : n;
-        buf.copy(ret, ret.length - n, 0, nb);
-        n -= nb;
-        if (n === 0) {
-          if (nb === buf.length) {
-            ++c;
-            if (p.next) this.head = p.next;else this.head = this.tail = null;
-          } else {
-            this.head = p;
-            p.data = buf.slice(nb);
-          }
-          break;
+    if (instances.length > 0) {
+      switch (instances.length) {
+        case 1:
+          msg += `an instance of ${instances[0]}`
+          break
+        case 2:
+          msg += `an instance of ${instances[0]} or ${instances[1]}`
+          break
+        default: {
+          const last = instances.pop()
+          msg += `an instance of ${instances.join(', ')}, or ${last}`
         }
-        ++c;
       }
-      this.length -= c;
-      return ret;
+      if (other.length > 0) {
+        msg += ' or '
+      }
     }
+    switch (other.length) {
+      case 0:
+        break
+      case 1:
+        if (other[0].toLowerCase() !== other[0]) {
+          msg += 'an '
+        }
+        msg += `${other[0]}`
+        break
+      case 2:
+        msg += `one of ${other[0]} or ${other[1]}`
+        break
+      default: {
+        const last = other.pop()
+        msg += `one of ${other.join(', ')}, or ${last}`
+      }
+    }
+    if (actual == null) {
+      msg += `. Received ${actual}`
+    } else if (typeof actual === 'function' && actual.name) {
+      msg += `. Received function ${actual.name}`
+    } else if (typeof actual === 'object') {
+      var _actual$constructor
+      if (
+        (_actual$constructor = actual.constructor) !== null &&
+        _actual$constructor !== undefined &&
+        _actual$constructor.name
+      ) {
+        msg += `. Received an instance of ${actual.constructor.name}`
+      } else {
+        const inspected = inspect(actual, {
+          depth: -1
+        })
+        msg += `. Received ${inspected}`
+      }
+    } else {
+      let inspected = inspect(actual, {
+        colors: false
+      })
+      if (inspected.length > 25) {
+        inspected = `${inspected.slice(0, 25)}...`
+      }
+      msg += `. Received type ${typeof actual} (${inspected})`
+    }
+    return msg
+  },
+  TypeError
+)
+E(
+  'ERR_INVALID_ARG_VALUE',
+  (name, value, reason = 'is invalid') => {
+    let inspected = inspect(value)
+    if (inspected.length > 128) {
+      inspected = inspected.slice(0, 128) + '...'
+    }
+    const type = name.includes('.') ? 'property' : 'argument'
+    return `The ${type} '${name}' ${reason}. Received ${inspected}`
+  },
+  TypeError
+)
+E(
+  'ERR_INVALID_RETURN_VALUE',
+  (input, name, value) => {
+    var _value$constructor
+    const type =
+      value !== null &&
+      value !== undefined &&
+      (_value$constructor = value.constructor) !== null &&
+      _value$constructor !== undefined &&
+      _value$constructor.name
+        ? `instance of ${value.constructor.name}`
+        : `type ${typeof value}`
+    return `Expected ${input} to be returned from the "${name}"` + ` function but got ${type}.`
+  },
+  TypeError
+)
+E(
+  'ERR_MISSING_ARGS',
+  (...args) => {
+    assert(args.length > 0, 'At least one arg needs to be specified')
+    let msg
+    const len = args.length
+    args = (Array.isArray(args) ? args : [args]).map((a) => `"${a}"`).join(' or ')
+    switch (len) {
+      case 1:
+        msg += `The ${args[0]} argument`
+        break
+      case 2:
+        msg += `The ${args[0]} and ${args[1]} arguments`
+        break
+      default:
+        {
+          const last = args.pop()
+          msg += `The ${args.join(', ')}, and ${last} arguments`
+        }
+        break
+    }
+    return `${msg} must be specified`
+  },
+  TypeError
+)
+E(
+  'ERR_OUT_OF_RANGE',
+  (str, range, input) => {
+    assert(range, 'Missing "range" argument')
+    let received
+    if (Number.isInteger(input) && Math.abs(input) > 2 ** 32) {
+      received = addNumericalSeparator(String(input))
+    } else if (typeof input === 'bigint') {
+      received = String(input)
+      if (input > 2n ** 32n || input < -(2n ** 32n)) {
+        received = addNumericalSeparator(received)
+      }
+      received += 'n'
+    } else {
+      received = inspect(input)
+    }
+    return `The value of "${str}" is out of range. It must be ${range}. Received ${received}`
+  },
+  RangeError
+)
+E('ERR_MULTIPLE_CALLBACK', 'Callback called multiple times', Error)
+E('ERR_METHOD_NOT_IMPLEMENTED', 'The %s method is not implemented', Error)
+E('ERR_STREAM_ALREADY_FINISHED', 'Cannot call %s after a stream was finished', Error)
+E('ERR_STREAM_CANNOT_PIPE', 'Cannot pipe, not readable', Error)
+E('ERR_STREAM_DESTROYED', 'Cannot call %s after a stream was destroyed', Error)
+E('ERR_STREAM_NULL_VALUES', 'May not write null values to stream', TypeError)
+E('ERR_STREAM_PREMATURE_CLOSE', 'Premature close', Error)
+E('ERR_STREAM_PUSH_AFTER_EOF', 'stream.push() after EOF', Error)
+E('ERR_STREAM_UNSHIFT_AFTER_END_EVENT', 'stream.unshift() after end event', Error)
+E('ERR_STREAM_WRITE_AFTER_END', 'write after end', Error)
+E('ERR_UNKNOWN_ENCODING', 'Unknown encoding: %s', TypeError)
+module.exports = {
+  AbortError,
+  aggregateTwoErrors: hideStackFrames(aggregateTwoErrors),
+  hideStackFrames,
+  codes
+}
 
-    // Make sure the linked list only shows the minimal necessary information.
-  }, {
-    key: custom,
-    value: function value(_, options) {
-      return inspect(this, _objectSpread(_objectSpread({}, options), {}, {
-        // Only inspect one level.
-        depth: 0,
-        // It should not recurse.
-        customInspect: false
-      }));
-    }
-  }]);
-  return BufferList;
-}();
 
 /***/ }),
 
-/***/ 7049:
+/***/ 5193:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+const Stream = __nccwpck_require__(2781)
+if (Stream && process.env.READABLE_STREAM === 'disable') {
+  const promises = Stream.promises
+
+  // Explicit export naming is needed for ESM
+  module.exports._uint8ArrayToBuffer = Stream._uint8ArrayToBuffer
+  module.exports._isUint8Array = Stream._isUint8Array
+  module.exports.isDisturbed = Stream.isDisturbed
+  module.exports.isErrored = Stream.isErrored
+  module.exports.isReadable = Stream.isReadable
+  module.exports.Readable = Stream.Readable
+  module.exports.Writable = Stream.Writable
+  module.exports.Duplex = Stream.Duplex
+  module.exports.Transform = Stream.Transform
+  module.exports.PassThrough = Stream.PassThrough
+  module.exports.addAbortSignal = Stream.addAbortSignal
+  module.exports.finished = Stream.finished
+  module.exports.destroy = Stream.destroy
+  module.exports.pipeline = Stream.pipeline
+  module.exports.compose = Stream.compose
+  Object.defineProperty(Stream, 'promises', {
+    configurable: true,
+    enumerable: true,
+    get() {
+      return promises
+    }
+  })
+  module.exports.Stream = Stream.Stream
+} else {
+  const CustomStream = __nccwpck_require__(5102)
+  const promises = __nccwpck_require__(348)
+  const originalDestroy = CustomStream.Readable.destroy
+  module.exports = CustomStream.Readable
+
+  // Explicit export naming is needed for ESM
+  module.exports._uint8ArrayToBuffer = CustomStream._uint8ArrayToBuffer
+  module.exports._isUint8Array = CustomStream._isUint8Array
+  module.exports.isDisturbed = CustomStream.isDisturbed
+  module.exports.isErrored = CustomStream.isErrored
+  module.exports.isReadable = CustomStream.isReadable
+  module.exports.Readable = CustomStream.Readable
+  module.exports.Writable = CustomStream.Writable
+  module.exports.Duplex = CustomStream.Duplex
+  module.exports.Transform = CustomStream.Transform
+  module.exports.PassThrough = CustomStream.PassThrough
+  module.exports.addAbortSignal = CustomStream.addAbortSignal
+  module.exports.finished = CustomStream.finished
+  module.exports.destroy = CustomStream.destroy
+  module.exports.destroy = originalDestroy
+  module.exports.pipeline = CustomStream.pipeline
+  module.exports.compose = CustomStream.compose
+  Object.defineProperty(CustomStream, 'promises', {
+    configurable: true,
+    enumerable: true,
+    get() {
+      return promises
+    }
+  })
+  module.exports.Stream = CustomStream.Stream
+}
+
+// Allow default importing
+module.exports["default"] = module.exports
+
+
+/***/ }),
+
+/***/ 9629:
 /***/ ((module) => {
 
 "use strict";
 
 
-// undocumented cb() API, needed for core, not for public API
-function destroy(err, cb) {
-  var _this = this;
-  var readableDestroyed = this._readableState && this._readableState.destroyed;
-  var writableDestroyed = this._writableState && this._writableState.destroyed;
-  if (readableDestroyed || writableDestroyed) {
-    if (cb) {
-      cb(err);
-    } else if (err) {
-      if (!this._writableState) {
-        process.nextTick(emitErrorNT, this, err);
-      } else if (!this._writableState.errorEmitted) {
-        this._writableState.errorEmitted = true;
-        process.nextTick(emitErrorNT, this, err);
+/*
+  This file is a reduced and adapted version of the main lib/internal/per_context/primordials.js file defined at
+
+  https://github.com/nodejs/node/blob/master/lib/internal/per_context/primordials.js
+
+  Don't try to replace with the original file and keep it up to date with the upstream file.
+*/
+module.exports = {
+  ArrayIsArray(self) {
+    return Array.isArray(self)
+  },
+  ArrayPrototypeIncludes(self, el) {
+    return self.includes(el)
+  },
+  ArrayPrototypeIndexOf(self, el) {
+    return self.indexOf(el)
+  },
+  ArrayPrototypeJoin(self, sep) {
+    return self.join(sep)
+  },
+  ArrayPrototypeMap(self, fn) {
+    return self.map(fn)
+  },
+  ArrayPrototypePop(self, el) {
+    return self.pop(el)
+  },
+  ArrayPrototypePush(self, el) {
+    return self.push(el)
+  },
+  ArrayPrototypeSlice(self, start, end) {
+    return self.slice(start, end)
+  },
+  Error,
+  FunctionPrototypeCall(fn, thisArgs, ...args) {
+    return fn.call(thisArgs, ...args)
+  },
+  FunctionPrototypeSymbolHasInstance(self, instance) {
+    return Function.prototype[Symbol.hasInstance].call(self, instance)
+  },
+  MathFloor: Math.floor,
+  Number,
+  NumberIsInteger: Number.isInteger,
+  NumberIsNaN: Number.isNaN,
+  NumberMAX_SAFE_INTEGER: Number.MAX_SAFE_INTEGER,
+  NumberMIN_SAFE_INTEGER: Number.MIN_SAFE_INTEGER,
+  NumberParseInt: Number.parseInt,
+  ObjectDefineProperties(self, props) {
+    return Object.defineProperties(self, props)
+  },
+  ObjectDefineProperty(self, name, prop) {
+    return Object.defineProperty(self, name, prop)
+  },
+  ObjectGetOwnPropertyDescriptor(self, name) {
+    return Object.getOwnPropertyDescriptor(self, name)
+  },
+  ObjectKeys(obj) {
+    return Object.keys(obj)
+  },
+  ObjectSetPrototypeOf(target, proto) {
+    return Object.setPrototypeOf(target, proto)
+  },
+  Promise,
+  PromisePrototypeCatch(self, fn) {
+    return self.catch(fn)
+  },
+  PromisePrototypeThen(self, thenFn, catchFn) {
+    return self.then(thenFn, catchFn)
+  },
+  PromiseReject(err) {
+    return Promise.reject(err)
+  },
+  PromiseResolve(val) {
+    return Promise.resolve(val)
+  },
+  ReflectApply: Reflect.apply,
+  RegExpPrototypeTest(self, value) {
+    return self.test(value)
+  },
+  SafeSet: Set,
+  String,
+  StringPrototypeSlice(self, start, end) {
+    return self.slice(start, end)
+  },
+  StringPrototypeToLowerCase(self) {
+    return self.toLowerCase()
+  },
+  StringPrototypeToUpperCase(self) {
+    return self.toUpperCase()
+  },
+  StringPrototypeTrim(self) {
+    return self.trim()
+  },
+  Symbol,
+  SymbolFor: Symbol.for,
+  SymbolAsyncIterator: Symbol.asyncIterator,
+  SymbolHasInstance: Symbol.hasInstance,
+  SymbolIterator: Symbol.iterator,
+  SymbolDispose: Symbol.dispose || Symbol('Symbol.dispose'),
+  SymbolAsyncDispose: Symbol.asyncDispose || Symbol('Symbol.asyncDispose'),
+  TypedArrayPrototypeSet(self, buf, len) {
+    return self.set(buf, len)
+  },
+  Boolean: Boolean,
+  Uint8Array
+}
+
+
+/***/ }),
+
+/***/ 6959:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+const bufferModule = __nccwpck_require__(4300)
+const { kResistStopPropagation, SymbolDispose } = __nccwpck_require__(9629)
+const AbortSignal = globalThis.AbortSignal || (__nccwpck_require__(1659).AbortSignal)
+const AbortController = globalThis.AbortController || (__nccwpck_require__(1659).AbortController)
+const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor
+const Blob = globalThis.Blob || bufferModule.Blob
+/* eslint-disable indent */
+const isBlob =
+  typeof Blob !== 'undefined'
+    ? function isBlob(b) {
+        // eslint-disable-next-line indent
+        return b instanceof Blob
       }
-    }
-    return this;
-  }
-
-  // we set destroyed to true before firing error callbacks in order
-  // to make it re-entrance safe in case destroy() is called within callbacks
-
-  if (this._readableState) {
-    this._readableState.destroyed = true;
-  }
-
-  // if this is a duplex stream mark the writable part as destroyed as well
-  if (this._writableState) {
-    this._writableState.destroyed = true;
-  }
-  this._destroy(err || null, function (err) {
-    if (!cb && err) {
-      if (!_this._writableState) {
-        process.nextTick(emitErrorAndCloseNT, _this, err);
-      } else if (!_this._writableState.errorEmitted) {
-        _this._writableState.errorEmitted = true;
-        process.nextTick(emitErrorAndCloseNT, _this, err);
-      } else {
-        process.nextTick(emitCloseNT, _this);
+    : function isBlob(b) {
+        return false
       }
-    } else if (cb) {
-      process.nextTick(emitCloseNT, _this);
-      cb(err);
-    } else {
-      process.nextTick(emitCloseNT, _this);
-    }
-  });
-  return this;
-}
-function emitErrorAndCloseNT(self, err) {
-  emitErrorNT(self, err);
-  emitCloseNT(self);
-}
-function emitCloseNT(self) {
-  if (self._writableState && !self._writableState.emitClose) return;
-  if (self._readableState && !self._readableState.emitClose) return;
-  self.emit('close');
-}
-function undestroy() {
-  if (this._readableState) {
-    this._readableState.destroyed = false;
-    this._readableState.reading = false;
-    this._readableState.ended = false;
-    this._readableState.endEmitted = false;
-  }
-  if (this._writableState) {
-    this._writableState.destroyed = false;
-    this._writableState.ended = false;
-    this._writableState.ending = false;
-    this._writableState.finalCalled = false;
-    this._writableState.prefinished = false;
-    this._writableState.finished = false;
-    this._writableState.errorEmitted = false;
-  }
-}
-function emitErrorNT(self, err) {
-  self.emit('error', err);
-}
-function errorOrDestroy(stream, err) {
-  // We have tests that rely on errors being emitted
-  // in the same tick, so changing this is semver major.
-  // For now when you opt-in to autoDestroy we allow
-  // the error to be emitted nextTick. In a future
-  // semver major update we should change the default to this.
+/* eslint-enable indent */
 
-  var rState = stream._readableState;
-  var wState = stream._writableState;
-  if (rState && rState.autoDestroy || wState && wState.autoDestroy) stream.destroy(err);else stream.emit('error', err);
+const validateAbortSignal = (signal, name) => {
+  if (signal !== undefined && (signal === null || typeof signal !== 'object' || !('aborted' in signal))) {
+    throw new ERR_INVALID_ARG_TYPE(name, 'AbortSignal', signal)
+  }
+}
+const validateFunction = (value, name) => {
+  if (typeof value !== 'function') throw new ERR_INVALID_ARG_TYPE(name, 'Function', value)
+}
+
+// This is a simplified version of AggregateError
+class AggregateError extends Error {
+  constructor(errors) {
+    if (!Array.isArray(errors)) {
+      throw new TypeError(`Expected input to be an Array, got ${typeof errors}`)
+    }
+    let message = ''
+    for (let i = 0; i < errors.length; i++) {
+      message += `    ${errors[i].stack}\n`
+    }
+    super(message)
+    this.name = 'AggregateError'
+    this.errors = errors
+  }
 }
 module.exports = {
-  destroy: destroy,
-  undestroy: undestroy,
-  errorOrDestroy: errorOrDestroy
-};
-
-/***/ }),
-
-/***/ 6080:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-"use strict";
-// Ported from https://github.com/mafintosh/end-of-stream with
-// permission from the author, Mathias Buus (@mafintosh).
-
-
-
-var ERR_STREAM_PREMATURE_CLOSE = (__nccwpck_require__(7214)/* .codes.ERR_STREAM_PREMATURE_CLOSE */ .q.ERR_STREAM_PREMATURE_CLOSE);
-function once(callback) {
-  var called = false;
-  return function () {
-    if (called) return;
-    called = true;
-    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-      args[_key] = arguments[_key];
+  AggregateError,
+  kEmptyObject: Object.freeze({}),
+  once(callback) {
+    let called = false
+    return function (...args) {
+      if (called) {
+        return
+      }
+      called = true
+      callback.apply(this, args)
     }
-    callback.apply(this, args);
-  };
-}
-function noop() {}
-function isRequest(stream) {
-  return stream.setHeader && typeof stream.abort === 'function';
-}
-function eos(stream, opts, callback) {
-  if (typeof opts === 'function') return eos(stream, null, opts);
-  if (!opts) opts = {};
-  callback = once(callback || noop);
-  var readable = opts.readable || opts.readable !== false && stream.readable;
-  var writable = opts.writable || opts.writable !== false && stream.writable;
-  var onlegacyfinish = function onlegacyfinish() {
-    if (!stream.writable) onfinish();
-  };
-  var writableEnded = stream._writableState && stream._writableState.finished;
-  var onfinish = function onfinish() {
-    writable = false;
-    writableEnded = true;
-    if (!readable) callback.call(stream);
-  };
-  var readableEnded = stream._readableState && stream._readableState.endEmitted;
-  var onend = function onend() {
-    readable = false;
-    readableEnded = true;
-    if (!writable) callback.call(stream);
-  };
-  var onerror = function onerror(err) {
-    callback.call(stream, err);
-  };
-  var onclose = function onclose() {
-    var err;
-    if (readable && !readableEnded) {
-      if (!stream._readableState || !stream._readableState.ended) err = new ERR_STREAM_PREMATURE_CLOSE();
-      return callback.call(stream, err);
+  },
+  createDeferredPromise: function () {
+    let resolve
+    let reject
+
+    // eslint-disable-next-line promise/param-names
+    const promise = new Promise((res, rej) => {
+      resolve = res
+      reject = rej
+    })
+    return {
+      promise,
+      resolve,
+      reject
     }
-    if (writable && !writableEnded) {
-      if (!stream._writableState || !stream._writableState.ended) err = new ERR_STREAM_PREMATURE_CLOSE();
-      return callback.call(stream, err);
-    }
-  };
-  var onrequest = function onrequest() {
-    stream.req.on('finish', onfinish);
-  };
-  if (isRequest(stream)) {
-    stream.on('complete', onfinish);
-    stream.on('abort', onclose);
-    if (stream.req) onrequest();else stream.on('request', onrequest);
-  } else if (writable && !stream._writableState) {
-    // legacy streams
-    stream.on('end', onlegacyfinish);
-    stream.on('close', onlegacyfinish);
-  }
-  stream.on('end', onend);
-  stream.on('finish', onfinish);
-  if (opts.error !== false) stream.on('error', onerror);
-  stream.on('close', onclose);
-  return function () {
-    stream.removeListener('complete', onfinish);
-    stream.removeListener('abort', onclose);
-    stream.removeListener('request', onrequest);
-    if (stream.req) stream.req.removeListener('finish', onfinish);
-    stream.removeListener('end', onlegacyfinish);
-    stream.removeListener('close', onlegacyfinish);
-    stream.removeListener('finish', onfinish);
-    stream.removeListener('end', onend);
-    stream.removeListener('error', onerror);
-    stream.removeListener('close', onclose);
-  };
-}
-module.exports = eos;
-
-/***/ }),
-
-/***/ 9082:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-"use strict";
-
-
-function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
-function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
-function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
-function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
-function _defineProperty(obj, key, value) { key = _toPropertyKey(key); if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return typeof key === "symbol" ? key : String(key); }
-function _toPrimitive(input, hint) { if (typeof input !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (typeof res !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
-var ERR_INVALID_ARG_TYPE = (__nccwpck_require__(7214)/* .codes.ERR_INVALID_ARG_TYPE */ .q.ERR_INVALID_ARG_TYPE);
-function from(Readable, iterable, opts) {
-  var iterator;
-  if (iterable && typeof iterable.next === 'function') {
-    iterator = iterable;
-  } else if (iterable && iterable[Symbol.asyncIterator]) iterator = iterable[Symbol.asyncIterator]();else if (iterable && iterable[Symbol.iterator]) iterator = iterable[Symbol.iterator]();else throw new ERR_INVALID_ARG_TYPE('iterable', ['Iterable'], iterable);
-  var readable = new Readable(_objectSpread({
-    objectMode: true
-  }, opts));
-  // Reading boolean to protect against _read
-  // being called before last iteration completion.
-  var reading = false;
-  readable._read = function () {
-    if (!reading) {
-      reading = true;
-      next();
-    }
-  };
-  function next() {
-    return _next2.apply(this, arguments);
-  }
-  function _next2() {
-    _next2 = _asyncToGenerator(function* () {
-      try {
-        var _yield$iterator$next = yield iterator.next(),
-          value = _yield$iterator$next.value,
-          done = _yield$iterator$next.done;
-        if (done) {
-          readable.push(null);
-        } else if (readable.push(yield value)) {
-          next();
-        } else {
-          reading = false;
+  },
+  promisify(fn) {
+    return new Promise((resolve, reject) => {
+      fn((err, ...args) => {
+        if (err) {
+          return reject(err)
         }
-      } catch (err) {
-        readable.destroy(err);
+        return resolve(...args)
+      })
+    })
+  },
+  debuglog() {
+    return function () {}
+  },
+  format(format, ...args) {
+    // Simplified version of https://nodejs.org/api/util.html#utilformatformat-args
+    return format.replace(/%([sdifj])/g, function (...[_unused, type]) {
+      const replacement = args.shift()
+      if (type === 'f') {
+        return replacement.toFixed(6)
+      } else if (type === 'j') {
+        return JSON.stringify(replacement)
+      } else if (type === 's' && typeof replacement === 'object') {
+        const ctor = replacement.constructor !== Object ? replacement.constructor.name : ''
+        return `${ctor} {}`.trim()
+      } else {
+        return replacement.toString()
       }
-    });
-    return _next2.apply(this, arguments);
-  }
-  return readable;
-}
-module.exports = from;
-
-
-/***/ }),
-
-/***/ 6989:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-"use strict";
-// Ported from https://github.com/mafintosh/pump with
-// permission from the author, Mathias Buus (@mafintosh).
-
-
-
-var eos;
-function once(callback) {
-  var called = false;
-  return function () {
-    if (called) return;
-    called = true;
-    callback.apply(void 0, arguments);
-  };
-}
-var _require$codes = (__nccwpck_require__(7214)/* .codes */ .q),
-  ERR_MISSING_ARGS = _require$codes.ERR_MISSING_ARGS,
-  ERR_STREAM_DESTROYED = _require$codes.ERR_STREAM_DESTROYED;
-function noop(err) {
-  // Rethrow the error if it exists to avoid swallowing it
-  if (err) throw err;
-}
-function isRequest(stream) {
-  return stream.setHeader && typeof stream.abort === 'function';
-}
-function destroyer(stream, reading, writing, callback) {
-  callback = once(callback);
-  var closed = false;
-  stream.on('close', function () {
-    closed = true;
-  });
-  if (eos === undefined) eos = __nccwpck_require__(6080);
-  eos(stream, {
-    readable: reading,
-    writable: writing
-  }, function (err) {
-    if (err) return callback(err);
-    closed = true;
-    callback();
-  });
-  var destroyed = false;
-  return function (err) {
-    if (closed) return;
-    if (destroyed) return;
-    destroyed = true;
-
-    // request.destroy just do .end - .abort is what we want
-    if (isRequest(stream)) return stream.abort();
-    if (typeof stream.destroy === 'function') return stream.destroy();
-    callback(err || new ERR_STREAM_DESTROYED('pipe'));
-  };
-}
-function call(fn) {
-  fn();
-}
-function pipe(from, to) {
-  return from.pipe(to);
-}
-function popCallback(streams) {
-  if (!streams.length) return noop;
-  if (typeof streams[streams.length - 1] !== 'function') return noop;
-  return streams.pop();
-}
-function pipeline() {
-  for (var _len = arguments.length, streams = new Array(_len), _key = 0; _key < _len; _key++) {
-    streams[_key] = arguments[_key];
-  }
-  var callback = popCallback(streams);
-  if (Array.isArray(streams[0])) streams = streams[0];
-  if (streams.length < 2) {
-    throw new ERR_MISSING_ARGS('streams');
-  }
-  var error;
-  var destroys = streams.map(function (stream, i) {
-    var reading = i < streams.length - 1;
-    var writing = i > 0;
-    return destroyer(stream, reading, writing, function (err) {
-      if (!error) error = err;
-      if (err) destroys.forEach(call);
-      if (reading) return;
-      destroys.forEach(call);
-      callback(error);
-    });
-  });
-  return streams.reduce(pipe);
-}
-module.exports = pipeline;
-
-/***/ }),
-
-/***/ 9948:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-"use strict";
-
-
-var ERR_INVALID_OPT_VALUE = (__nccwpck_require__(7214)/* .codes.ERR_INVALID_OPT_VALUE */ .q.ERR_INVALID_OPT_VALUE);
-function highWaterMarkFrom(options, isDuplex, duplexKey) {
-  return options.highWaterMark != null ? options.highWaterMark : isDuplex ? options[duplexKey] : null;
-}
-function getHighWaterMark(state, options, duplexKey, isDuplex) {
-  var hwm = highWaterMarkFrom(options, isDuplex, duplexKey);
-  if (hwm != null) {
-    if (!(isFinite(hwm) && Math.floor(hwm) === hwm) || hwm < 0) {
-      var name = isDuplex ? duplexKey : 'highWaterMark';
-      throw new ERR_INVALID_OPT_VALUE(name, hwm);
+    })
+  },
+  inspect(value) {
+    // Vastly simplified version of https://nodejs.org/api/util.html#utilinspectobject-options
+    switch (typeof value) {
+      case 'string':
+        if (value.includes("'")) {
+          if (!value.includes('"')) {
+            return `"${value}"`
+          } else if (!value.includes('`') && !value.includes('${')) {
+            return `\`${value}\``
+          }
+        }
+        return `'${value}'`
+      case 'number':
+        if (isNaN(value)) {
+          return 'NaN'
+        } else if (Object.is(value, -0)) {
+          return String(value)
+        }
+        return value
+      case 'bigint':
+        return `${String(value)}n`
+      case 'boolean':
+      case 'undefined':
+        return String(value)
+      case 'object':
+        return '{}'
     }
-    return Math.floor(hwm);
-  }
+  },
+  types: {
+    isAsyncFunction(fn) {
+      return fn instanceof AsyncFunction
+    },
+    isArrayBufferView(arr) {
+      return ArrayBuffer.isView(arr)
+    }
+  },
+  isBlob,
+  deprecate(fn, message) {
+    return fn
+  },
+  addAbortListener:
+    (__nccwpck_require__(2361).addAbortListener) ||
+    function addAbortListener(signal, listener) {
+      if (signal === undefined) {
+        throw new ERR_INVALID_ARG_TYPE('signal', 'AbortSignal', signal)
+      }
+      validateAbortSignal(signal, 'signal')
+      validateFunction(listener, 'listener')
+      let removeEventListener
+      if (signal.aborted) {
+        queueMicrotask(() => listener())
+      } else {
+        signal.addEventListener('abort', listener, {
+          __proto__: null,
+          once: true,
+          [kResistStopPropagation]: true
+        })
+        removeEventListener = () => {
+          signal.removeEventListener('abort', listener)
+        }
+      }
+      return {
+        __proto__: null,
+        [SymbolDispose]() {
+          var _removeEventListener
+          ;(_removeEventListener = removeEventListener) === null || _removeEventListener === undefined
+            ? undefined
+            : _removeEventListener()
+        }
+      }
+    },
+  AbortSignalAny:
+    AbortSignal.any ||
+    function AbortSignalAny(signals) {
+      // Fast path if there is only one signal.
+      if (signals.length === 1) {
+        return signals[0]
+      }
+      const ac = new AbortController()
+      const abort = () => ac.abort()
+      signals.forEach((signal) => {
+        validateAbortSignal(signal, 'signals')
+        signal.addEventListener('abort', abort, {
+          once: true
+        })
+      })
+      ac.signal.addEventListener(
+        'abort',
+        () => {
+          signals.forEach((signal) => signal.removeEventListener('abort', abort))
+        },
+        {
+          once: true
+        }
+      )
+      return ac.signal
+    }
+}
+module.exports.promisify.custom = Symbol.for('nodejs.util.promisify.custom')
 
-  // Default value
-  return state.objectMode ? 16 : 16 * 1024;
+
+/***/ }),
+
+/***/ 5102:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+/* replacement start */
+
+const { Buffer } = __nccwpck_require__(4300)
+
+/* replacement end */
+// Copyright Joyent, Inc. and other Node contributors.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the
+// "Software"), to deal in the Software without restriction, including
+// without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Software, and to permit
+// persons to whom the Software is furnished to do so, subject to the
+// following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+// USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+;('use strict')
+const { ObjectDefineProperty, ObjectKeys, ReflectApply } = __nccwpck_require__(9629)
+const {
+  promisify: { custom: customPromisify }
+} = __nccwpck_require__(6959)
+const { streamReturningOperators, promiseReturningOperators } = __nccwpck_require__(3193)
+const {
+  codes: { ERR_ILLEGAL_CONSTRUCTOR }
+} = __nccwpck_require__(529)
+const compose = __nccwpck_require__(3129)
+const { setDefaultHighWaterMark, getDefaultHighWaterMark } = __nccwpck_require__(9948)
+const { pipeline } = __nccwpck_require__(6989)
+const { destroyer } = __nccwpck_require__(7049)
+const eos = __nccwpck_require__(6080)
+const internalBuffer = {}
+const promises = __nccwpck_require__(348)
+const utils = __nccwpck_require__(7981)
+const Stream = (module.exports = __nccwpck_require__(9792).Stream)
+Stream.isDestroyed = utils.isDestroyed
+Stream.isDisturbed = utils.isDisturbed
+Stream.isErrored = utils.isErrored
+Stream.isReadable = utils.isReadable
+Stream.isWritable = utils.isWritable
+Stream.Readable = __nccwpck_require__(7920)
+for (const key of ObjectKeys(streamReturningOperators)) {
+  const op = streamReturningOperators[key]
+  function fn(...args) {
+    if (new.target) {
+      throw ERR_ILLEGAL_CONSTRUCTOR()
+    }
+    return Stream.Readable.from(ReflectApply(op, this, args))
+  }
+  ObjectDefineProperty(fn, 'name', {
+    __proto__: null,
+    value: op.name
+  })
+  ObjectDefineProperty(fn, 'length', {
+    __proto__: null,
+    value: op.length
+  })
+  ObjectDefineProperty(Stream.Readable.prototype, key, {
+    __proto__: null,
+    value: fn,
+    enumerable: false,
+    configurable: true,
+    writable: true
+  })
+}
+for (const key of ObjectKeys(promiseReturningOperators)) {
+  const op = promiseReturningOperators[key]
+  function fn(...args) {
+    if (new.target) {
+      throw ERR_ILLEGAL_CONSTRUCTOR()
+    }
+    return ReflectApply(op, this, args)
+  }
+  ObjectDefineProperty(fn, 'name', {
+    __proto__: null,
+    value: op.name
+  })
+  ObjectDefineProperty(fn, 'length', {
+    __proto__: null,
+    value: op.length
+  })
+  ObjectDefineProperty(Stream.Readable.prototype, key, {
+    __proto__: null,
+    value: fn,
+    enumerable: false,
+    configurable: true,
+    writable: true
+  })
+}
+Stream.Writable = __nccwpck_require__(8488)
+Stream.Duplex = __nccwpck_require__(2613)
+Stream.Transform = __nccwpck_require__(6941)
+Stream.PassThrough = __nccwpck_require__(2839)
+Stream.pipeline = pipeline
+const { addAbortSignal } = __nccwpck_require__(289)
+Stream.addAbortSignal = addAbortSignal
+Stream.finished = eos
+Stream.destroy = destroyer
+Stream.compose = compose
+Stream.setDefaultHighWaterMark = setDefaultHighWaterMark
+Stream.getDefaultHighWaterMark = getDefaultHighWaterMark
+ObjectDefineProperty(Stream, 'promises', {
+  __proto__: null,
+  configurable: true,
+  enumerable: true,
+  get() {
+    return promises
+  }
+})
+ObjectDefineProperty(pipeline, customPromisify, {
+  __proto__: null,
+  enumerable: true,
+  get() {
+    return promises.pipeline
+  }
+})
+ObjectDefineProperty(eos, customPromisify, {
+  __proto__: null,
+  enumerable: true,
+  get() {
+    return promises.finished
+  }
+})
+
+// Backwards-compat with node 0.4.x
+Stream.Stream = Stream
+Stream._isUint8Array = function isUint8Array(value) {
+  return value instanceof Uint8Array
+}
+Stream._uint8ArrayToBuffer = function _uint8ArrayToBuffer(chunk) {
+  return Buffer.from(chunk.buffer, chunk.byteOffset, chunk.byteLength)
+}
+
+
+/***/ }),
+
+/***/ 348:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+const { ArrayPrototypePop, Promise } = __nccwpck_require__(9629)
+const { isIterable, isNodeStream, isWebStream } = __nccwpck_require__(7981)
+const { pipelineImpl: pl } = __nccwpck_require__(6989)
+const { finished } = __nccwpck_require__(6080)
+__nccwpck_require__(5102)
+function pipeline(...streams) {
+  return new Promise((resolve, reject) => {
+    let signal
+    let end
+    const lastArg = streams[streams.length - 1]
+    if (
+      lastArg &&
+      typeof lastArg === 'object' &&
+      !isNodeStream(lastArg) &&
+      !isIterable(lastArg) &&
+      !isWebStream(lastArg)
+    ) {
+      const options = ArrayPrototypePop(streams)
+      signal = options.signal
+      end = options.end
+    }
+    pl(
+      streams,
+      (err, value) => {
+        if (err) {
+          reject(err)
+        } else {
+          resolve(value)
+        }
+      },
+      {
+        signal,
+        end
+      }
+    )
+  })
 }
 module.exports = {
-  getHighWaterMark: getHighWaterMark
-};
-
-/***/ }),
-
-/***/ 2387:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-module.exports = __nccwpck_require__(2781);
-
-
-/***/ }),
-
-/***/ 1642:
-/***/ ((module, exports, __nccwpck_require__) => {
-
-var Stream = __nccwpck_require__(2781);
-if (process.env.READABLE_STREAM === 'disable' && Stream) {
-  module.exports = Stream.Readable;
-  Object.assign(module.exports, Stream);
-  module.exports.Stream = Stream;
-} else {
-  exports = module.exports = __nccwpck_require__(1433);
-  exports.Stream = Stream || exports;
-  exports.Readable = exports;
-  exports.Writable = __nccwpck_require__(6993);
-  exports.Duplex = __nccwpck_require__(1359);
-  exports.Transform = __nccwpck_require__(4415);
-  exports.PassThrough = __nccwpck_require__(1542);
-  exports.finished = __nccwpck_require__(6080);
-  exports.pipeline = __nccwpck_require__(6989);
+  finished,
+  pipeline
 }
 
 
@@ -30869,381 +32813,6 @@ module.exports = {
 
 /***/ }),
 
-/***/ 4841:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-// Copyright Joyent, Inc. and other Node contributors.
-//
-// Permission is hereby granted, free of charge, to any person obtaining a
-// copy of this software and associated documentation files (the
-// "Software"), to deal in the Software without restriction, including
-// without limitation the rights to use, copy, modify, merge, publish,
-// distribute, sublicense, and/or sell copies of the Software, and to permit
-// persons to whom the Software is furnished to do so, subject to the
-// following conditions:
-//
-// The above copyright notice and this permission notice shall be included
-// in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-// USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-
-
-/*<replacement>*/
-
-var Buffer = (__nccwpck_require__(2279).Buffer);
-/*</replacement>*/
-
-var isEncoding = Buffer.isEncoding || function (encoding) {
-  encoding = '' + encoding;
-  switch (encoding && encoding.toLowerCase()) {
-    case 'hex':case 'utf8':case 'utf-8':case 'ascii':case 'binary':case 'base64':case 'ucs2':case 'ucs-2':case 'utf16le':case 'utf-16le':case 'raw':
-      return true;
-    default:
-      return false;
-  }
-};
-
-function _normalizeEncoding(enc) {
-  if (!enc) return 'utf8';
-  var retried;
-  while (true) {
-    switch (enc) {
-      case 'utf8':
-      case 'utf-8':
-        return 'utf8';
-      case 'ucs2':
-      case 'ucs-2':
-      case 'utf16le':
-      case 'utf-16le':
-        return 'utf16le';
-      case 'latin1':
-      case 'binary':
-        return 'latin1';
-      case 'base64':
-      case 'ascii':
-      case 'hex':
-        return enc;
-      default:
-        if (retried) return; // undefined
-        enc = ('' + enc).toLowerCase();
-        retried = true;
-    }
-  }
-};
-
-// Do not cache `Buffer.isEncoding` when checking encoding names as some
-// modules monkey-patch it to support additional encodings
-function normalizeEncoding(enc) {
-  var nenc = _normalizeEncoding(enc);
-  if (typeof nenc !== 'string' && (Buffer.isEncoding === isEncoding || !isEncoding(enc))) throw new Error('Unknown encoding: ' + enc);
-  return nenc || enc;
-}
-
-// StringDecoder provides an interface for efficiently splitting a series of
-// buffers into a series of JS strings without breaking apart multi-byte
-// characters.
-exports.s = StringDecoder;
-function StringDecoder(encoding) {
-  this.encoding = normalizeEncoding(encoding);
-  var nb;
-  switch (this.encoding) {
-    case 'utf16le':
-      this.text = utf16Text;
-      this.end = utf16End;
-      nb = 4;
-      break;
-    case 'utf8':
-      this.fillLast = utf8FillLast;
-      nb = 4;
-      break;
-    case 'base64':
-      this.text = base64Text;
-      this.end = base64End;
-      nb = 3;
-      break;
-    default:
-      this.write = simpleWrite;
-      this.end = simpleEnd;
-      return;
-  }
-  this.lastNeed = 0;
-  this.lastTotal = 0;
-  this.lastChar = Buffer.allocUnsafe(nb);
-}
-
-StringDecoder.prototype.write = function (buf) {
-  if (buf.length === 0) return '';
-  var r;
-  var i;
-  if (this.lastNeed) {
-    r = this.fillLast(buf);
-    if (r === undefined) return '';
-    i = this.lastNeed;
-    this.lastNeed = 0;
-  } else {
-    i = 0;
-  }
-  if (i < buf.length) return r ? r + this.text(buf, i) : this.text(buf, i);
-  return r || '';
-};
-
-StringDecoder.prototype.end = utf8End;
-
-// Returns only complete characters in a Buffer
-StringDecoder.prototype.text = utf8Text;
-
-// Attempts to complete a partial non-UTF-8 character using bytes from a Buffer
-StringDecoder.prototype.fillLast = function (buf) {
-  if (this.lastNeed <= buf.length) {
-    buf.copy(this.lastChar, this.lastTotal - this.lastNeed, 0, this.lastNeed);
-    return this.lastChar.toString(this.encoding, 0, this.lastTotal);
-  }
-  buf.copy(this.lastChar, this.lastTotal - this.lastNeed, 0, buf.length);
-  this.lastNeed -= buf.length;
-};
-
-// Checks the type of a UTF-8 byte, whether it's ASCII, a leading byte, or a
-// continuation byte. If an invalid byte is detected, -2 is returned.
-function utf8CheckByte(byte) {
-  if (byte <= 0x7F) return 0;else if (byte >> 5 === 0x06) return 2;else if (byte >> 4 === 0x0E) return 3;else if (byte >> 3 === 0x1E) return 4;
-  return byte >> 6 === 0x02 ? -1 : -2;
-}
-
-// Checks at most 3 bytes at the end of a Buffer in order to detect an
-// incomplete multi-byte UTF-8 character. The total number of bytes (2, 3, or 4)
-// needed to complete the UTF-8 character (if applicable) are returned.
-function utf8CheckIncomplete(self, buf, i) {
-  var j = buf.length - 1;
-  if (j < i) return 0;
-  var nb = utf8CheckByte(buf[j]);
-  if (nb >= 0) {
-    if (nb > 0) self.lastNeed = nb - 1;
-    return nb;
-  }
-  if (--j < i || nb === -2) return 0;
-  nb = utf8CheckByte(buf[j]);
-  if (nb >= 0) {
-    if (nb > 0) self.lastNeed = nb - 2;
-    return nb;
-  }
-  if (--j < i || nb === -2) return 0;
-  nb = utf8CheckByte(buf[j]);
-  if (nb >= 0) {
-    if (nb > 0) {
-      if (nb === 2) nb = 0;else self.lastNeed = nb - 3;
-    }
-    return nb;
-  }
-  return 0;
-}
-
-// Validates as many continuation bytes for a multi-byte UTF-8 character as
-// needed or are available. If we see a non-continuation byte where we expect
-// one, we "replace" the validated continuation bytes we've seen so far with
-// a single UTF-8 replacement character ('\ufffd'), to match v8's UTF-8 decoding
-// behavior. The continuation byte check is included three times in the case
-// where all of the continuation bytes for a character exist in the same buffer.
-// It is also done this way as a slight performance increase instead of using a
-// loop.
-function utf8CheckExtraBytes(self, buf, p) {
-  if ((buf[0] & 0xC0) !== 0x80) {
-    self.lastNeed = 0;
-    return '\ufffd';
-  }
-  if (self.lastNeed > 1 && buf.length > 1) {
-    if ((buf[1] & 0xC0) !== 0x80) {
-      self.lastNeed = 1;
-      return '\ufffd';
-    }
-    if (self.lastNeed > 2 && buf.length > 2) {
-      if ((buf[2] & 0xC0) !== 0x80) {
-        self.lastNeed = 2;
-        return '\ufffd';
-      }
-    }
-  }
-}
-
-// Attempts to complete a multi-byte UTF-8 character using bytes from a Buffer.
-function utf8FillLast(buf) {
-  var p = this.lastTotal - this.lastNeed;
-  var r = utf8CheckExtraBytes(this, buf, p);
-  if (r !== undefined) return r;
-  if (this.lastNeed <= buf.length) {
-    buf.copy(this.lastChar, p, 0, this.lastNeed);
-    return this.lastChar.toString(this.encoding, 0, this.lastTotal);
-  }
-  buf.copy(this.lastChar, p, 0, buf.length);
-  this.lastNeed -= buf.length;
-}
-
-// Returns all complete UTF-8 characters in a Buffer. If the Buffer ended on a
-// partial character, the character's bytes are buffered until the required
-// number of bytes are available.
-function utf8Text(buf, i) {
-  var total = utf8CheckIncomplete(this, buf, i);
-  if (!this.lastNeed) return buf.toString('utf8', i);
-  this.lastTotal = total;
-  var end = buf.length - (total - this.lastNeed);
-  buf.copy(this.lastChar, 0, end);
-  return buf.toString('utf8', i, end);
-}
-
-// For UTF-8, a replacement character is added when ending on a partial
-// character.
-function utf8End(buf) {
-  var r = buf && buf.length ? this.write(buf) : '';
-  if (this.lastNeed) return r + '\ufffd';
-  return r;
-}
-
-// UTF-16LE typically needs two bytes per character, but even if we have an even
-// number of bytes available, we need to check if we end on a leading/high
-// surrogate. In that case, we need to wait for the next two bytes in order to
-// decode the last character properly.
-function utf16Text(buf, i) {
-  if ((buf.length - i) % 2 === 0) {
-    var r = buf.toString('utf16le', i);
-    if (r) {
-      var c = r.charCodeAt(r.length - 1);
-      if (c >= 0xD800 && c <= 0xDBFF) {
-        this.lastNeed = 2;
-        this.lastTotal = 4;
-        this.lastChar[0] = buf[buf.length - 2];
-        this.lastChar[1] = buf[buf.length - 1];
-        return r.slice(0, -1);
-      }
-    }
-    return r;
-  }
-  this.lastNeed = 1;
-  this.lastTotal = 2;
-  this.lastChar[0] = buf[buf.length - 1];
-  return buf.toString('utf16le', i, buf.length - 1);
-}
-
-// For UTF-16LE we do not explicitly append special replacement characters if we
-// end on a partial character, we simply let v8 handle that.
-function utf16End(buf) {
-  var r = buf && buf.length ? this.write(buf) : '';
-  if (this.lastNeed) {
-    var end = this.lastTotal - this.lastNeed;
-    return r + this.lastChar.toString('utf16le', 0, end);
-  }
-  return r;
-}
-
-function base64Text(buf, i) {
-  var n = (buf.length - i) % 3;
-  if (n === 0) return buf.toString('base64', i);
-  this.lastNeed = 3 - n;
-  this.lastTotal = 3;
-  if (n === 1) {
-    this.lastChar[0] = buf[buf.length - 1];
-  } else {
-    this.lastChar[0] = buf[buf.length - 2];
-    this.lastChar[1] = buf[buf.length - 1];
-  }
-  return buf.toString('base64', i, buf.length - n);
-}
-
-function base64End(buf) {
-  var r = buf && buf.length ? this.write(buf) : '';
-  if (this.lastNeed) return r + this.lastChar.toString('base64', 0, 3 - this.lastNeed);
-  return r;
-}
-
-// Pass bytes on through for single-byte encodings (e.g. ascii, latin1, hex)
-function simpleWrite(buf) {
-  return buf.toString(this.encoding);
-}
-
-function simpleEnd(buf) {
-  return buf && buf.length ? this.write(buf) : '';
-}
-
-/***/ }),
-
-/***/ 2279:
-/***/ ((module, exports, __nccwpck_require__) => {
-
-/*! safe-buffer. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
-/* eslint-disable node/no-deprecated-api */
-var buffer = __nccwpck_require__(4300)
-var Buffer = buffer.Buffer
-
-// alternative to using Object.keys for old browsers
-function copyProps (src, dst) {
-  for (var key in src) {
-    dst[key] = src[key]
-  }
-}
-if (Buffer.from && Buffer.alloc && Buffer.allocUnsafe && Buffer.allocUnsafeSlow) {
-  module.exports = buffer
-} else {
-  // Copy properties from require('buffer')
-  copyProps(buffer, exports)
-  exports.Buffer = SafeBuffer
-}
-
-function SafeBuffer (arg, encodingOrOffset, length) {
-  return Buffer(arg, encodingOrOffset, length)
-}
-
-SafeBuffer.prototype = Object.create(Buffer.prototype)
-
-// Copy static methods from Buffer
-copyProps(Buffer, SafeBuffer)
-
-SafeBuffer.from = function (arg, encodingOrOffset, length) {
-  if (typeof arg === 'number') {
-    throw new TypeError('Argument must not be a number')
-  }
-  return Buffer(arg, encodingOrOffset, length)
-}
-
-SafeBuffer.alloc = function (size, fill, encoding) {
-  if (typeof size !== 'number') {
-    throw new TypeError('Argument must be a number')
-  }
-  var buf = Buffer(size)
-  if (fill !== undefined) {
-    if (typeof encoding === 'string') {
-      buf.fill(fill, encoding)
-    } else {
-      buf.fill(fill)
-    }
-  } else {
-    buf.fill(0)
-  }
-  return buf
-}
-
-SafeBuffer.allocUnsafe = function (size) {
-  if (typeof size !== 'number') {
-    throw new TypeError('Argument must be a number')
-  }
-  return Buffer(size)
-}
-
-SafeBuffer.allocUnsafeSlow = function (size) {
-  if (typeof size !== 'number') {
-    throw new TypeError('Argument must be a number')
-  }
-  return buffer.SlowBuffer(size)
-}
-
-
-/***/ }),
-
 /***/ 9318:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
@@ -33391,46 +34960,6 @@ exports["default"] = _default;
 
 /***/ }),
 
-/***/ 2940:
-/***/ ((module) => {
-
-// Returns a wrapper function that returns a wrapped callback
-// The wrapper function should do some stuff, and return a
-// presumably different callback function.
-// This makes sure that own properties are retained, so that
-// decorations and such are not lost along the way.
-module.exports = wrappy
-function wrappy (fn, cb) {
-  if (fn && cb) return wrappy(fn)(cb)
-
-  if (typeof fn !== 'function')
-    throw new TypeError('need wrapper function')
-
-  Object.keys(fn).forEach(function (k) {
-    wrapper[k] = fn[k]
-  })
-
-  return wrapper
-
-  function wrapper() {
-    var args = new Array(arguments.length)
-    for (var i = 0; i < args.length; i++) {
-      args[i] = arguments[i]
-    }
-    var ret = fn.apply(this, args)
-    var cb = args[args.length-1]
-    if (typeof ret === 'function' && ret !== cb) {
-      Object.keys(cb).forEach(function (k) {
-        ret[k] = cb[k]
-      })
-    }
-    return ret
-  }
-}
-
-
-/***/ }),
-
 /***/ 6454:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
@@ -33657,7 +35186,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.cacheFile = exports.zip = void 0;
+exports.zip = zip;
+exports.cacheFile = cacheFile;
 const fs_1 = __importDefault(__nccwpck_require__(7147));
 const archiver_1 = __importDefault(__nccwpck_require__(3084));
 const path_1 = __importDefault(__nccwpck_require__(1017));
@@ -33698,7 +35228,6 @@ async function zip(cacheFile, addonDir, addonName, ignoreList) {
         });
     });
 }
-exports.zip = zip;
 function getDefaultRedaxoIgnoreList() {
     const rexFinderIgnoreList = [
         '.DS_Store',
@@ -33727,7 +35256,6 @@ function cacheFile() {
     const TMP_DIR = process.env['RUNNER_TEMP'];
     return path_1.default.join(TMP_DIR, '/', Math.random() + 'addon.zip');
 }
-exports.cacheFile = cacheFile;
 
 
 /***/ }),
@@ -33835,7 +35363,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.versionExists = exports.fetchAddonPackageYml = exports.uploadArchive = void 0;
+exports.uploadArchive = uploadArchive;
+exports.fetchAddonPackageYml = fetchAddonPackageYml;
+exports.versionExists = versionExists;
 const Core = __importStar(__nccwpck_require__(2186));
 const form_data_1 = __importDefault(__nccwpck_require__(4334));
 const fs_1 = __importDefault(__nccwpck_require__(7147));
@@ -33871,7 +35401,6 @@ async function uploadArchive(addonKey, redaxoLogin, redaxoApiKey, version, descr
     Core.setFailed(`Upload failed with error: ${response.data.error}`);
     return response.data.error;
 }
-exports.uploadArchive = uploadArchive;
 async function fetchAddonPackageYml(addonKey, redaxoLogin, redaxoApiKey) {
     try {
         Core.info(`Fetch package.yml from redaxo.org for addon ${addonKey}`);
@@ -33891,11 +35420,9 @@ async function fetchAddonPackageYml(addonKey, redaxoLogin, redaxoApiKey) {
         return null;
     }
 }
-exports.fetchAddonPackageYml = fetchAddonPackageYml;
 function versionExists(packageYml, version) {
     return Object.values(packageYml.files).some(file => file.version === version);
 }
-exports.versionExists = versionExists;
 
 
 /***/ }),
@@ -33932,7 +35459,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.validatePackageVersion = exports.md5_file = exports.readPackageYml = void 0;
+exports.readPackageYml = readPackageYml;
+exports.md5_file = md5_file;
+exports.validatePackageVersion = validatePackageVersion;
 const Core = __importStar(__nccwpck_require__(2186));
 const path_1 = __importDefault(__nccwpck_require__(1017));
 const fs_1 = __importDefault(__nccwpck_require__(7147));
@@ -33963,7 +35492,6 @@ async function readPackageYml(addonDir) {
         }
     }
 }
-exports.readPackageYml = readPackageYml;
 function md5_file(file) {
     return new Promise((resolve, reject) => {
         try {
@@ -33977,11 +35505,9 @@ function md5_file(file) {
         }
     });
 }
-exports.md5_file = md5_file;
 function validatePackageVersion(packageYmlVersion, releaseVersion) {
     return packageYmlVersion === releaseVersion;
 }
-exports.validatePackageVersion = validatePackageVersion;
 
 
 /***/ }),
@@ -34058,6 +35584,62 @@ module.exports = require("net");
 
 /***/ }),
 
+/***/ 5673:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("node:events");
+
+/***/ }),
+
+/***/ 7561:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("node:fs");
+
+/***/ }),
+
+/***/ 3977:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("node:fs/promises");
+
+/***/ }),
+
+/***/ 9411:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("node:path");
+
+/***/ }),
+
+/***/ 4492:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("node:stream");
+
+/***/ }),
+
+/***/ 6915:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("node:string_decoder");
+
+/***/ }),
+
+/***/ 1041:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("node:url");
+
+/***/ }),
+
 /***/ 2037:
 /***/ ((module) => {
 
@@ -34079,6 +35661,14 @@ module.exports = require("path");
 
 "use strict";
 module.exports = require("stream");
+
+/***/ }),
+
+/***/ 1576:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("string_decoder");
 
 /***/ }),
 
@@ -34119,6 +35709,7794 @@ module.exports = require("util");
 
 "use strict";
 module.exports = require("zlib");
+
+/***/ }),
+
+/***/ 1746:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Glob = void 0;
+const minimatch_1 = __nccwpck_require__(134);
+const node_url_1 = __nccwpck_require__(1041);
+const path_scurry_1 = __nccwpck_require__(1081);
+const pattern_js_1 = __nccwpck_require__(7537);
+const walker_js_1 = __nccwpck_require__(3875);
+// if no process global, just call it linux.
+// so we default to case-sensitive, / separators
+const defaultPlatform = (typeof process === 'object' &&
+    process &&
+    typeof process.platform === 'string') ?
+    process.platform
+    : 'linux';
+/**
+ * An object that can perform glob pattern traversals.
+ */
+class Glob {
+    absolute;
+    cwd;
+    root;
+    dot;
+    dotRelative;
+    follow;
+    ignore;
+    magicalBraces;
+    mark;
+    matchBase;
+    maxDepth;
+    nobrace;
+    nocase;
+    nodir;
+    noext;
+    noglobstar;
+    pattern;
+    platform;
+    realpath;
+    scurry;
+    stat;
+    signal;
+    windowsPathsNoEscape;
+    withFileTypes;
+    includeChildMatches;
+    /**
+     * The options provided to the constructor.
+     */
+    opts;
+    /**
+     * An array of parsed immutable {@link Pattern} objects.
+     */
+    patterns;
+    /**
+     * All options are stored as properties on the `Glob` object.
+     *
+     * See {@link GlobOptions} for full options descriptions.
+     *
+     * Note that a previous `Glob` object can be passed as the
+     * `GlobOptions` to another `Glob` instantiation to re-use settings
+     * and caches with a new pattern.
+     *
+     * Traversal functions can be called multiple times to run the walk
+     * again.
+     */
+    constructor(pattern, opts) {
+        /* c8 ignore start */
+        if (!opts)
+            throw new TypeError('glob options required');
+        /* c8 ignore stop */
+        this.withFileTypes = !!opts.withFileTypes;
+        this.signal = opts.signal;
+        this.follow = !!opts.follow;
+        this.dot = !!opts.dot;
+        this.dotRelative = !!opts.dotRelative;
+        this.nodir = !!opts.nodir;
+        this.mark = !!opts.mark;
+        if (!opts.cwd) {
+            this.cwd = '';
+        }
+        else if (opts.cwd instanceof URL || opts.cwd.startsWith('file://')) {
+            opts.cwd = (0, node_url_1.fileURLToPath)(opts.cwd);
+        }
+        this.cwd = opts.cwd || '';
+        this.root = opts.root;
+        this.magicalBraces = !!opts.magicalBraces;
+        this.nobrace = !!opts.nobrace;
+        this.noext = !!opts.noext;
+        this.realpath = !!opts.realpath;
+        this.absolute = opts.absolute;
+        this.includeChildMatches = opts.includeChildMatches !== false;
+        this.noglobstar = !!opts.noglobstar;
+        this.matchBase = !!opts.matchBase;
+        this.maxDepth =
+            typeof opts.maxDepth === 'number' ? opts.maxDepth : Infinity;
+        this.stat = !!opts.stat;
+        this.ignore = opts.ignore;
+        if (this.withFileTypes && this.absolute !== undefined) {
+            throw new Error('cannot set absolute and withFileTypes:true');
+        }
+        if (typeof pattern === 'string') {
+            pattern = [pattern];
+        }
+        this.windowsPathsNoEscape =
+            !!opts.windowsPathsNoEscape ||
+                opts.allowWindowsEscape ===
+                    false;
+        if (this.windowsPathsNoEscape) {
+            pattern = pattern.map(p => p.replace(/\\/g, '/'));
+        }
+        if (this.matchBase) {
+            if (opts.noglobstar) {
+                throw new TypeError('base matching requires globstar');
+            }
+            pattern = pattern.map(p => (p.includes('/') ? p : `./**/${p}`));
+        }
+        this.pattern = pattern;
+        this.platform = opts.platform || defaultPlatform;
+        this.opts = { ...opts, platform: this.platform };
+        if (opts.scurry) {
+            this.scurry = opts.scurry;
+            if (opts.nocase !== undefined &&
+                opts.nocase !== opts.scurry.nocase) {
+                throw new Error('nocase option contradicts provided scurry option');
+            }
+        }
+        else {
+            const Scurry = opts.platform === 'win32' ? path_scurry_1.PathScurryWin32
+                : opts.platform === 'darwin' ? path_scurry_1.PathScurryDarwin
+                    : opts.platform ? path_scurry_1.PathScurryPosix
+                        : path_scurry_1.PathScurry;
+            this.scurry = new Scurry(this.cwd, {
+                nocase: opts.nocase,
+                fs: opts.fs,
+            });
+        }
+        this.nocase = this.scurry.nocase;
+        // If you do nocase:true on a case-sensitive file system, then
+        // we need to use regexps instead of strings for non-magic
+        // path portions, because statting `aBc` won't return results
+        // for the file `AbC` for example.
+        const nocaseMagicOnly = this.platform === 'darwin' || this.platform === 'win32';
+        const mmo = {
+            // default nocase based on platform
+            ...opts,
+            dot: this.dot,
+            matchBase: this.matchBase,
+            nobrace: this.nobrace,
+            nocase: this.nocase,
+            nocaseMagicOnly,
+            nocomment: true,
+            noext: this.noext,
+            nonegate: true,
+            optimizationLevel: 2,
+            platform: this.platform,
+            windowsPathsNoEscape: this.windowsPathsNoEscape,
+            debug: !!this.opts.debug,
+        };
+        const mms = this.pattern.map(p => new minimatch_1.Minimatch(p, mmo));
+        const [matchSet, globParts] = mms.reduce((set, m) => {
+            set[0].push(...m.set);
+            set[1].push(...m.globParts);
+            return set;
+        }, [[], []]);
+        this.patterns = matchSet.map((set, i) => {
+            const g = globParts[i];
+            /* c8 ignore start */
+            if (!g)
+                throw new Error('invalid pattern object');
+            /* c8 ignore stop */
+            return new pattern_js_1.Pattern(set, g, 0, this.platform);
+        });
+    }
+    async walk() {
+        // Walkers always return array of Path objects, so we just have to
+        // coerce them into the right shape.  It will have already called
+        // realpath() if the option was set to do so, so we know that's cached.
+        // start out knowing the cwd, at least
+        return [
+            ...(await new walker_js_1.GlobWalker(this.patterns, this.scurry.cwd, {
+                ...this.opts,
+                maxDepth: this.maxDepth !== Infinity ?
+                    this.maxDepth + this.scurry.cwd.depth()
+                    : Infinity,
+                platform: this.platform,
+                nocase: this.nocase,
+                includeChildMatches: this.includeChildMatches,
+            }).walk()),
+        ];
+    }
+    walkSync() {
+        return [
+            ...new walker_js_1.GlobWalker(this.patterns, this.scurry.cwd, {
+                ...this.opts,
+                maxDepth: this.maxDepth !== Infinity ?
+                    this.maxDepth + this.scurry.cwd.depth()
+                    : Infinity,
+                platform: this.platform,
+                nocase: this.nocase,
+                includeChildMatches: this.includeChildMatches,
+            }).walkSync(),
+        ];
+    }
+    stream() {
+        return new walker_js_1.GlobStream(this.patterns, this.scurry.cwd, {
+            ...this.opts,
+            maxDepth: this.maxDepth !== Infinity ?
+                this.maxDepth + this.scurry.cwd.depth()
+                : Infinity,
+            platform: this.platform,
+            nocase: this.nocase,
+            includeChildMatches: this.includeChildMatches,
+        }).stream();
+    }
+    streamSync() {
+        return new walker_js_1.GlobStream(this.patterns, this.scurry.cwd, {
+            ...this.opts,
+            maxDepth: this.maxDepth !== Infinity ?
+                this.maxDepth + this.scurry.cwd.depth()
+                : Infinity,
+            platform: this.platform,
+            nocase: this.nocase,
+            includeChildMatches: this.includeChildMatches,
+        }).streamSync();
+    }
+    /**
+     * Default sync iteration function. Returns a Generator that
+     * iterates over the results.
+     */
+    iterateSync() {
+        return this.streamSync()[Symbol.iterator]();
+    }
+    [Symbol.iterator]() {
+        return this.iterateSync();
+    }
+    /**
+     * Default async iteration function. Returns an AsyncGenerator that
+     * iterates over the results.
+     */
+    iterate() {
+        return this.stream()[Symbol.asyncIterator]();
+    }
+    [Symbol.asyncIterator]() {
+        return this.iterate();
+    }
+}
+exports.Glob = Glob;
+//# sourceMappingURL=glob.js.map
+
+/***/ }),
+
+/***/ 6319:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.hasMagic = void 0;
+const minimatch_1 = __nccwpck_require__(134);
+/**
+ * Return true if the patterns provided contain any magic glob characters,
+ * given the options provided.
+ *
+ * Brace expansion is not considered "magic" unless the `magicalBraces` option
+ * is set, as brace expansion just turns one string into an array of strings.
+ * So a pattern like `'x{a,b}y'` would return `false`, because `'xay'` and
+ * `'xby'` both do not contain any magic glob characters, and it's treated the
+ * same as if you had called it on `['xay', 'xby']`. When `magicalBraces:true`
+ * is in the options, brace expansion _is_ treated as a pattern having magic.
+ */
+const hasMagic = (pattern, options = {}) => {
+    if (!Array.isArray(pattern)) {
+        pattern = [pattern];
+    }
+    for (const p of pattern) {
+        if (new minimatch_1.Minimatch(p, options).hasMagic())
+            return true;
+    }
+    return false;
+};
+exports.hasMagic = hasMagic;
+//# sourceMappingURL=has-magic.js.map
+
+/***/ }),
+
+/***/ 9772:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+// give it a pattern, and it'll be able to tell you if
+// a given path should be ignored.
+// Ignoring a path ignores its children if the pattern ends in /**
+// Ignores are always parsed in dot:true mode
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Ignore = void 0;
+const minimatch_1 = __nccwpck_require__(134);
+const pattern_js_1 = __nccwpck_require__(7537);
+const defaultPlatform = (typeof process === 'object' &&
+    process &&
+    typeof process.platform === 'string') ?
+    process.platform
+    : 'linux';
+/**
+ * Class used to process ignored patterns
+ */
+class Ignore {
+    relative;
+    relativeChildren;
+    absolute;
+    absoluteChildren;
+    platform;
+    mmopts;
+    constructor(ignored, { nobrace, nocase, noext, noglobstar, platform = defaultPlatform, }) {
+        this.relative = [];
+        this.absolute = [];
+        this.relativeChildren = [];
+        this.absoluteChildren = [];
+        this.platform = platform;
+        this.mmopts = {
+            dot: true,
+            nobrace,
+            nocase,
+            noext,
+            noglobstar,
+            optimizationLevel: 2,
+            platform,
+            nocomment: true,
+            nonegate: true,
+        };
+        for (const ign of ignored)
+            this.add(ign);
+    }
+    add(ign) {
+        // this is a little weird, but it gives us a clean set of optimized
+        // minimatch matchers, without getting tripped up if one of them
+        // ends in /** inside a brace section, and it's only inefficient at
+        // the start of the walk, not along it.
+        // It'd be nice if the Pattern class just had a .test() method, but
+        // handling globstars is a bit of a pita, and that code already lives
+        // in minimatch anyway.
+        // Another way would be if maybe Minimatch could take its set/globParts
+        // as an option, and then we could at least just use Pattern to test
+        // for absolute-ness.
+        // Yet another way, Minimatch could take an array of glob strings, and
+        // a cwd option, and do the right thing.
+        const mm = new minimatch_1.Minimatch(ign, this.mmopts);
+        for (let i = 0; i < mm.set.length; i++) {
+            const parsed = mm.set[i];
+            const globParts = mm.globParts[i];
+            /* c8 ignore start */
+            if (!parsed || !globParts) {
+                throw new Error('invalid pattern object');
+            }
+            // strip off leading ./ portions
+            // https://github.com/isaacs/node-glob/issues/570
+            while (parsed[0] === '.' && globParts[0] === '.') {
+                parsed.shift();
+                globParts.shift();
+            }
+            /* c8 ignore stop */
+            const p = new pattern_js_1.Pattern(parsed, globParts, 0, this.platform);
+            const m = new minimatch_1.Minimatch(p.globString(), this.mmopts);
+            const children = globParts[globParts.length - 1] === '**';
+            const absolute = p.isAbsolute();
+            if (absolute)
+                this.absolute.push(m);
+            else
+                this.relative.push(m);
+            if (children) {
+                if (absolute)
+                    this.absoluteChildren.push(m);
+                else
+                    this.relativeChildren.push(m);
+            }
+        }
+    }
+    ignored(p) {
+        const fullpath = p.fullpath();
+        const fullpaths = `${fullpath}/`;
+        const relative = p.relative() || '.';
+        const relatives = `${relative}/`;
+        for (const m of this.relative) {
+            if (m.match(relative) || m.match(relatives))
+                return true;
+        }
+        for (const m of this.absolute) {
+            if (m.match(fullpath) || m.match(fullpaths))
+                return true;
+        }
+        return false;
+    }
+    childrenIgnored(p) {
+        const fullpath = p.fullpath() + '/';
+        const relative = (p.relative() || '.') + '/';
+        for (const m of this.relativeChildren) {
+            if (m.match(relative))
+                return true;
+        }
+        for (const m of this.absoluteChildren) {
+            if (m.match(fullpath))
+                return true;
+        }
+        return false;
+    }
+}
+exports.Ignore = Ignore;
+//# sourceMappingURL=ignore.js.map
+
+/***/ }),
+
+/***/ 9834:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.glob = exports.sync = exports.iterate = exports.iterateSync = exports.stream = exports.streamSync = exports.globIterate = exports.globIterateSync = exports.globSync = exports.globStream = exports.globStreamSync = exports.Ignore = exports.hasMagic = exports.Glob = exports.unescape = exports.escape = void 0;
+const minimatch_1 = __nccwpck_require__(134);
+const glob_js_1 = __nccwpck_require__(1746);
+const has_magic_js_1 = __nccwpck_require__(6319);
+var minimatch_2 = __nccwpck_require__(134);
+Object.defineProperty(exports, "escape", ({ enumerable: true, get: function () { return minimatch_2.escape; } }));
+Object.defineProperty(exports, "unescape", ({ enumerable: true, get: function () { return minimatch_2.unescape; } }));
+var glob_js_2 = __nccwpck_require__(1746);
+Object.defineProperty(exports, "Glob", ({ enumerable: true, get: function () { return glob_js_2.Glob; } }));
+var has_magic_js_2 = __nccwpck_require__(6319);
+Object.defineProperty(exports, "hasMagic", ({ enumerable: true, get: function () { return has_magic_js_2.hasMagic; } }));
+var ignore_js_1 = __nccwpck_require__(9772);
+Object.defineProperty(exports, "Ignore", ({ enumerable: true, get: function () { return ignore_js_1.Ignore; } }));
+function globStreamSync(pattern, options = {}) {
+    return new glob_js_1.Glob(pattern, options).streamSync();
+}
+exports.globStreamSync = globStreamSync;
+function globStream(pattern, options = {}) {
+    return new glob_js_1.Glob(pattern, options).stream();
+}
+exports.globStream = globStream;
+function globSync(pattern, options = {}) {
+    return new glob_js_1.Glob(pattern, options).walkSync();
+}
+exports.globSync = globSync;
+async function glob_(pattern, options = {}) {
+    return new glob_js_1.Glob(pattern, options).walk();
+}
+function globIterateSync(pattern, options = {}) {
+    return new glob_js_1.Glob(pattern, options).iterateSync();
+}
+exports.globIterateSync = globIterateSync;
+function globIterate(pattern, options = {}) {
+    return new glob_js_1.Glob(pattern, options).iterate();
+}
+exports.globIterate = globIterate;
+// aliases: glob.sync.stream() glob.stream.sync() glob.sync() etc
+exports.streamSync = globStreamSync;
+exports.stream = Object.assign(globStream, { sync: globStreamSync });
+exports.iterateSync = globIterateSync;
+exports.iterate = Object.assign(globIterate, {
+    sync: globIterateSync,
+});
+exports.sync = Object.assign(globSync, {
+    stream: globStreamSync,
+    iterate: globIterateSync,
+});
+exports.glob = Object.assign(glob_, {
+    glob: glob_,
+    globSync,
+    sync: exports.sync,
+    globStream,
+    stream: exports.stream,
+    globStreamSync,
+    streamSync: exports.streamSync,
+    globIterate,
+    iterate: exports.iterate,
+    globIterateSync,
+    iterateSync: exports.iterateSync,
+    Glob: glob_js_1.Glob,
+    hasMagic: has_magic_js_1.hasMagic,
+    escape: minimatch_1.escape,
+    unescape: minimatch_1.unescape,
+});
+exports.glob.glob = exports.glob;
+//# sourceMappingURL=index.js.map
+
+/***/ }),
+
+/***/ 7537:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+// this is just a very light wrapper around 2 arrays with an offset index
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Pattern = void 0;
+const minimatch_1 = __nccwpck_require__(134);
+const isPatternList = (pl) => pl.length >= 1;
+const isGlobList = (gl) => gl.length >= 1;
+/**
+ * An immutable-ish view on an array of glob parts and their parsed
+ * results
+ */
+class Pattern {
+    #patternList;
+    #globList;
+    #index;
+    length;
+    #platform;
+    #rest;
+    #globString;
+    #isDrive;
+    #isUNC;
+    #isAbsolute;
+    #followGlobstar = true;
+    constructor(patternList, globList, index, platform) {
+        if (!isPatternList(patternList)) {
+            throw new TypeError('empty pattern list');
+        }
+        if (!isGlobList(globList)) {
+            throw new TypeError('empty glob list');
+        }
+        if (globList.length !== patternList.length) {
+            throw new TypeError('mismatched pattern list and glob list lengths');
+        }
+        this.length = patternList.length;
+        if (index < 0 || index >= this.length) {
+            throw new TypeError('index out of range');
+        }
+        this.#patternList = patternList;
+        this.#globList = globList;
+        this.#index = index;
+        this.#platform = platform;
+        // normalize root entries of absolute patterns on initial creation.
+        if (this.#index === 0) {
+            // c: => ['c:/']
+            // C:/ => ['C:/']
+            // C:/x => ['C:/', 'x']
+            // //host/share => ['//host/share/']
+            // //host/share/ => ['//host/share/']
+            // //host/share/x => ['//host/share/', 'x']
+            // /etc => ['/', 'etc']
+            // / => ['/']
+            if (this.isUNC()) {
+                // '' / '' / 'host' / 'share'
+                const [p0, p1, p2, p3, ...prest] = this.#patternList;
+                const [g0, g1, g2, g3, ...grest] = this.#globList;
+                if (prest[0] === '') {
+                    // ends in /
+                    prest.shift();
+                    grest.shift();
+                }
+                const p = [p0, p1, p2, p3, ''].join('/');
+                const g = [g0, g1, g2, g3, ''].join('/');
+                this.#patternList = [p, ...prest];
+                this.#globList = [g, ...grest];
+                this.length = this.#patternList.length;
+            }
+            else if (this.isDrive() || this.isAbsolute()) {
+                const [p1, ...prest] = this.#patternList;
+                const [g1, ...grest] = this.#globList;
+                if (prest[0] === '') {
+                    // ends in /
+                    prest.shift();
+                    grest.shift();
+                }
+                const p = p1 + '/';
+                const g = g1 + '/';
+                this.#patternList = [p, ...prest];
+                this.#globList = [g, ...grest];
+                this.length = this.#patternList.length;
+            }
+        }
+    }
+    /**
+     * The first entry in the parsed list of patterns
+     */
+    pattern() {
+        return this.#patternList[this.#index];
+    }
+    /**
+     * true of if pattern() returns a string
+     */
+    isString() {
+        return typeof this.#patternList[this.#index] === 'string';
+    }
+    /**
+     * true of if pattern() returns GLOBSTAR
+     */
+    isGlobstar() {
+        return this.#patternList[this.#index] === minimatch_1.GLOBSTAR;
+    }
+    /**
+     * true if pattern() returns a regexp
+     */
+    isRegExp() {
+        return this.#patternList[this.#index] instanceof RegExp;
+    }
+    /**
+     * The /-joined set of glob parts that make up this pattern
+     */
+    globString() {
+        return (this.#globString =
+            this.#globString ||
+                (this.#index === 0 ?
+                    this.isAbsolute() ?
+                        this.#globList[0] + this.#globList.slice(1).join('/')
+                        : this.#globList.join('/')
+                    : this.#globList.slice(this.#index).join('/')));
+    }
+    /**
+     * true if there are more pattern parts after this one
+     */
+    hasMore() {
+        return this.length > this.#index + 1;
+    }
+    /**
+     * The rest of the pattern after this part, or null if this is the end
+     */
+    rest() {
+        if (this.#rest !== undefined)
+            return this.#rest;
+        if (!this.hasMore())
+            return (this.#rest = null);
+        this.#rest = new Pattern(this.#patternList, this.#globList, this.#index + 1, this.#platform);
+        this.#rest.#isAbsolute = this.#isAbsolute;
+        this.#rest.#isUNC = this.#isUNC;
+        this.#rest.#isDrive = this.#isDrive;
+        return this.#rest;
+    }
+    /**
+     * true if the pattern represents a //unc/path/ on windows
+     */
+    isUNC() {
+        const pl = this.#patternList;
+        return this.#isUNC !== undefined ?
+            this.#isUNC
+            : (this.#isUNC =
+                this.#platform === 'win32' &&
+                    this.#index === 0 &&
+                    pl[0] === '' &&
+                    pl[1] === '' &&
+                    typeof pl[2] === 'string' &&
+                    !!pl[2] &&
+                    typeof pl[3] === 'string' &&
+                    !!pl[3]);
+    }
+    // pattern like C:/...
+    // split = ['C:', ...]
+    // XXX: would be nice to handle patterns like `c:*` to test the cwd
+    // in c: for *, but I don't know of a way to even figure out what that
+    // cwd is without actually chdir'ing into it?
+    /**
+     * True if the pattern starts with a drive letter on Windows
+     */
+    isDrive() {
+        const pl = this.#patternList;
+        return this.#isDrive !== undefined ?
+            this.#isDrive
+            : (this.#isDrive =
+                this.#platform === 'win32' &&
+                    this.#index === 0 &&
+                    this.length > 1 &&
+                    typeof pl[0] === 'string' &&
+                    /^[a-z]:$/i.test(pl[0]));
+    }
+    // pattern = '/' or '/...' or '/x/...'
+    // split = ['', ''] or ['', ...] or ['', 'x', ...]
+    // Drive and UNC both considered absolute on windows
+    /**
+     * True if the pattern is rooted on an absolute path
+     */
+    isAbsolute() {
+        const pl = this.#patternList;
+        return this.#isAbsolute !== undefined ?
+            this.#isAbsolute
+            : (this.#isAbsolute =
+                (pl[0] === '' && pl.length > 1) ||
+                    this.isDrive() ||
+                    this.isUNC());
+    }
+    /**
+     * consume the root of the pattern, and return it
+     */
+    root() {
+        const p = this.#patternList[0];
+        return (typeof p === 'string' && this.isAbsolute() && this.#index === 0) ?
+            p
+            : '';
+    }
+    /**
+     * Check to see if the current globstar pattern is allowed to follow
+     * a symbolic link.
+     */
+    checkFollowGlobstar() {
+        return !(this.#index === 0 ||
+            !this.isGlobstar() ||
+            !this.#followGlobstar);
+    }
+    /**
+     * Mark that the current globstar pattern is following a symbolic link
+     */
+    markFollowGlobstar() {
+        if (this.#index === 0 || !this.isGlobstar() || !this.#followGlobstar)
+            return false;
+        this.#followGlobstar = false;
+        return true;
+    }
+}
+exports.Pattern = Pattern;
+//# sourceMappingURL=pattern.js.map
+
+/***/ }),
+
+/***/ 7712:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+// synchronous utility for filtering entries and calculating subwalks
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Processor = exports.SubWalks = exports.MatchRecord = exports.HasWalkedCache = void 0;
+const minimatch_1 = __nccwpck_require__(134);
+/**
+ * A cache of which patterns have been processed for a given Path
+ */
+class HasWalkedCache {
+    store;
+    constructor(store = new Map()) {
+        this.store = store;
+    }
+    copy() {
+        return new HasWalkedCache(new Map(this.store));
+    }
+    hasWalked(target, pattern) {
+        return this.store.get(target.fullpath())?.has(pattern.globString());
+    }
+    storeWalked(target, pattern) {
+        const fullpath = target.fullpath();
+        const cached = this.store.get(fullpath);
+        if (cached)
+            cached.add(pattern.globString());
+        else
+            this.store.set(fullpath, new Set([pattern.globString()]));
+    }
+}
+exports.HasWalkedCache = HasWalkedCache;
+/**
+ * A record of which paths have been matched in a given walk step,
+ * and whether they only are considered a match if they are a directory,
+ * and whether their absolute or relative path should be returned.
+ */
+class MatchRecord {
+    store = new Map();
+    add(target, absolute, ifDir) {
+        const n = (absolute ? 2 : 0) | (ifDir ? 1 : 0);
+        const current = this.store.get(target);
+        this.store.set(target, current === undefined ? n : n & current);
+    }
+    // match, absolute, ifdir
+    entries() {
+        return [...this.store.entries()].map(([path, n]) => [
+            path,
+            !!(n & 2),
+            !!(n & 1),
+        ]);
+    }
+}
+exports.MatchRecord = MatchRecord;
+/**
+ * A collection of patterns that must be processed in a subsequent step
+ * for a given path.
+ */
+class SubWalks {
+    store = new Map();
+    add(target, pattern) {
+        if (!target.canReaddir()) {
+            return;
+        }
+        const subs = this.store.get(target);
+        if (subs) {
+            if (!subs.find(p => p.globString() === pattern.globString())) {
+                subs.push(pattern);
+            }
+        }
+        else
+            this.store.set(target, [pattern]);
+    }
+    get(target) {
+        const subs = this.store.get(target);
+        /* c8 ignore start */
+        if (!subs) {
+            throw new Error('attempting to walk unknown path');
+        }
+        /* c8 ignore stop */
+        return subs;
+    }
+    entries() {
+        return this.keys().map(k => [k, this.store.get(k)]);
+    }
+    keys() {
+        return [...this.store.keys()].filter(t => t.canReaddir());
+    }
+}
+exports.SubWalks = SubWalks;
+/**
+ * The class that processes patterns for a given path.
+ *
+ * Handles child entry filtering, and determining whether a path's
+ * directory contents must be read.
+ */
+class Processor {
+    hasWalkedCache;
+    matches = new MatchRecord();
+    subwalks = new SubWalks();
+    patterns;
+    follow;
+    dot;
+    opts;
+    constructor(opts, hasWalkedCache) {
+        this.opts = opts;
+        this.follow = !!opts.follow;
+        this.dot = !!opts.dot;
+        this.hasWalkedCache =
+            hasWalkedCache ? hasWalkedCache.copy() : new HasWalkedCache();
+    }
+    processPatterns(target, patterns) {
+        this.patterns = patterns;
+        const processingSet = patterns.map(p => [target, p]);
+        // map of paths to the magic-starting subwalks they need to walk
+        // first item in patterns is the filter
+        for (let [t, pattern] of processingSet) {
+            this.hasWalkedCache.storeWalked(t, pattern);
+            const root = pattern.root();
+            const absolute = pattern.isAbsolute() && this.opts.absolute !== false;
+            // start absolute patterns at root
+            if (root) {
+                t = t.resolve(root === '/' && this.opts.root !== undefined ?
+                    this.opts.root
+                    : root);
+                const rest = pattern.rest();
+                if (!rest) {
+                    this.matches.add(t, true, false);
+                    continue;
+                }
+                else {
+                    pattern = rest;
+                }
+            }
+            if (t.isENOENT())
+                continue;
+            let p;
+            let rest;
+            let changed = false;
+            while (typeof (p = pattern.pattern()) === 'string' &&
+                (rest = pattern.rest())) {
+                const c = t.resolve(p);
+                t = c;
+                pattern = rest;
+                changed = true;
+            }
+            p = pattern.pattern();
+            rest = pattern.rest();
+            if (changed) {
+                if (this.hasWalkedCache.hasWalked(t, pattern))
+                    continue;
+                this.hasWalkedCache.storeWalked(t, pattern);
+            }
+            // now we have either a final string for a known entry,
+            // more strings for an unknown entry,
+            // or a pattern starting with magic, mounted on t.
+            if (typeof p === 'string') {
+                // must not be final entry, otherwise we would have
+                // concatenated it earlier.
+                const ifDir = p === '..' || p === '' || p === '.';
+                this.matches.add(t.resolve(p), absolute, ifDir);
+                continue;
+            }
+            else if (p === minimatch_1.GLOBSTAR) {
+                // if no rest, match and subwalk pattern
+                // if rest, process rest and subwalk pattern
+                // if it's a symlink, but we didn't get here by way of a
+                // globstar match (meaning it's the first time THIS globstar
+                // has traversed a symlink), then we follow it. Otherwise, stop.
+                if (!t.isSymbolicLink() ||
+                    this.follow ||
+                    pattern.checkFollowGlobstar()) {
+                    this.subwalks.add(t, pattern);
+                }
+                const rp = rest?.pattern();
+                const rrest = rest?.rest();
+                if (!rest || ((rp === '' || rp === '.') && !rrest)) {
+                    // only HAS to be a dir if it ends in **/ or **/.
+                    // but ending in ** will match files as well.
+                    this.matches.add(t, absolute, rp === '' || rp === '.');
+                }
+                else {
+                    if (rp === '..') {
+                        // this would mean you're matching **/.. at the fs root,
+                        // and no thanks, I'm not gonna test that specific case.
+                        /* c8 ignore start */
+                        const tp = t.parent || t;
+                        /* c8 ignore stop */
+                        if (!rrest)
+                            this.matches.add(tp, absolute, true);
+                        else if (!this.hasWalkedCache.hasWalked(tp, rrest)) {
+                            this.subwalks.add(tp, rrest);
+                        }
+                    }
+                }
+            }
+            else if (p instanceof RegExp) {
+                this.subwalks.add(t, pattern);
+            }
+        }
+        return this;
+    }
+    subwalkTargets() {
+        return this.subwalks.keys();
+    }
+    child() {
+        return new Processor(this.opts, this.hasWalkedCache);
+    }
+    // return a new Processor containing the subwalks for each
+    // child entry, and a set of matches, and
+    // a hasWalkedCache that's a copy of this one
+    // then we're going to call
+    filterEntries(parent, entries) {
+        const patterns = this.subwalks.get(parent);
+        // put matches and entry walks into the results processor
+        const results = this.child();
+        for (const e of entries) {
+            for (const pattern of patterns) {
+                const absolute = pattern.isAbsolute();
+                const p = pattern.pattern();
+                const rest = pattern.rest();
+                if (p === minimatch_1.GLOBSTAR) {
+                    results.testGlobstar(e, pattern, rest, absolute);
+                }
+                else if (p instanceof RegExp) {
+                    results.testRegExp(e, p, rest, absolute);
+                }
+                else {
+                    results.testString(e, p, rest, absolute);
+                }
+            }
+        }
+        return results;
+    }
+    testGlobstar(e, pattern, rest, absolute) {
+        if (this.dot || !e.name.startsWith('.')) {
+            if (!pattern.hasMore()) {
+                this.matches.add(e, absolute, false);
+            }
+            if (e.canReaddir()) {
+                // if we're in follow mode or it's not a symlink, just keep
+                // testing the same pattern. If there's more after the globstar,
+                // then this symlink consumes the globstar. If not, then we can
+                // follow at most ONE symlink along the way, so we mark it, which
+                // also checks to ensure that it wasn't already marked.
+                if (this.follow || !e.isSymbolicLink()) {
+                    this.subwalks.add(e, pattern);
+                }
+                else if (e.isSymbolicLink()) {
+                    if (rest && pattern.checkFollowGlobstar()) {
+                        this.subwalks.add(e, rest);
+                    }
+                    else if (pattern.markFollowGlobstar()) {
+                        this.subwalks.add(e, pattern);
+                    }
+                }
+            }
+        }
+        // if the NEXT thing matches this entry, then also add
+        // the rest.
+        if (rest) {
+            const rp = rest.pattern();
+            if (typeof rp === 'string' &&
+                // dots and empty were handled already
+                rp !== '..' &&
+                rp !== '' &&
+                rp !== '.') {
+                this.testString(e, rp, rest.rest(), absolute);
+            }
+            else if (rp === '..') {
+                /* c8 ignore start */
+                const ep = e.parent || e;
+                /* c8 ignore stop */
+                this.subwalks.add(ep, rest);
+            }
+            else if (rp instanceof RegExp) {
+                this.testRegExp(e, rp, rest.rest(), absolute);
+            }
+        }
+    }
+    testRegExp(e, p, rest, absolute) {
+        if (!p.test(e.name))
+            return;
+        if (!rest) {
+            this.matches.add(e, absolute, false);
+        }
+        else {
+            this.subwalks.add(e, rest);
+        }
+    }
+    testString(e, p, rest, absolute) {
+        // should never happen?
+        if (!e.isNamed(p))
+            return;
+        if (!rest) {
+            this.matches.add(e, absolute, false);
+        }
+        else {
+            this.subwalks.add(e, rest);
+        }
+    }
+}
+exports.Processor = Processor;
+//# sourceMappingURL=processor.js.map
+
+/***/ }),
+
+/***/ 3875:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.GlobStream = exports.GlobWalker = exports.GlobUtil = void 0;
+/**
+ * Single-use utility classes to provide functionality to the {@link Glob}
+ * methods.
+ *
+ * @module
+ */
+const minipass_1 = __nccwpck_require__(4968);
+const ignore_js_1 = __nccwpck_require__(9772);
+const processor_js_1 = __nccwpck_require__(7712);
+const makeIgnore = (ignore, opts) => typeof ignore === 'string' ? new ignore_js_1.Ignore([ignore], opts)
+    : Array.isArray(ignore) ? new ignore_js_1.Ignore(ignore, opts)
+        : ignore;
+/**
+ * basic walking utilities that all the glob walker types use
+ */
+class GlobUtil {
+    path;
+    patterns;
+    opts;
+    seen = new Set();
+    paused = false;
+    aborted = false;
+    #onResume = [];
+    #ignore;
+    #sep;
+    signal;
+    maxDepth;
+    includeChildMatches;
+    constructor(patterns, path, opts) {
+        this.patterns = patterns;
+        this.path = path;
+        this.opts = opts;
+        this.#sep = !opts.posix && opts.platform === 'win32' ? '\\' : '/';
+        this.includeChildMatches = opts.includeChildMatches !== false;
+        if (opts.ignore || !this.includeChildMatches) {
+            this.#ignore = makeIgnore(opts.ignore ?? [], opts);
+            if (!this.includeChildMatches &&
+                typeof this.#ignore.add !== 'function') {
+                const m = 'cannot ignore child matches, ignore lacks add() method.';
+                throw new Error(m);
+            }
+        }
+        // ignore, always set with maxDepth, but it's optional on the
+        // GlobOptions type
+        /* c8 ignore start */
+        this.maxDepth = opts.maxDepth || Infinity;
+        /* c8 ignore stop */
+        if (opts.signal) {
+            this.signal = opts.signal;
+            this.signal.addEventListener('abort', () => {
+                this.#onResume.length = 0;
+            });
+        }
+    }
+    #ignored(path) {
+        return this.seen.has(path) || !!this.#ignore?.ignored?.(path);
+    }
+    #childrenIgnored(path) {
+        return !!this.#ignore?.childrenIgnored?.(path);
+    }
+    // backpressure mechanism
+    pause() {
+        this.paused = true;
+    }
+    resume() {
+        /* c8 ignore start */
+        if (this.signal?.aborted)
+            return;
+        /* c8 ignore stop */
+        this.paused = false;
+        let fn = undefined;
+        while (!this.paused && (fn = this.#onResume.shift())) {
+            fn();
+        }
+    }
+    onResume(fn) {
+        if (this.signal?.aborted)
+            return;
+        /* c8 ignore start */
+        if (!this.paused) {
+            fn();
+        }
+        else {
+            /* c8 ignore stop */
+            this.#onResume.push(fn);
+        }
+    }
+    // do the requisite realpath/stat checking, and return the path
+    // to add or undefined to filter it out.
+    async matchCheck(e, ifDir) {
+        if (ifDir && this.opts.nodir)
+            return undefined;
+        let rpc;
+        if (this.opts.realpath) {
+            rpc = e.realpathCached() || (await e.realpath());
+            if (!rpc)
+                return undefined;
+            e = rpc;
+        }
+        const needStat = e.isUnknown() || this.opts.stat;
+        const s = needStat ? await e.lstat() : e;
+        if (this.opts.follow && this.opts.nodir && s?.isSymbolicLink()) {
+            const target = await s.realpath();
+            /* c8 ignore start */
+            if (target && (target.isUnknown() || this.opts.stat)) {
+                await target.lstat();
+            }
+            /* c8 ignore stop */
+        }
+        return this.matchCheckTest(s, ifDir);
+    }
+    matchCheckTest(e, ifDir) {
+        return (e &&
+            (this.maxDepth === Infinity || e.depth() <= this.maxDepth) &&
+            (!ifDir || e.canReaddir()) &&
+            (!this.opts.nodir || !e.isDirectory()) &&
+            (!this.opts.nodir ||
+                !this.opts.follow ||
+                !e.isSymbolicLink() ||
+                !e.realpathCached()?.isDirectory()) &&
+            !this.#ignored(e)) ?
+            e
+            : undefined;
+    }
+    matchCheckSync(e, ifDir) {
+        if (ifDir && this.opts.nodir)
+            return undefined;
+        let rpc;
+        if (this.opts.realpath) {
+            rpc = e.realpathCached() || e.realpathSync();
+            if (!rpc)
+                return undefined;
+            e = rpc;
+        }
+        const needStat = e.isUnknown() || this.opts.stat;
+        const s = needStat ? e.lstatSync() : e;
+        if (this.opts.follow && this.opts.nodir && s?.isSymbolicLink()) {
+            const target = s.realpathSync();
+            if (target && (target?.isUnknown() || this.opts.stat)) {
+                target.lstatSync();
+            }
+        }
+        return this.matchCheckTest(s, ifDir);
+    }
+    matchFinish(e, absolute) {
+        if (this.#ignored(e))
+            return;
+        // we know we have an ignore if this is false, but TS doesn't
+        if (!this.includeChildMatches && this.#ignore?.add) {
+            const ign = `${e.relativePosix()}/**`;
+            this.#ignore.add(ign);
+        }
+        const abs = this.opts.absolute === undefined ? absolute : this.opts.absolute;
+        this.seen.add(e);
+        const mark = this.opts.mark && e.isDirectory() ? this.#sep : '';
+        // ok, we have what we need!
+        if (this.opts.withFileTypes) {
+            this.matchEmit(e);
+        }
+        else if (abs) {
+            const abs = this.opts.posix ? e.fullpathPosix() : e.fullpath();
+            this.matchEmit(abs + mark);
+        }
+        else {
+            const rel = this.opts.posix ? e.relativePosix() : e.relative();
+            const pre = this.opts.dotRelative && !rel.startsWith('..' + this.#sep) ?
+                '.' + this.#sep
+                : '';
+            this.matchEmit(!rel ? '.' + mark : pre + rel + mark);
+        }
+    }
+    async match(e, absolute, ifDir) {
+        const p = await this.matchCheck(e, ifDir);
+        if (p)
+            this.matchFinish(p, absolute);
+    }
+    matchSync(e, absolute, ifDir) {
+        const p = this.matchCheckSync(e, ifDir);
+        if (p)
+            this.matchFinish(p, absolute);
+    }
+    walkCB(target, patterns, cb) {
+        /* c8 ignore start */
+        if (this.signal?.aborted)
+            cb();
+        /* c8 ignore stop */
+        this.walkCB2(target, patterns, new processor_js_1.Processor(this.opts), cb);
+    }
+    walkCB2(target, patterns, processor, cb) {
+        if (this.#childrenIgnored(target))
+            return cb();
+        if (this.signal?.aborted)
+            cb();
+        if (this.paused) {
+            this.onResume(() => this.walkCB2(target, patterns, processor, cb));
+            return;
+        }
+        processor.processPatterns(target, patterns);
+        // done processing.  all of the above is sync, can be abstracted out.
+        // subwalks is a map of paths to the entry filters they need
+        // matches is a map of paths to [absolute, ifDir] tuples.
+        let tasks = 1;
+        const next = () => {
+            if (--tasks === 0)
+                cb();
+        };
+        for (const [m, absolute, ifDir] of processor.matches.entries()) {
+            if (this.#ignored(m))
+                continue;
+            tasks++;
+            this.match(m, absolute, ifDir).then(() => next());
+        }
+        for (const t of processor.subwalkTargets()) {
+            if (this.maxDepth !== Infinity && t.depth() >= this.maxDepth) {
+                continue;
+            }
+            tasks++;
+            const childrenCached = t.readdirCached();
+            if (t.calledReaddir())
+                this.walkCB3(t, childrenCached, processor, next);
+            else {
+                t.readdirCB((_, entries) => this.walkCB3(t, entries, processor, next), true);
+            }
+        }
+        next();
+    }
+    walkCB3(target, entries, processor, cb) {
+        processor = processor.filterEntries(target, entries);
+        let tasks = 1;
+        const next = () => {
+            if (--tasks === 0)
+                cb();
+        };
+        for (const [m, absolute, ifDir] of processor.matches.entries()) {
+            if (this.#ignored(m))
+                continue;
+            tasks++;
+            this.match(m, absolute, ifDir).then(() => next());
+        }
+        for (const [target, patterns] of processor.subwalks.entries()) {
+            tasks++;
+            this.walkCB2(target, patterns, processor.child(), next);
+        }
+        next();
+    }
+    walkCBSync(target, patterns, cb) {
+        /* c8 ignore start */
+        if (this.signal?.aborted)
+            cb();
+        /* c8 ignore stop */
+        this.walkCB2Sync(target, patterns, new processor_js_1.Processor(this.opts), cb);
+    }
+    walkCB2Sync(target, patterns, processor, cb) {
+        if (this.#childrenIgnored(target))
+            return cb();
+        if (this.signal?.aborted)
+            cb();
+        if (this.paused) {
+            this.onResume(() => this.walkCB2Sync(target, patterns, processor, cb));
+            return;
+        }
+        processor.processPatterns(target, patterns);
+        // done processing.  all of the above is sync, can be abstracted out.
+        // subwalks is a map of paths to the entry filters they need
+        // matches is a map of paths to [absolute, ifDir] tuples.
+        let tasks = 1;
+        const next = () => {
+            if (--tasks === 0)
+                cb();
+        };
+        for (const [m, absolute, ifDir] of processor.matches.entries()) {
+            if (this.#ignored(m))
+                continue;
+            this.matchSync(m, absolute, ifDir);
+        }
+        for (const t of processor.subwalkTargets()) {
+            if (this.maxDepth !== Infinity && t.depth() >= this.maxDepth) {
+                continue;
+            }
+            tasks++;
+            const children = t.readdirSync();
+            this.walkCB3Sync(t, children, processor, next);
+        }
+        next();
+    }
+    walkCB3Sync(target, entries, processor, cb) {
+        processor = processor.filterEntries(target, entries);
+        let tasks = 1;
+        const next = () => {
+            if (--tasks === 0)
+                cb();
+        };
+        for (const [m, absolute, ifDir] of processor.matches.entries()) {
+            if (this.#ignored(m))
+                continue;
+            this.matchSync(m, absolute, ifDir);
+        }
+        for (const [target, patterns] of processor.subwalks.entries()) {
+            tasks++;
+            this.walkCB2Sync(target, patterns, processor.child(), next);
+        }
+        next();
+    }
+}
+exports.GlobUtil = GlobUtil;
+class GlobWalker extends GlobUtil {
+    matches = new Set();
+    constructor(patterns, path, opts) {
+        super(patterns, path, opts);
+    }
+    matchEmit(e) {
+        this.matches.add(e);
+    }
+    async walk() {
+        if (this.signal?.aborted)
+            throw this.signal.reason;
+        if (this.path.isUnknown()) {
+            await this.path.lstat();
+        }
+        await new Promise((res, rej) => {
+            this.walkCB(this.path, this.patterns, () => {
+                if (this.signal?.aborted) {
+                    rej(this.signal.reason);
+                }
+                else {
+                    res(this.matches);
+                }
+            });
+        });
+        return this.matches;
+    }
+    walkSync() {
+        if (this.signal?.aborted)
+            throw this.signal.reason;
+        if (this.path.isUnknown()) {
+            this.path.lstatSync();
+        }
+        // nothing for the callback to do, because this never pauses
+        this.walkCBSync(this.path, this.patterns, () => {
+            if (this.signal?.aborted)
+                throw this.signal.reason;
+        });
+        return this.matches;
+    }
+}
+exports.GlobWalker = GlobWalker;
+class GlobStream extends GlobUtil {
+    results;
+    constructor(patterns, path, opts) {
+        super(patterns, path, opts);
+        this.results = new minipass_1.Minipass({
+            signal: this.signal,
+            objectMode: true,
+        });
+        this.results.on('drain', () => this.resume());
+        this.results.on('resume', () => this.resume());
+    }
+    matchEmit(e) {
+        this.results.write(e);
+        if (!this.results.flowing)
+            this.pause();
+    }
+    stream() {
+        const target = this.path;
+        if (target.isUnknown()) {
+            target.lstat().then(() => {
+                this.walkCB(target, this.patterns, () => this.results.end());
+            });
+        }
+        else {
+            this.walkCB(target, this.patterns, () => this.results.end());
+        }
+        return this.results;
+    }
+    streamSync() {
+        if (this.path.isUnknown()) {
+            this.path.lstatSync();
+        }
+        this.walkCBSync(this.path, this.patterns, () => this.results.end());
+        return this.results;
+    }
+}
+exports.GlobStream = GlobStream;
+//# sourceMappingURL=walker.js.map
+
+/***/ }),
+
+/***/ 7070:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.assertValidPattern = void 0;
+const MAX_PATTERN_LENGTH = 1024 * 64;
+const assertValidPattern = (pattern) => {
+    if (typeof pattern !== 'string') {
+        throw new TypeError('invalid pattern');
+    }
+    if (pattern.length > MAX_PATTERN_LENGTH) {
+        throw new TypeError('pattern is too long');
+    }
+};
+exports.assertValidPattern = assertValidPattern;
+//# sourceMappingURL=assert-valid-pattern.js.map
+
+/***/ }),
+
+/***/ 7095:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+// parse a single path portion
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.AST = void 0;
+const brace_expressions_js_1 = __nccwpck_require__(5754);
+const unescape_js_1 = __nccwpck_require__(7519);
+const types = new Set(['!', '?', '+', '*', '@']);
+const isExtglobType = (c) => types.has(c);
+// Patterns that get prepended to bind to the start of either the
+// entire string, or just a single path portion, to prevent dots
+// and/or traversal patterns, when needed.
+// Exts don't need the ^ or / bit, because the root binds that already.
+const startNoTraversal = '(?!(?:^|/)\\.\\.?(?:$|/))';
+const startNoDot = '(?!\\.)';
+// characters that indicate a start of pattern needs the "no dots" bit,
+// because a dot *might* be matched. ( is not in the list, because in
+// the case of a child extglob, it will handle the prevention itself.
+const addPatternStart = new Set(['[', '.']);
+// cases where traversal is A-OK, no dot prevention needed
+const justDots = new Set(['..', '.']);
+const reSpecials = new Set('().*{}+?[]^$\\!');
+const regExpEscape = (s) => s.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+// any single thing other than /
+const qmark = '[^/]';
+// * => any number of characters
+const star = qmark + '*?';
+// use + when we need to ensure that *something* matches, because the * is
+// the only thing in the path portion.
+const starNoEmpty = qmark + '+?';
+// remove the \ chars that we added if we end up doing a nonmagic compare
+// const deslash = (s: string) => s.replace(/\\(.)/g, '$1')
+class AST {
+    type;
+    #root;
+    #hasMagic;
+    #uflag = false;
+    #parts = [];
+    #parent;
+    #parentIndex;
+    #negs;
+    #filledNegs = false;
+    #options;
+    #toString;
+    // set to true if it's an extglob with no children
+    // (which really means one child of '')
+    #emptyExt = false;
+    constructor(type, parent, options = {}) {
+        this.type = type;
+        // extglobs are inherently magical
+        if (type)
+            this.#hasMagic = true;
+        this.#parent = parent;
+        this.#root = this.#parent ? this.#parent.#root : this;
+        this.#options = this.#root === this ? options : this.#root.#options;
+        this.#negs = this.#root === this ? [] : this.#root.#negs;
+        if (type === '!' && !this.#root.#filledNegs)
+            this.#negs.push(this);
+        this.#parentIndex = this.#parent ? this.#parent.#parts.length : 0;
+    }
+    get hasMagic() {
+        /* c8 ignore start */
+        if (this.#hasMagic !== undefined)
+            return this.#hasMagic;
+        /* c8 ignore stop */
+        for (const p of this.#parts) {
+            if (typeof p === 'string')
+                continue;
+            if (p.type || p.hasMagic)
+                return (this.#hasMagic = true);
+        }
+        // note: will be undefined until we generate the regexp src and find out
+        return this.#hasMagic;
+    }
+    // reconstructs the pattern
+    toString() {
+        if (this.#toString !== undefined)
+            return this.#toString;
+        if (!this.type) {
+            return (this.#toString = this.#parts.map(p => String(p)).join(''));
+        }
+        else {
+            return (this.#toString =
+                this.type + '(' + this.#parts.map(p => String(p)).join('|') + ')');
+        }
+    }
+    #fillNegs() {
+        /* c8 ignore start */
+        if (this !== this.#root)
+            throw new Error('should only call on root');
+        if (this.#filledNegs)
+            return this;
+        /* c8 ignore stop */
+        // call toString() once to fill this out
+        this.toString();
+        this.#filledNegs = true;
+        let n;
+        while ((n = this.#negs.pop())) {
+            if (n.type !== '!')
+                continue;
+            // walk up the tree, appending everthing that comes AFTER parentIndex
+            let p = n;
+            let pp = p.#parent;
+            while (pp) {
+                for (let i = p.#parentIndex + 1; !pp.type && i < pp.#parts.length; i++) {
+                    for (const part of n.#parts) {
+                        /* c8 ignore start */
+                        if (typeof part === 'string') {
+                            throw new Error('string part in extglob AST??');
+                        }
+                        /* c8 ignore stop */
+                        part.copyIn(pp.#parts[i]);
+                    }
+                }
+                p = pp;
+                pp = p.#parent;
+            }
+        }
+        return this;
+    }
+    push(...parts) {
+        for (const p of parts) {
+            if (p === '')
+                continue;
+            /* c8 ignore start */
+            if (typeof p !== 'string' && !(p instanceof AST && p.#parent === this)) {
+                throw new Error('invalid part: ' + p);
+            }
+            /* c8 ignore stop */
+            this.#parts.push(p);
+        }
+    }
+    toJSON() {
+        const ret = this.type === null
+            ? this.#parts.slice().map(p => (typeof p === 'string' ? p : p.toJSON()))
+            : [this.type, ...this.#parts.map(p => p.toJSON())];
+        if (this.isStart() && !this.type)
+            ret.unshift([]);
+        if (this.isEnd() &&
+            (this === this.#root ||
+                (this.#root.#filledNegs && this.#parent?.type === '!'))) {
+            ret.push({});
+        }
+        return ret;
+    }
+    isStart() {
+        if (this.#root === this)
+            return true;
+        // if (this.type) return !!this.#parent?.isStart()
+        if (!this.#parent?.isStart())
+            return false;
+        if (this.#parentIndex === 0)
+            return true;
+        // if everything AHEAD of this is a negation, then it's still the "start"
+        const p = this.#parent;
+        for (let i = 0; i < this.#parentIndex; i++) {
+            const pp = p.#parts[i];
+            if (!(pp instanceof AST && pp.type === '!')) {
+                return false;
+            }
+        }
+        return true;
+    }
+    isEnd() {
+        if (this.#root === this)
+            return true;
+        if (this.#parent?.type === '!')
+            return true;
+        if (!this.#parent?.isEnd())
+            return false;
+        if (!this.type)
+            return this.#parent?.isEnd();
+        // if not root, it'll always have a parent
+        /* c8 ignore start */
+        const pl = this.#parent ? this.#parent.#parts.length : 0;
+        /* c8 ignore stop */
+        return this.#parentIndex === pl - 1;
+    }
+    copyIn(part) {
+        if (typeof part === 'string')
+            this.push(part);
+        else
+            this.push(part.clone(this));
+    }
+    clone(parent) {
+        const c = new AST(this.type, parent);
+        for (const p of this.#parts) {
+            c.copyIn(p);
+        }
+        return c;
+    }
+    static #parseAST(str, ast, pos, opt) {
+        let escaping = false;
+        let inBrace = false;
+        let braceStart = -1;
+        let braceNeg = false;
+        if (ast.type === null) {
+            // outside of a extglob, append until we find a start
+            let i = pos;
+            let acc = '';
+            while (i < str.length) {
+                const c = str.charAt(i++);
+                // still accumulate escapes at this point, but we do ignore
+                // starts that are escaped
+                if (escaping || c === '\\') {
+                    escaping = !escaping;
+                    acc += c;
+                    continue;
+                }
+                if (inBrace) {
+                    if (i === braceStart + 1) {
+                        if (c === '^' || c === '!') {
+                            braceNeg = true;
+                        }
+                    }
+                    else if (c === ']' && !(i === braceStart + 2 && braceNeg)) {
+                        inBrace = false;
+                    }
+                    acc += c;
+                    continue;
+                }
+                else if (c === '[') {
+                    inBrace = true;
+                    braceStart = i;
+                    braceNeg = false;
+                    acc += c;
+                    continue;
+                }
+                if (!opt.noext && isExtglobType(c) && str.charAt(i) === '(') {
+                    ast.push(acc);
+                    acc = '';
+                    const ext = new AST(c, ast);
+                    i = AST.#parseAST(str, ext, i, opt);
+                    ast.push(ext);
+                    continue;
+                }
+                acc += c;
+            }
+            ast.push(acc);
+            return i;
+        }
+        // some kind of extglob, pos is at the (
+        // find the next | or )
+        let i = pos + 1;
+        let part = new AST(null, ast);
+        const parts = [];
+        let acc = '';
+        while (i < str.length) {
+            const c = str.charAt(i++);
+            // still accumulate escapes at this point, but we do ignore
+            // starts that are escaped
+            if (escaping || c === '\\') {
+                escaping = !escaping;
+                acc += c;
+                continue;
+            }
+            if (inBrace) {
+                if (i === braceStart + 1) {
+                    if (c === '^' || c === '!') {
+                        braceNeg = true;
+                    }
+                }
+                else if (c === ']' && !(i === braceStart + 2 && braceNeg)) {
+                    inBrace = false;
+                }
+                acc += c;
+                continue;
+            }
+            else if (c === '[') {
+                inBrace = true;
+                braceStart = i;
+                braceNeg = false;
+                acc += c;
+                continue;
+            }
+            if (isExtglobType(c) && str.charAt(i) === '(') {
+                part.push(acc);
+                acc = '';
+                const ext = new AST(c, part);
+                part.push(ext);
+                i = AST.#parseAST(str, ext, i, opt);
+                continue;
+            }
+            if (c === '|') {
+                part.push(acc);
+                acc = '';
+                parts.push(part);
+                part = new AST(null, ast);
+                continue;
+            }
+            if (c === ')') {
+                if (acc === '' && ast.#parts.length === 0) {
+                    ast.#emptyExt = true;
+                }
+                part.push(acc);
+                acc = '';
+                ast.push(...parts, part);
+                return i;
+            }
+            acc += c;
+        }
+        // unfinished extglob
+        // if we got here, it was a malformed extglob! not an extglob, but
+        // maybe something else in there.
+        ast.type = null;
+        ast.#hasMagic = undefined;
+        ast.#parts = [str.substring(pos - 1)];
+        return i;
+    }
+    static fromGlob(pattern, options = {}) {
+        const ast = new AST(null, undefined, options);
+        AST.#parseAST(pattern, ast, 0, options);
+        return ast;
+    }
+    // returns the regular expression if there's magic, or the unescaped
+    // string if not.
+    toMMPattern() {
+        // should only be called on root
+        /* c8 ignore start */
+        if (this !== this.#root)
+            return this.#root.toMMPattern();
+        /* c8 ignore stop */
+        const glob = this.toString();
+        const [re, body, hasMagic, uflag] = this.toRegExpSource();
+        // if we're in nocase mode, and not nocaseMagicOnly, then we do
+        // still need a regular expression if we have to case-insensitively
+        // match capital/lowercase characters.
+        const anyMagic = hasMagic ||
+            this.#hasMagic ||
+            (this.#options.nocase &&
+                !this.#options.nocaseMagicOnly &&
+                glob.toUpperCase() !== glob.toLowerCase());
+        if (!anyMagic) {
+            return body;
+        }
+        const flags = (this.#options.nocase ? 'i' : '') + (uflag ? 'u' : '');
+        return Object.assign(new RegExp(`^${re}$`, flags), {
+            _src: re,
+            _glob: glob,
+        });
+    }
+    get options() {
+        return this.#options;
+    }
+    // returns the string match, the regexp source, whether there's magic
+    // in the regexp (so a regular expression is required) and whether or
+    // not the uflag is needed for the regular expression (for posix classes)
+    // TODO: instead of injecting the start/end at this point, just return
+    // the BODY of the regexp, along with the start/end portions suitable
+    // for binding the start/end in either a joined full-path makeRe context
+    // (where we bind to (^|/), or a standalone matchPart context (where
+    // we bind to ^, and not /).  Otherwise slashes get duped!
+    //
+    // In part-matching mode, the start is:
+    // - if not isStart: nothing
+    // - if traversal possible, but not allowed: ^(?!\.\.?$)
+    // - if dots allowed or not possible: ^
+    // - if dots possible and not allowed: ^(?!\.)
+    // end is:
+    // - if not isEnd(): nothing
+    // - else: $
+    //
+    // In full-path matching mode, we put the slash at the START of the
+    // pattern, so start is:
+    // - if first pattern: same as part-matching mode
+    // - if not isStart(): nothing
+    // - if traversal possible, but not allowed: /(?!\.\.?(?:$|/))
+    // - if dots allowed or not possible: /
+    // - if dots possible and not allowed: /(?!\.)
+    // end is:
+    // - if last pattern, same as part-matching mode
+    // - else nothing
+    //
+    // Always put the (?:$|/) on negated tails, though, because that has to be
+    // there to bind the end of the negated pattern portion, and it's easier to
+    // just stick it in now rather than try to inject it later in the middle of
+    // the pattern.
+    //
+    // We can just always return the same end, and leave it up to the caller
+    // to know whether it's going to be used joined or in parts.
+    // And, if the start is adjusted slightly, can do the same there:
+    // - if not isStart: nothing
+    // - if traversal possible, but not allowed: (?:/|^)(?!\.\.?$)
+    // - if dots allowed or not possible: (?:/|^)
+    // - if dots possible and not allowed: (?:/|^)(?!\.)
+    //
+    // But it's better to have a simpler binding without a conditional, for
+    // performance, so probably better to return both start options.
+    //
+    // Then the caller just ignores the end if it's not the first pattern,
+    // and the start always gets applied.
+    //
+    // But that's always going to be $ if it's the ending pattern, or nothing,
+    // so the caller can just attach $ at the end of the pattern when building.
+    //
+    // So the todo is:
+    // - better detect what kind of start is needed
+    // - return both flavors of starting pattern
+    // - attach $ at the end of the pattern when creating the actual RegExp
+    //
+    // Ah, but wait, no, that all only applies to the root when the first pattern
+    // is not an extglob. If the first pattern IS an extglob, then we need all
+    // that dot prevention biz to live in the extglob portions, because eg
+    // +(*|.x*) can match .xy but not .yx.
+    //
+    // So, return the two flavors if it's #root and the first child is not an
+    // AST, otherwise leave it to the child AST to handle it, and there,
+    // use the (?:^|/) style of start binding.
+    //
+    // Even simplified further:
+    // - Since the start for a join is eg /(?!\.) and the start for a part
+    // is ^(?!\.), we can just prepend (?!\.) to the pattern (either root
+    // or start or whatever) and prepend ^ or / at the Regexp construction.
+    toRegExpSource(allowDot) {
+        const dot = allowDot ?? !!this.#options.dot;
+        if (this.#root === this)
+            this.#fillNegs();
+        if (!this.type) {
+            const noEmpty = this.isStart() && this.isEnd();
+            const src = this.#parts
+                .map(p => {
+                const [re, _, hasMagic, uflag] = typeof p === 'string'
+                    ? AST.#parseGlob(p, this.#hasMagic, noEmpty)
+                    : p.toRegExpSource(allowDot);
+                this.#hasMagic = this.#hasMagic || hasMagic;
+                this.#uflag = this.#uflag || uflag;
+                return re;
+            })
+                .join('');
+            let start = '';
+            if (this.isStart()) {
+                if (typeof this.#parts[0] === 'string') {
+                    // this is the string that will match the start of the pattern,
+                    // so we need to protect against dots and such.
+                    // '.' and '..' cannot match unless the pattern is that exactly,
+                    // even if it starts with . or dot:true is set.
+                    const dotTravAllowed = this.#parts.length === 1 && justDots.has(this.#parts[0]);
+                    if (!dotTravAllowed) {
+                        const aps = addPatternStart;
+                        // check if we have a possibility of matching . or ..,
+                        // and prevent that.
+                        const needNoTrav = 
+                        // dots are allowed, and the pattern starts with [ or .
+                        (dot && aps.has(src.charAt(0))) ||
+                            // the pattern starts with \., and then [ or .
+                            (src.startsWith('\\.') && aps.has(src.charAt(2))) ||
+                            // the pattern starts with \.\., and then [ or .
+                            (src.startsWith('\\.\\.') && aps.has(src.charAt(4)));
+                        // no need to prevent dots if it can't match a dot, or if a
+                        // sub-pattern will be preventing it anyway.
+                        const needNoDot = !dot && !allowDot && aps.has(src.charAt(0));
+                        start = needNoTrav ? startNoTraversal : needNoDot ? startNoDot : '';
+                    }
+                }
+            }
+            // append the "end of path portion" pattern to negation tails
+            let end = '';
+            if (this.isEnd() &&
+                this.#root.#filledNegs &&
+                this.#parent?.type === '!') {
+                end = '(?:$|\\/)';
+            }
+            const final = start + src + end;
+            return [
+                final,
+                (0, unescape_js_1.unescape)(src),
+                (this.#hasMagic = !!this.#hasMagic),
+                this.#uflag,
+            ];
+        }
+        // We need to calculate the body *twice* if it's a repeat pattern
+        // at the start, once in nodot mode, then again in dot mode, so a
+        // pattern like *(?) can match 'x.y'
+        const repeated = this.type === '*' || this.type === '+';
+        // some kind of extglob
+        const start = this.type === '!' ? '(?:(?!(?:' : '(?:';
+        let body = this.#partsToRegExp(dot);
+        if (this.isStart() && this.isEnd() && !body && this.type !== '!') {
+            // invalid extglob, has to at least be *something* present, if it's
+            // the entire path portion.
+            const s = this.toString();
+            this.#parts = [s];
+            this.type = null;
+            this.#hasMagic = undefined;
+            return [s, (0, unescape_js_1.unescape)(this.toString()), false, false];
+        }
+        // XXX abstract out this map method
+        let bodyDotAllowed = !repeated || allowDot || dot || !startNoDot
+            ? ''
+            : this.#partsToRegExp(true);
+        if (bodyDotAllowed === body) {
+            bodyDotAllowed = '';
+        }
+        if (bodyDotAllowed) {
+            body = `(?:${body})(?:${bodyDotAllowed})*?`;
+        }
+        // an empty !() is exactly equivalent to a starNoEmpty
+        let final = '';
+        if (this.type === '!' && this.#emptyExt) {
+            final = (this.isStart() && !dot ? startNoDot : '') + starNoEmpty;
+        }
+        else {
+            const close = this.type === '!'
+                ? // !() must match something,but !(x) can match ''
+                    '))' +
+                        (this.isStart() && !dot && !allowDot ? startNoDot : '') +
+                        star +
+                        ')'
+                : this.type === '@'
+                    ? ')'
+                    : this.type === '?'
+                        ? ')?'
+                        : this.type === '+' && bodyDotAllowed
+                            ? ')'
+                            : this.type === '*' && bodyDotAllowed
+                                ? `)?`
+                                : `)${this.type}`;
+            final = start + body + close;
+        }
+        return [
+            final,
+            (0, unescape_js_1.unescape)(body),
+            (this.#hasMagic = !!this.#hasMagic),
+            this.#uflag,
+        ];
+    }
+    #partsToRegExp(dot) {
+        return this.#parts
+            .map(p => {
+            // extglob ASTs should only contain parent ASTs
+            /* c8 ignore start */
+            if (typeof p === 'string') {
+                throw new Error('string type in extglob ast??');
+            }
+            /* c8 ignore stop */
+            // can ignore hasMagic, because extglobs are already always magic
+            const [re, _, _hasMagic, uflag] = p.toRegExpSource(dot);
+            this.#uflag = this.#uflag || uflag;
+            return re;
+        })
+            .filter(p => !(this.isStart() && this.isEnd()) || !!p)
+            .join('|');
+    }
+    static #parseGlob(glob, hasMagic, noEmpty = false) {
+        let escaping = false;
+        let re = '';
+        let uflag = false;
+        for (let i = 0; i < glob.length; i++) {
+            const c = glob.charAt(i);
+            if (escaping) {
+                escaping = false;
+                re += (reSpecials.has(c) ? '\\' : '') + c;
+                continue;
+            }
+            if (c === '\\') {
+                if (i === glob.length - 1) {
+                    re += '\\\\';
+                }
+                else {
+                    escaping = true;
+                }
+                continue;
+            }
+            if (c === '[') {
+                const [src, needUflag, consumed, magic] = (0, brace_expressions_js_1.parseClass)(glob, i);
+                if (consumed) {
+                    re += src;
+                    uflag = uflag || needUflag;
+                    i += consumed - 1;
+                    hasMagic = hasMagic || magic;
+                    continue;
+                }
+            }
+            if (c === '*') {
+                if (noEmpty && glob === '*')
+                    re += starNoEmpty;
+                else
+                    re += star;
+                hasMagic = true;
+                continue;
+            }
+            if (c === '?') {
+                re += qmark;
+                hasMagic = true;
+                continue;
+            }
+            re += regExpEscape(c);
+        }
+        return [re, (0, unescape_js_1.unescape)(glob), !!hasMagic, uflag];
+    }
+}
+exports.AST = AST;
+//# sourceMappingURL=ast.js.map
+
+/***/ }),
+
+/***/ 5754:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+// translate the various posix character classes into unicode properties
+// this works across all unicode locales
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.parseClass = void 0;
+// { <posix class>: [<translation>, /u flag required, negated]
+const posixClasses = {
+    '[:alnum:]': ['\\p{L}\\p{Nl}\\p{Nd}', true],
+    '[:alpha:]': ['\\p{L}\\p{Nl}', true],
+    '[:ascii:]': ['\\x' + '00-\\x' + '7f', false],
+    '[:blank:]': ['\\p{Zs}\\t', true],
+    '[:cntrl:]': ['\\p{Cc}', true],
+    '[:digit:]': ['\\p{Nd}', true],
+    '[:graph:]': ['\\p{Z}\\p{C}', true, true],
+    '[:lower:]': ['\\p{Ll}', true],
+    '[:print:]': ['\\p{C}', true],
+    '[:punct:]': ['\\p{P}', true],
+    '[:space:]': ['\\p{Z}\\t\\r\\n\\v\\f', true],
+    '[:upper:]': ['\\p{Lu}', true],
+    '[:word:]': ['\\p{L}\\p{Nl}\\p{Nd}\\p{Pc}', true],
+    '[:xdigit:]': ['A-Fa-f0-9', false],
+};
+// only need to escape a few things inside of brace expressions
+// escapes: [ \ ] -
+const braceEscape = (s) => s.replace(/[[\]\\-]/g, '\\$&');
+// escape all regexp magic characters
+const regexpEscape = (s) => s.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+// everything has already been escaped, we just have to join
+const rangesToString = (ranges) => ranges.join('');
+// takes a glob string at a posix brace expression, and returns
+// an equivalent regular expression source, and boolean indicating
+// whether the /u flag needs to be applied, and the number of chars
+// consumed to parse the character class.
+// This also removes out of order ranges, and returns ($.) if the
+// entire class just no good.
+const parseClass = (glob, position) => {
+    const pos = position;
+    /* c8 ignore start */
+    if (glob.charAt(pos) !== '[') {
+        throw new Error('not in a brace expression');
+    }
+    /* c8 ignore stop */
+    const ranges = [];
+    const negs = [];
+    let i = pos + 1;
+    let sawStart = false;
+    let uflag = false;
+    let escaping = false;
+    let negate = false;
+    let endPos = pos;
+    let rangeStart = '';
+    WHILE: while (i < glob.length) {
+        const c = glob.charAt(i);
+        if ((c === '!' || c === '^') && i === pos + 1) {
+            negate = true;
+            i++;
+            continue;
+        }
+        if (c === ']' && sawStart && !escaping) {
+            endPos = i + 1;
+            break;
+        }
+        sawStart = true;
+        if (c === '\\') {
+            if (!escaping) {
+                escaping = true;
+                i++;
+                continue;
+            }
+            // escaped \ char, fall through and treat like normal char
+        }
+        if (c === '[' && !escaping) {
+            // either a posix class, a collation equivalent, or just a [
+            for (const [cls, [unip, u, neg]] of Object.entries(posixClasses)) {
+                if (glob.startsWith(cls, i)) {
+                    // invalid, [a-[] is fine, but not [a-[:alpha]]
+                    if (rangeStart) {
+                        return ['$.', false, glob.length - pos, true];
+                    }
+                    i += cls.length;
+                    if (neg)
+                        negs.push(unip);
+                    else
+                        ranges.push(unip);
+                    uflag = uflag || u;
+                    continue WHILE;
+                }
+            }
+        }
+        // now it's just a normal character, effectively
+        escaping = false;
+        if (rangeStart) {
+            // throw this range away if it's not valid, but others
+            // can still match.
+            if (c > rangeStart) {
+                ranges.push(braceEscape(rangeStart) + '-' + braceEscape(c));
+            }
+            else if (c === rangeStart) {
+                ranges.push(braceEscape(c));
+            }
+            rangeStart = '';
+            i++;
+            continue;
+        }
+        // now might be the start of a range.
+        // can be either c-d or c-] or c<more...>] or c] at this point
+        if (glob.startsWith('-]', i + 1)) {
+            ranges.push(braceEscape(c + '-'));
+            i += 2;
+            continue;
+        }
+        if (glob.startsWith('-', i + 1)) {
+            rangeStart = c;
+            i += 2;
+            continue;
+        }
+        // not the start of a range, just a single character
+        ranges.push(braceEscape(c));
+        i++;
+    }
+    if (endPos < i) {
+        // didn't see the end of the class, not a valid class,
+        // but might still be valid as a literal match.
+        return ['', false, 0, false];
+    }
+    // if we got no ranges and no negates, then we have a range that
+    // cannot possibly match anything, and that poisons the whole glob
+    if (!ranges.length && !negs.length) {
+        return ['$.', false, glob.length - pos, true];
+    }
+    // if we got one positive range, and it's a single character, then that's
+    // not actually a magic pattern, it's just that one literal character.
+    // we should not treat that as "magic", we should just return the literal
+    // character. [_] is a perfectly valid way to escape glob magic chars.
+    if (negs.length === 0 &&
+        ranges.length === 1 &&
+        /^\\?.$/.test(ranges[0]) &&
+        !negate) {
+        const r = ranges[0].length === 2 ? ranges[0].slice(-1) : ranges[0];
+        return [regexpEscape(r), false, endPos - pos, false];
+    }
+    const sranges = '[' + (negate ? '^' : '') + rangesToString(ranges) + ']';
+    const snegs = '[' + (negate ? '' : '^') + rangesToString(negs) + ']';
+    const comb = ranges.length && negs.length
+        ? '(' + sranges + '|' + snegs + ')'
+        : ranges.length
+            ? sranges
+            : snegs;
+    return [comb, uflag, endPos - pos, true];
+};
+exports.parseClass = parseClass;
+//# sourceMappingURL=brace-expressions.js.map
+
+/***/ }),
+
+/***/ 2776:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.escape = void 0;
+/**
+ * Escape all magic characters in a glob pattern.
+ *
+ * If the {@link windowsPathsNoEscape | GlobOptions.windowsPathsNoEscape}
+ * option is used, then characters are escaped by wrapping in `[]`, because
+ * a magic character wrapped in a character class can only be satisfied by
+ * that exact character.  In this mode, `\` is _not_ escaped, because it is
+ * not interpreted as a magic character, but instead as a path separator.
+ */
+const escape = (s, { windowsPathsNoEscape = false, } = {}) => {
+    // don't need to escape +@! because we escape the parens
+    // that make those magic, and escaping ! as [!] isn't valid,
+    // because [!]] is a valid glob class meaning not ']'.
+    return windowsPathsNoEscape
+        ? s.replace(/[?*()[\]]/g, '[$&]')
+        : s.replace(/[?*()[\]\\]/g, '\\$&');
+};
+exports.escape = escape;
+//# sourceMappingURL=escape.js.map
+
+/***/ }),
+
+/***/ 134:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.unescape = exports.escape = exports.AST = exports.Minimatch = exports.match = exports.makeRe = exports.braceExpand = exports.defaults = exports.filter = exports.GLOBSTAR = exports.sep = exports.minimatch = void 0;
+const brace_expansion_1 = __importDefault(__nccwpck_require__(8311));
+const assert_valid_pattern_js_1 = __nccwpck_require__(7070);
+const ast_js_1 = __nccwpck_require__(7095);
+const escape_js_1 = __nccwpck_require__(2776);
+const unescape_js_1 = __nccwpck_require__(7519);
+const minimatch = (p, pattern, options = {}) => {
+    (0, assert_valid_pattern_js_1.assertValidPattern)(pattern);
+    // shortcut: comments match nothing.
+    if (!options.nocomment && pattern.charAt(0) === '#') {
+        return false;
+    }
+    return new Minimatch(pattern, options).match(p);
+};
+exports.minimatch = minimatch;
+// Optimized checking for the most common glob patterns.
+const starDotExtRE = /^\*+([^+@!?\*\[\(]*)$/;
+const starDotExtTest = (ext) => (f) => !f.startsWith('.') && f.endsWith(ext);
+const starDotExtTestDot = (ext) => (f) => f.endsWith(ext);
+const starDotExtTestNocase = (ext) => {
+    ext = ext.toLowerCase();
+    return (f) => !f.startsWith('.') && f.toLowerCase().endsWith(ext);
+};
+const starDotExtTestNocaseDot = (ext) => {
+    ext = ext.toLowerCase();
+    return (f) => f.toLowerCase().endsWith(ext);
+};
+const starDotStarRE = /^\*+\.\*+$/;
+const starDotStarTest = (f) => !f.startsWith('.') && f.includes('.');
+const starDotStarTestDot = (f) => f !== '.' && f !== '..' && f.includes('.');
+const dotStarRE = /^\.\*+$/;
+const dotStarTest = (f) => f !== '.' && f !== '..' && f.startsWith('.');
+const starRE = /^\*+$/;
+const starTest = (f) => f.length !== 0 && !f.startsWith('.');
+const starTestDot = (f) => f.length !== 0 && f !== '.' && f !== '..';
+const qmarksRE = /^\?+([^+@!?\*\[\(]*)?$/;
+const qmarksTestNocase = ([$0, ext = '']) => {
+    const noext = qmarksTestNoExt([$0]);
+    if (!ext)
+        return noext;
+    ext = ext.toLowerCase();
+    return (f) => noext(f) && f.toLowerCase().endsWith(ext);
+};
+const qmarksTestNocaseDot = ([$0, ext = '']) => {
+    const noext = qmarksTestNoExtDot([$0]);
+    if (!ext)
+        return noext;
+    ext = ext.toLowerCase();
+    return (f) => noext(f) && f.toLowerCase().endsWith(ext);
+};
+const qmarksTestDot = ([$0, ext = '']) => {
+    const noext = qmarksTestNoExtDot([$0]);
+    return !ext ? noext : (f) => noext(f) && f.endsWith(ext);
+};
+const qmarksTest = ([$0, ext = '']) => {
+    const noext = qmarksTestNoExt([$0]);
+    return !ext ? noext : (f) => noext(f) && f.endsWith(ext);
+};
+const qmarksTestNoExt = ([$0]) => {
+    const len = $0.length;
+    return (f) => f.length === len && !f.startsWith('.');
+};
+const qmarksTestNoExtDot = ([$0]) => {
+    const len = $0.length;
+    return (f) => f.length === len && f !== '.' && f !== '..';
+};
+/* c8 ignore start */
+const defaultPlatform = (typeof process === 'object' && process
+    ? (typeof process.env === 'object' &&
+        process.env &&
+        process.env.__MINIMATCH_TESTING_PLATFORM__) ||
+        process.platform
+    : 'posix');
+const path = {
+    win32: { sep: '\\' },
+    posix: { sep: '/' },
+};
+/* c8 ignore stop */
+exports.sep = defaultPlatform === 'win32' ? path.win32.sep : path.posix.sep;
+exports.minimatch.sep = exports.sep;
+exports.GLOBSTAR = Symbol('globstar **');
+exports.minimatch.GLOBSTAR = exports.GLOBSTAR;
+// any single thing other than /
+// don't need to escape / when using new RegExp()
+const qmark = '[^/]';
+// * => any number of characters
+const star = qmark + '*?';
+// ** when dots are allowed.  Anything goes, except .. and .
+// not (^ or / followed by one or two dots followed by $ or /),
+// followed by anything, any number of times.
+const twoStarDot = '(?:(?!(?:\\/|^)(?:\\.{1,2})($|\\/)).)*?';
+// not a ^ or / followed by a dot,
+// followed by anything, any number of times.
+const twoStarNoDot = '(?:(?!(?:\\/|^)\\.).)*?';
+const filter = (pattern, options = {}) => (p) => (0, exports.minimatch)(p, pattern, options);
+exports.filter = filter;
+exports.minimatch.filter = exports.filter;
+const ext = (a, b = {}) => Object.assign({}, a, b);
+const defaults = (def) => {
+    if (!def || typeof def !== 'object' || !Object.keys(def).length) {
+        return exports.minimatch;
+    }
+    const orig = exports.minimatch;
+    const m = (p, pattern, options = {}) => orig(p, pattern, ext(def, options));
+    return Object.assign(m, {
+        Minimatch: class Minimatch extends orig.Minimatch {
+            constructor(pattern, options = {}) {
+                super(pattern, ext(def, options));
+            }
+            static defaults(options) {
+                return orig.defaults(ext(def, options)).Minimatch;
+            }
+        },
+        AST: class AST extends orig.AST {
+            /* c8 ignore start */
+            constructor(type, parent, options = {}) {
+                super(type, parent, ext(def, options));
+            }
+            /* c8 ignore stop */
+            static fromGlob(pattern, options = {}) {
+                return orig.AST.fromGlob(pattern, ext(def, options));
+            }
+        },
+        unescape: (s, options = {}) => orig.unescape(s, ext(def, options)),
+        escape: (s, options = {}) => orig.escape(s, ext(def, options)),
+        filter: (pattern, options = {}) => orig.filter(pattern, ext(def, options)),
+        defaults: (options) => orig.defaults(ext(def, options)),
+        makeRe: (pattern, options = {}) => orig.makeRe(pattern, ext(def, options)),
+        braceExpand: (pattern, options = {}) => orig.braceExpand(pattern, ext(def, options)),
+        match: (list, pattern, options = {}) => orig.match(list, pattern, ext(def, options)),
+        sep: orig.sep,
+        GLOBSTAR: exports.GLOBSTAR,
+    });
+};
+exports.defaults = defaults;
+exports.minimatch.defaults = exports.defaults;
+// Brace expansion:
+// a{b,c}d -> abd acd
+// a{b,}c -> abc ac
+// a{0..3}d -> a0d a1d a2d a3d
+// a{b,c{d,e}f}g -> abg acdfg acefg
+// a{b,c}d{e,f}g -> abdeg acdeg abdeg abdfg
+//
+// Invalid sets are not expanded.
+// a{2..}b -> a{2..}b
+// a{b}c -> a{b}c
+const braceExpand = (pattern, options = {}) => {
+    (0, assert_valid_pattern_js_1.assertValidPattern)(pattern);
+    // Thanks to Yeting Li <https://github.com/yetingli> for
+    // improving this regexp to avoid a ReDOS vulnerability.
+    if (options.nobrace || !/\{(?:(?!\{).)*\}/.test(pattern)) {
+        // shortcut. no need to expand.
+        return [pattern];
+    }
+    return (0, brace_expansion_1.default)(pattern);
+};
+exports.braceExpand = braceExpand;
+exports.minimatch.braceExpand = exports.braceExpand;
+// parse a component of the expanded set.
+// At this point, no pattern may contain "/" in it
+// so we're going to return a 2d array, where each entry is the full
+// pattern, split on '/', and then turned into a regular expression.
+// A regexp is made at the end which joins each array with an
+// escaped /, and another full one which joins each regexp with |.
+//
+// Following the lead of Bash 4.1, note that "**" only has special meaning
+// when it is the *only* thing in a path portion.  Otherwise, any series
+// of * is equivalent to a single *.  Globstar behavior is enabled by
+// default, and can be disabled by setting options.noglobstar.
+const makeRe = (pattern, options = {}) => new Minimatch(pattern, options).makeRe();
+exports.makeRe = makeRe;
+exports.minimatch.makeRe = exports.makeRe;
+const match = (list, pattern, options = {}) => {
+    const mm = new Minimatch(pattern, options);
+    list = list.filter(f => mm.match(f));
+    if (mm.options.nonull && !list.length) {
+        list.push(pattern);
+    }
+    return list;
+};
+exports.match = match;
+exports.minimatch.match = exports.match;
+// replace stuff like \* with *
+const globMagic = /[?*]|[+@!]\(.*?\)|\[|\]/;
+const regExpEscape = (s) => s.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+class Minimatch {
+    options;
+    set;
+    pattern;
+    windowsPathsNoEscape;
+    nonegate;
+    negate;
+    comment;
+    empty;
+    preserveMultipleSlashes;
+    partial;
+    globSet;
+    globParts;
+    nocase;
+    isWindows;
+    platform;
+    windowsNoMagicRoot;
+    regexp;
+    constructor(pattern, options = {}) {
+        (0, assert_valid_pattern_js_1.assertValidPattern)(pattern);
+        options = options || {};
+        this.options = options;
+        this.pattern = pattern;
+        this.platform = options.platform || defaultPlatform;
+        this.isWindows = this.platform === 'win32';
+        this.windowsPathsNoEscape =
+            !!options.windowsPathsNoEscape || options.allowWindowsEscape === false;
+        if (this.windowsPathsNoEscape) {
+            this.pattern = this.pattern.replace(/\\/g, '/');
+        }
+        this.preserveMultipleSlashes = !!options.preserveMultipleSlashes;
+        this.regexp = null;
+        this.negate = false;
+        this.nonegate = !!options.nonegate;
+        this.comment = false;
+        this.empty = false;
+        this.partial = !!options.partial;
+        this.nocase = !!this.options.nocase;
+        this.windowsNoMagicRoot =
+            options.windowsNoMagicRoot !== undefined
+                ? options.windowsNoMagicRoot
+                : !!(this.isWindows && this.nocase);
+        this.globSet = [];
+        this.globParts = [];
+        this.set = [];
+        // make the set of regexps etc.
+        this.make();
+    }
+    hasMagic() {
+        if (this.options.magicalBraces && this.set.length > 1) {
+            return true;
+        }
+        for (const pattern of this.set) {
+            for (const part of pattern) {
+                if (typeof part !== 'string')
+                    return true;
+            }
+        }
+        return false;
+    }
+    debug(..._) { }
+    make() {
+        const pattern = this.pattern;
+        const options = this.options;
+        // empty patterns and comments match nothing.
+        if (!options.nocomment && pattern.charAt(0) === '#') {
+            this.comment = true;
+            return;
+        }
+        if (!pattern) {
+            this.empty = true;
+            return;
+        }
+        // step 1: figure out negation, etc.
+        this.parseNegate();
+        // step 2: expand braces
+        this.globSet = [...new Set(this.braceExpand())];
+        if (options.debug) {
+            this.debug = (...args) => console.error(...args);
+        }
+        this.debug(this.pattern, this.globSet);
+        // step 3: now we have a set, so turn each one into a series of
+        // path-portion matching patterns.
+        // These will be regexps, except in the case of "**", which is
+        // set to the GLOBSTAR object for globstar behavior,
+        // and will not contain any / characters
+        //
+        // First, we preprocess to make the glob pattern sets a bit simpler
+        // and deduped.  There are some perf-killing patterns that can cause
+        // problems with a glob walk, but we can simplify them down a bit.
+        const rawGlobParts = this.globSet.map(s => this.slashSplit(s));
+        this.globParts = this.preprocess(rawGlobParts);
+        this.debug(this.pattern, this.globParts);
+        // glob --> regexps
+        let set = this.globParts.map((s, _, __) => {
+            if (this.isWindows && this.windowsNoMagicRoot) {
+                // check if it's a drive or unc path.
+                const isUNC = s[0] === '' &&
+                    s[1] === '' &&
+                    (s[2] === '?' || !globMagic.test(s[2])) &&
+                    !globMagic.test(s[3]);
+                const isDrive = /^[a-z]:/i.test(s[0]);
+                if (isUNC) {
+                    return [...s.slice(0, 4), ...s.slice(4).map(ss => this.parse(ss))];
+                }
+                else if (isDrive) {
+                    return [s[0], ...s.slice(1).map(ss => this.parse(ss))];
+                }
+            }
+            return s.map(ss => this.parse(ss));
+        });
+        this.debug(this.pattern, set);
+        // filter out everything that didn't compile properly.
+        this.set = set.filter(s => s.indexOf(false) === -1);
+        // do not treat the ? in UNC paths as magic
+        if (this.isWindows) {
+            for (let i = 0; i < this.set.length; i++) {
+                const p = this.set[i];
+                if (p[0] === '' &&
+                    p[1] === '' &&
+                    this.globParts[i][2] === '?' &&
+                    typeof p[3] === 'string' &&
+                    /^[a-z]:$/i.test(p[3])) {
+                    p[2] = '?';
+                }
+            }
+        }
+        this.debug(this.pattern, this.set);
+    }
+    // various transforms to equivalent pattern sets that are
+    // faster to process in a filesystem walk.  The goal is to
+    // eliminate what we can, and push all ** patterns as far
+    // to the right as possible, even if it increases the number
+    // of patterns that we have to process.
+    preprocess(globParts) {
+        // if we're not in globstar mode, then turn all ** into *
+        if (this.options.noglobstar) {
+            for (let i = 0; i < globParts.length; i++) {
+                for (let j = 0; j < globParts[i].length; j++) {
+                    if (globParts[i][j] === '**') {
+                        globParts[i][j] = '*';
+                    }
+                }
+            }
+        }
+        const { optimizationLevel = 1 } = this.options;
+        if (optimizationLevel >= 2) {
+            // aggressive optimization for the purpose of fs walking
+            globParts = this.firstPhasePreProcess(globParts);
+            globParts = this.secondPhasePreProcess(globParts);
+        }
+        else if (optimizationLevel >= 1) {
+            // just basic optimizations to remove some .. parts
+            globParts = this.levelOneOptimize(globParts);
+        }
+        else {
+            // just collapse multiple ** portions into one
+            globParts = this.adjascentGlobstarOptimize(globParts);
+        }
+        return globParts;
+    }
+    // just get rid of adjascent ** portions
+    adjascentGlobstarOptimize(globParts) {
+        return globParts.map(parts => {
+            let gs = -1;
+            while (-1 !== (gs = parts.indexOf('**', gs + 1))) {
+                let i = gs;
+                while (parts[i + 1] === '**') {
+                    i++;
+                }
+                if (i !== gs) {
+                    parts.splice(gs, i - gs);
+                }
+            }
+            return parts;
+        });
+    }
+    // get rid of adjascent ** and resolve .. portions
+    levelOneOptimize(globParts) {
+        return globParts.map(parts => {
+            parts = parts.reduce((set, part) => {
+                const prev = set[set.length - 1];
+                if (part === '**' && prev === '**') {
+                    return set;
+                }
+                if (part === '..') {
+                    if (prev && prev !== '..' && prev !== '.' && prev !== '**') {
+                        set.pop();
+                        return set;
+                    }
+                }
+                set.push(part);
+                return set;
+            }, []);
+            return parts.length === 0 ? [''] : parts;
+        });
+    }
+    levelTwoFileOptimize(parts) {
+        if (!Array.isArray(parts)) {
+            parts = this.slashSplit(parts);
+        }
+        let didSomething = false;
+        do {
+            didSomething = false;
+            // <pre>/<e>/<rest> -> <pre>/<rest>
+            if (!this.preserveMultipleSlashes) {
+                for (let i = 1; i < parts.length - 1; i++) {
+                    const p = parts[i];
+                    // don't squeeze out UNC patterns
+                    if (i === 1 && p === '' && parts[0] === '')
+                        continue;
+                    if (p === '.' || p === '') {
+                        didSomething = true;
+                        parts.splice(i, 1);
+                        i--;
+                    }
+                }
+                if (parts[0] === '.' &&
+                    parts.length === 2 &&
+                    (parts[1] === '.' || parts[1] === '')) {
+                    didSomething = true;
+                    parts.pop();
+                }
+            }
+            // <pre>/<p>/../<rest> -> <pre>/<rest>
+            let dd = 0;
+            while (-1 !== (dd = parts.indexOf('..', dd + 1))) {
+                const p = parts[dd - 1];
+                if (p && p !== '.' && p !== '..' && p !== '**') {
+                    didSomething = true;
+                    parts.splice(dd - 1, 2);
+                    dd -= 2;
+                }
+            }
+        } while (didSomething);
+        return parts.length === 0 ? [''] : parts;
+    }
+    // First phase: single-pattern processing
+    // <pre> is 1 or more portions
+    // <rest> is 1 or more portions
+    // <p> is any portion other than ., .., '', or **
+    // <e> is . or ''
+    //
+    // **/.. is *brutal* for filesystem walking performance, because
+    // it effectively resets the recursive walk each time it occurs,
+    // and ** cannot be reduced out by a .. pattern part like a regexp
+    // or most strings (other than .., ., and '') can be.
+    //
+    // <pre>/**/../<p>/<p>/<rest> -> {<pre>/../<p>/<p>/<rest>,<pre>/**/<p>/<p>/<rest>}
+    // <pre>/<e>/<rest> -> <pre>/<rest>
+    // <pre>/<p>/../<rest> -> <pre>/<rest>
+    // **/**/<rest> -> **/<rest>
+    //
+    // **/*/<rest> -> */**/<rest> <== not valid because ** doesn't follow
+    // this WOULD be allowed if ** did follow symlinks, or * didn't
+    firstPhasePreProcess(globParts) {
+        let didSomething = false;
+        do {
+            didSomething = false;
+            // <pre>/**/../<p>/<p>/<rest> -> {<pre>/../<p>/<p>/<rest>,<pre>/**/<p>/<p>/<rest>}
+            for (let parts of globParts) {
+                let gs = -1;
+                while (-1 !== (gs = parts.indexOf('**', gs + 1))) {
+                    let gss = gs;
+                    while (parts[gss + 1] === '**') {
+                        // <pre>/**/**/<rest> -> <pre>/**/<rest>
+                        gss++;
+                    }
+                    // eg, if gs is 2 and gss is 4, that means we have 3 **
+                    // parts, and can remove 2 of them.
+                    if (gss > gs) {
+                        parts.splice(gs + 1, gss - gs);
+                    }
+                    let next = parts[gs + 1];
+                    const p = parts[gs + 2];
+                    const p2 = parts[gs + 3];
+                    if (next !== '..')
+                        continue;
+                    if (!p ||
+                        p === '.' ||
+                        p === '..' ||
+                        !p2 ||
+                        p2 === '.' ||
+                        p2 === '..') {
+                        continue;
+                    }
+                    didSomething = true;
+                    // edit parts in place, and push the new one
+                    parts.splice(gs, 1);
+                    const other = parts.slice(0);
+                    other[gs] = '**';
+                    globParts.push(other);
+                    gs--;
+                }
+                // <pre>/<e>/<rest> -> <pre>/<rest>
+                if (!this.preserveMultipleSlashes) {
+                    for (let i = 1; i < parts.length - 1; i++) {
+                        const p = parts[i];
+                        // don't squeeze out UNC patterns
+                        if (i === 1 && p === '' && parts[0] === '')
+                            continue;
+                        if (p === '.' || p === '') {
+                            didSomething = true;
+                            parts.splice(i, 1);
+                            i--;
+                        }
+                    }
+                    if (parts[0] === '.' &&
+                        parts.length === 2 &&
+                        (parts[1] === '.' || parts[1] === '')) {
+                        didSomething = true;
+                        parts.pop();
+                    }
+                }
+                // <pre>/<p>/../<rest> -> <pre>/<rest>
+                let dd = 0;
+                while (-1 !== (dd = parts.indexOf('..', dd + 1))) {
+                    const p = parts[dd - 1];
+                    if (p && p !== '.' && p !== '..' && p !== '**') {
+                        didSomething = true;
+                        const needDot = dd === 1 && parts[dd + 1] === '**';
+                        const splin = needDot ? ['.'] : [];
+                        parts.splice(dd - 1, 2, ...splin);
+                        if (parts.length === 0)
+                            parts.push('');
+                        dd -= 2;
+                    }
+                }
+            }
+        } while (didSomething);
+        return globParts;
+    }
+    // second phase: multi-pattern dedupes
+    // {<pre>/*/<rest>,<pre>/<p>/<rest>} -> <pre>/*/<rest>
+    // {<pre>/<rest>,<pre>/<rest>} -> <pre>/<rest>
+    // {<pre>/**/<rest>,<pre>/<rest>} -> <pre>/**/<rest>
+    //
+    // {<pre>/**/<rest>,<pre>/**/<p>/<rest>} -> <pre>/**/<rest>
+    // ^-- not valid because ** doens't follow symlinks
+    secondPhasePreProcess(globParts) {
+        for (let i = 0; i < globParts.length - 1; i++) {
+            for (let j = i + 1; j < globParts.length; j++) {
+                const matched = this.partsMatch(globParts[i], globParts[j], !this.preserveMultipleSlashes);
+                if (!matched)
+                    continue;
+                globParts[i] = matched;
+                globParts[j] = [];
+            }
+        }
+        return globParts.filter(gs => gs.length);
+    }
+    partsMatch(a, b, emptyGSMatch = false) {
+        let ai = 0;
+        let bi = 0;
+        let result = [];
+        let which = '';
+        while (ai < a.length && bi < b.length) {
+            if (a[ai] === b[bi]) {
+                result.push(which === 'b' ? b[bi] : a[ai]);
+                ai++;
+                bi++;
+            }
+            else if (emptyGSMatch && a[ai] === '**' && b[bi] === a[ai + 1]) {
+                result.push(a[ai]);
+                ai++;
+            }
+            else if (emptyGSMatch && b[bi] === '**' && a[ai] === b[bi + 1]) {
+                result.push(b[bi]);
+                bi++;
+            }
+            else if (a[ai] === '*' &&
+                b[bi] &&
+                (this.options.dot || !b[bi].startsWith('.')) &&
+                b[bi] !== '**') {
+                if (which === 'b')
+                    return false;
+                which = 'a';
+                result.push(a[ai]);
+                ai++;
+                bi++;
+            }
+            else if (b[bi] === '*' &&
+                a[ai] &&
+                (this.options.dot || !a[ai].startsWith('.')) &&
+                a[ai] !== '**') {
+                if (which === 'a')
+                    return false;
+                which = 'b';
+                result.push(b[bi]);
+                ai++;
+                bi++;
+            }
+            else {
+                return false;
+            }
+        }
+        // if we fall out of the loop, it means they two are identical
+        // as long as their lengths match
+        return a.length === b.length && result;
+    }
+    parseNegate() {
+        if (this.nonegate)
+            return;
+        const pattern = this.pattern;
+        let negate = false;
+        let negateOffset = 0;
+        for (let i = 0; i < pattern.length && pattern.charAt(i) === '!'; i++) {
+            negate = !negate;
+            negateOffset++;
+        }
+        if (negateOffset)
+            this.pattern = pattern.slice(negateOffset);
+        this.negate = negate;
+    }
+    // set partial to true to test if, for example,
+    // "/a/b" matches the start of "/*/b/*/d"
+    // Partial means, if you run out of file before you run
+    // out of pattern, then that's fine, as long as all
+    // the parts match.
+    matchOne(file, pattern, partial = false) {
+        const options = this.options;
+        // UNC paths like //?/X:/... can match X:/... and vice versa
+        // Drive letters in absolute drive or unc paths are always compared
+        // case-insensitively.
+        if (this.isWindows) {
+            const fileDrive = typeof file[0] === 'string' && /^[a-z]:$/i.test(file[0]);
+            const fileUNC = !fileDrive &&
+                file[0] === '' &&
+                file[1] === '' &&
+                file[2] === '?' &&
+                /^[a-z]:$/i.test(file[3]);
+            const patternDrive = typeof pattern[0] === 'string' && /^[a-z]:$/i.test(pattern[0]);
+            const patternUNC = !patternDrive &&
+                pattern[0] === '' &&
+                pattern[1] === '' &&
+                pattern[2] === '?' &&
+                typeof pattern[3] === 'string' &&
+                /^[a-z]:$/i.test(pattern[3]);
+            const fdi = fileUNC ? 3 : fileDrive ? 0 : undefined;
+            const pdi = patternUNC ? 3 : patternDrive ? 0 : undefined;
+            if (typeof fdi === 'number' && typeof pdi === 'number') {
+                const [fd, pd] = [file[fdi], pattern[pdi]];
+                if (fd.toLowerCase() === pd.toLowerCase()) {
+                    pattern[pdi] = fd;
+                    if (pdi > fdi) {
+                        pattern = pattern.slice(pdi);
+                    }
+                    else if (fdi > pdi) {
+                        file = file.slice(fdi);
+                    }
+                }
+            }
+        }
+        // resolve and reduce . and .. portions in the file as well.
+        // dont' need to do the second phase, because it's only one string[]
+        const { optimizationLevel = 1 } = this.options;
+        if (optimizationLevel >= 2) {
+            file = this.levelTwoFileOptimize(file);
+        }
+        this.debug('matchOne', this, { file, pattern });
+        this.debug('matchOne', file.length, pattern.length);
+        for (var fi = 0, pi = 0, fl = file.length, pl = pattern.length; fi < fl && pi < pl; fi++, pi++) {
+            this.debug('matchOne loop');
+            var p = pattern[pi];
+            var f = file[fi];
+            this.debug(pattern, p, f);
+            // should be impossible.
+            // some invalid regexp stuff in the set.
+            /* c8 ignore start */
+            if (p === false) {
+                return false;
+            }
+            /* c8 ignore stop */
+            if (p === exports.GLOBSTAR) {
+                this.debug('GLOBSTAR', [pattern, p, f]);
+                // "**"
+                // a/**/b/**/c would match the following:
+                // a/b/x/y/z/c
+                // a/x/y/z/b/c
+                // a/b/x/b/x/c
+                // a/b/c
+                // To do this, take the rest of the pattern after
+                // the **, and see if it would match the file remainder.
+                // If so, return success.
+                // If not, the ** "swallows" a segment, and try again.
+                // This is recursively awful.
+                //
+                // a/**/b/**/c matching a/b/x/y/z/c
+                // - a matches a
+                // - doublestar
+                //   - matchOne(b/x/y/z/c, b/**/c)
+                //     - b matches b
+                //     - doublestar
+                //       - matchOne(x/y/z/c, c) -> no
+                //       - matchOne(y/z/c, c) -> no
+                //       - matchOne(z/c, c) -> no
+                //       - matchOne(c, c) yes, hit
+                var fr = fi;
+                var pr = pi + 1;
+                if (pr === pl) {
+                    this.debug('** at the end');
+                    // a ** at the end will just swallow the rest.
+                    // We have found a match.
+                    // however, it will not swallow /.x, unless
+                    // options.dot is set.
+                    // . and .. are *never* matched by **, for explosively
+                    // exponential reasons.
+                    for (; fi < fl; fi++) {
+                        if (file[fi] === '.' ||
+                            file[fi] === '..' ||
+                            (!options.dot && file[fi].charAt(0) === '.'))
+                            return false;
+                    }
+                    return true;
+                }
+                // ok, let's see if we can swallow whatever we can.
+                while (fr < fl) {
+                    var swallowee = file[fr];
+                    this.debug('\nglobstar while', file, fr, pattern, pr, swallowee);
+                    // XXX remove this slice.  Just pass the start index.
+                    if (this.matchOne(file.slice(fr), pattern.slice(pr), partial)) {
+                        this.debug('globstar found match!', fr, fl, swallowee);
+                        // found a match.
+                        return true;
+                    }
+                    else {
+                        // can't swallow "." or ".." ever.
+                        // can only swallow ".foo" when explicitly asked.
+                        if (swallowee === '.' ||
+                            swallowee === '..' ||
+                            (!options.dot && swallowee.charAt(0) === '.')) {
+                            this.debug('dot detected!', file, fr, pattern, pr);
+                            break;
+                        }
+                        // ** swallows a segment, and continue.
+                        this.debug('globstar swallow a segment, and continue');
+                        fr++;
+                    }
+                }
+                // no match was found.
+                // However, in partial mode, we can't say this is necessarily over.
+                /* c8 ignore start */
+                if (partial) {
+                    // ran out of file
+                    this.debug('\n>>> no match, partial?', file, fr, pattern, pr);
+                    if (fr === fl) {
+                        return true;
+                    }
+                }
+                /* c8 ignore stop */
+                return false;
+            }
+            // something other than **
+            // non-magic patterns just have to match exactly
+            // patterns with magic have been turned into regexps.
+            let hit;
+            if (typeof p === 'string') {
+                hit = f === p;
+                this.debug('string match', p, f, hit);
+            }
+            else {
+                hit = p.test(f);
+                this.debug('pattern match', p, f, hit);
+            }
+            if (!hit)
+                return false;
+        }
+        // Note: ending in / means that we'll get a final ""
+        // at the end of the pattern.  This can only match a
+        // corresponding "" at the end of the file.
+        // If the file ends in /, then it can only match a
+        // a pattern that ends in /, unless the pattern just
+        // doesn't have any more for it. But, a/b/ should *not*
+        // match "a/b/*", even though "" matches against the
+        // [^/]*? pattern, except in partial mode, where it might
+        // simply not be reached yet.
+        // However, a/b/ should still satisfy a/*
+        // now either we fell off the end of the pattern, or we're done.
+        if (fi === fl && pi === pl) {
+            // ran out of pattern and filename at the same time.
+            // an exact hit!
+            return true;
+        }
+        else if (fi === fl) {
+            // ran out of file, but still had pattern left.
+            // this is ok if we're doing the match as part of
+            // a glob fs traversal.
+            return partial;
+        }
+        else if (pi === pl) {
+            // ran out of pattern, still have file left.
+            // this is only acceptable if we're on the very last
+            // empty segment of a file with a trailing slash.
+            // a/* should match a/b/
+            return fi === fl - 1 && file[fi] === '';
+            /* c8 ignore start */
+        }
+        else {
+            // should be unreachable.
+            throw new Error('wtf?');
+        }
+        /* c8 ignore stop */
+    }
+    braceExpand() {
+        return (0, exports.braceExpand)(this.pattern, this.options);
+    }
+    parse(pattern) {
+        (0, assert_valid_pattern_js_1.assertValidPattern)(pattern);
+        const options = this.options;
+        // shortcuts
+        if (pattern === '**')
+            return exports.GLOBSTAR;
+        if (pattern === '')
+            return '';
+        // far and away, the most common glob pattern parts are
+        // *, *.*, and *.<ext>  Add a fast check method for those.
+        let m;
+        let fastTest = null;
+        if ((m = pattern.match(starRE))) {
+            fastTest = options.dot ? starTestDot : starTest;
+        }
+        else if ((m = pattern.match(starDotExtRE))) {
+            fastTest = (options.nocase
+                ? options.dot
+                    ? starDotExtTestNocaseDot
+                    : starDotExtTestNocase
+                : options.dot
+                    ? starDotExtTestDot
+                    : starDotExtTest)(m[1]);
+        }
+        else if ((m = pattern.match(qmarksRE))) {
+            fastTest = (options.nocase
+                ? options.dot
+                    ? qmarksTestNocaseDot
+                    : qmarksTestNocase
+                : options.dot
+                    ? qmarksTestDot
+                    : qmarksTest)(m);
+        }
+        else if ((m = pattern.match(starDotStarRE))) {
+            fastTest = options.dot ? starDotStarTestDot : starDotStarTest;
+        }
+        else if ((m = pattern.match(dotStarRE))) {
+            fastTest = dotStarTest;
+        }
+        const re = ast_js_1.AST.fromGlob(pattern, this.options).toMMPattern();
+        if (fastTest && typeof re === 'object') {
+            // Avoids overriding in frozen environments
+            Reflect.defineProperty(re, 'test', { value: fastTest });
+        }
+        return re;
+    }
+    makeRe() {
+        if (this.regexp || this.regexp === false)
+            return this.regexp;
+        // at this point, this.set is a 2d array of partial
+        // pattern strings, or "**".
+        //
+        // It's better to use .match().  This function shouldn't
+        // be used, really, but it's pretty convenient sometimes,
+        // when you just want to work with a regex.
+        const set = this.set;
+        if (!set.length) {
+            this.regexp = false;
+            return this.regexp;
+        }
+        const options = this.options;
+        const twoStar = options.noglobstar
+            ? star
+            : options.dot
+                ? twoStarDot
+                : twoStarNoDot;
+        const flags = new Set(options.nocase ? ['i'] : []);
+        // regexpify non-globstar patterns
+        // if ** is only item, then we just do one twoStar
+        // if ** is first, and there are more, prepend (\/|twoStar\/)? to next
+        // if ** is last, append (\/twoStar|) to previous
+        // if ** is in the middle, append (\/|\/twoStar\/) to previous
+        // then filter out GLOBSTAR symbols
+        let re = set
+            .map(pattern => {
+            const pp = pattern.map(p => {
+                if (p instanceof RegExp) {
+                    for (const f of p.flags.split(''))
+                        flags.add(f);
+                }
+                return typeof p === 'string'
+                    ? regExpEscape(p)
+                    : p === exports.GLOBSTAR
+                        ? exports.GLOBSTAR
+                        : p._src;
+            });
+            pp.forEach((p, i) => {
+                const next = pp[i + 1];
+                const prev = pp[i - 1];
+                if (p !== exports.GLOBSTAR || prev === exports.GLOBSTAR) {
+                    return;
+                }
+                if (prev === undefined) {
+                    if (next !== undefined && next !== exports.GLOBSTAR) {
+                        pp[i + 1] = '(?:\\/|' + twoStar + '\\/)?' + next;
+                    }
+                    else {
+                        pp[i] = twoStar;
+                    }
+                }
+                else if (next === undefined) {
+                    pp[i - 1] = prev + '(?:\\/|' + twoStar + ')?';
+                }
+                else if (next !== exports.GLOBSTAR) {
+                    pp[i - 1] = prev + '(?:\\/|\\/' + twoStar + '\\/)' + next;
+                    pp[i + 1] = exports.GLOBSTAR;
+                }
+            });
+            return pp.filter(p => p !== exports.GLOBSTAR).join('/');
+        })
+            .join('|');
+        // need to wrap in parens if we had more than one thing with |,
+        // otherwise only the first will be anchored to ^ and the last to $
+        const [open, close] = set.length > 1 ? ['(?:', ')'] : ['', ''];
+        // must match entire pattern
+        // ending in a * or ** will make it less strict.
+        re = '^' + open + re + close + '$';
+        // can match anything, as long as it's not this.
+        if (this.negate)
+            re = '^(?!' + re + ').+$';
+        try {
+            this.regexp = new RegExp(re, [...flags].join(''));
+            /* c8 ignore start */
+        }
+        catch (ex) {
+            // should be impossible
+            this.regexp = false;
+        }
+        /* c8 ignore stop */
+        return this.regexp;
+    }
+    slashSplit(p) {
+        // if p starts with // on windows, we preserve that
+        // so that UNC paths aren't broken.  Otherwise, any number of
+        // / characters are coalesced into one, unless
+        // preserveMultipleSlashes is set to true.
+        if (this.preserveMultipleSlashes) {
+            return p.split('/');
+        }
+        else if (this.isWindows && /^\/\/[^\/]+/.test(p)) {
+            // add an extra '' for the one we lose
+            return ['', ...p.split(/\/+/)];
+        }
+        else {
+            return p.split(/\/+/);
+        }
+    }
+    match(f, partial = this.partial) {
+        this.debug('match', f, this.pattern);
+        // short-circuit in the case of busted things.
+        // comments, etc.
+        if (this.comment) {
+            return false;
+        }
+        if (this.empty) {
+            return f === '';
+        }
+        if (f === '/' && partial) {
+            return true;
+        }
+        const options = this.options;
+        // windows: need to use /, not \
+        if (this.isWindows) {
+            f = f.split('\\').join('/');
+        }
+        // treat the test path as a set of pathparts.
+        const ff = this.slashSplit(f);
+        this.debug(this.pattern, 'split', ff);
+        // just ONE of the pattern sets in this.set needs to match
+        // in order for it to be valid.  If negating, then just one
+        // match means that we have failed.
+        // Either way, return on the first hit.
+        const set = this.set;
+        this.debug(this.pattern, 'set', set);
+        // Find the basename of the path by looking for the last non-empty segment
+        let filename = ff[ff.length - 1];
+        if (!filename) {
+            for (let i = ff.length - 2; !filename && i >= 0; i--) {
+                filename = ff[i];
+            }
+        }
+        for (let i = 0; i < set.length; i++) {
+            const pattern = set[i];
+            let file = ff;
+            if (options.matchBase && pattern.length === 1) {
+                file = [filename];
+            }
+            const hit = this.matchOne(file, pattern, partial);
+            if (hit) {
+                if (options.flipNegate) {
+                    return true;
+                }
+                return !this.negate;
+            }
+        }
+        // didn't get any hits.  this is success if it's a negative
+        // pattern, failure otherwise.
+        if (options.flipNegate) {
+            return false;
+        }
+        return this.negate;
+    }
+    static defaults(def) {
+        return exports.minimatch.defaults(def).Minimatch;
+    }
+}
+exports.Minimatch = Minimatch;
+/* c8 ignore start */
+var ast_js_2 = __nccwpck_require__(7095);
+Object.defineProperty(exports, "AST", ({ enumerable: true, get: function () { return ast_js_2.AST; } }));
+var escape_js_2 = __nccwpck_require__(2776);
+Object.defineProperty(exports, "escape", ({ enumerable: true, get: function () { return escape_js_2.escape; } }));
+var unescape_js_2 = __nccwpck_require__(7519);
+Object.defineProperty(exports, "unescape", ({ enumerable: true, get: function () { return unescape_js_2.unescape; } }));
+/* c8 ignore stop */
+exports.minimatch.AST = ast_js_1.AST;
+exports.minimatch.Minimatch = Minimatch;
+exports.minimatch.escape = escape_js_1.escape;
+exports.minimatch.unescape = unescape_js_1.unescape;
+//# sourceMappingURL=index.js.map
+
+/***/ }),
+
+/***/ 7519:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.unescape = void 0;
+/**
+ * Un-escape a string that has been escaped with {@link escape}.
+ *
+ * If the {@link windowsPathsNoEscape} option is used, then square-brace
+ * escapes are removed, but not backslash escapes.  For example, it will turn
+ * the string `'[*]'` into `*`, but it will not turn `'\\*'` into `'*'`,
+ * becuase `\` is a path separator in `windowsPathsNoEscape` mode.
+ *
+ * When `windowsPathsNoEscape` is not set, then both brace escapes and
+ * backslash escapes are removed.
+ *
+ * Slashes (and backslashes in `windowsPathsNoEscape` mode) cannot be escaped
+ * or unescaped.
+ */
+const unescape = (s, { windowsPathsNoEscape = false, } = {}) => {
+    return windowsPathsNoEscape
+        ? s.replace(/\[([^\/\\])\]/g, '$1')
+        : s.replace(/((?!\\).|^)\[([^\/\\])\]/g, '$1$2').replace(/\\([^\/])/g, '$1');
+};
+exports.unescape = unescape;
+//# sourceMappingURL=unescape.js.map
+
+/***/ }),
+
+/***/ 4968:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Minipass = exports.isWritable = exports.isReadable = exports.isStream = void 0;
+const proc = typeof process === 'object' && process
+    ? process
+    : {
+        stdout: null,
+        stderr: null,
+    };
+const node_events_1 = __nccwpck_require__(5673);
+const node_stream_1 = __importDefault(__nccwpck_require__(4492));
+const node_string_decoder_1 = __nccwpck_require__(6915);
+/**
+ * Return true if the argument is a Minipass stream, Node stream, or something
+ * else that Minipass can interact with.
+ */
+const isStream = (s) => !!s &&
+    typeof s === 'object' &&
+    (s instanceof Minipass ||
+        s instanceof node_stream_1.default ||
+        (0, exports.isReadable)(s) ||
+        (0, exports.isWritable)(s));
+exports.isStream = isStream;
+/**
+ * Return true if the argument is a valid {@link Minipass.Readable}
+ */
+const isReadable = (s) => !!s &&
+    typeof s === 'object' &&
+    s instanceof node_events_1.EventEmitter &&
+    typeof s.pipe === 'function' &&
+    // node core Writable streams have a pipe() method, but it throws
+    s.pipe !== node_stream_1.default.Writable.prototype.pipe;
+exports.isReadable = isReadable;
+/**
+ * Return true if the argument is a valid {@link Minipass.Writable}
+ */
+const isWritable = (s) => !!s &&
+    typeof s === 'object' &&
+    s instanceof node_events_1.EventEmitter &&
+    typeof s.write === 'function' &&
+    typeof s.end === 'function';
+exports.isWritable = isWritable;
+const EOF = Symbol('EOF');
+const MAYBE_EMIT_END = Symbol('maybeEmitEnd');
+const EMITTED_END = Symbol('emittedEnd');
+const EMITTING_END = Symbol('emittingEnd');
+const EMITTED_ERROR = Symbol('emittedError');
+const CLOSED = Symbol('closed');
+const READ = Symbol('read');
+const FLUSH = Symbol('flush');
+const FLUSHCHUNK = Symbol('flushChunk');
+const ENCODING = Symbol('encoding');
+const DECODER = Symbol('decoder');
+const FLOWING = Symbol('flowing');
+const PAUSED = Symbol('paused');
+const RESUME = Symbol('resume');
+const BUFFER = Symbol('buffer');
+const PIPES = Symbol('pipes');
+const BUFFERLENGTH = Symbol('bufferLength');
+const BUFFERPUSH = Symbol('bufferPush');
+const BUFFERSHIFT = Symbol('bufferShift');
+const OBJECTMODE = Symbol('objectMode');
+// internal event when stream is destroyed
+const DESTROYED = Symbol('destroyed');
+// internal event when stream has an error
+const ERROR = Symbol('error');
+const EMITDATA = Symbol('emitData');
+const EMITEND = Symbol('emitEnd');
+const EMITEND2 = Symbol('emitEnd2');
+const ASYNC = Symbol('async');
+const ABORT = Symbol('abort');
+const ABORTED = Symbol('aborted');
+const SIGNAL = Symbol('signal');
+const DATALISTENERS = Symbol('dataListeners');
+const DISCARDED = Symbol('discarded');
+const defer = (fn) => Promise.resolve().then(fn);
+const nodefer = (fn) => fn();
+const isEndish = (ev) => ev === 'end' || ev === 'finish' || ev === 'prefinish';
+const isArrayBufferLike = (b) => b instanceof ArrayBuffer ||
+    (!!b &&
+        typeof b === 'object' &&
+        b.constructor &&
+        b.constructor.name === 'ArrayBuffer' &&
+        b.byteLength >= 0);
+const isArrayBufferView = (b) => !Buffer.isBuffer(b) && ArrayBuffer.isView(b);
+/**
+ * Internal class representing a pipe to a destination stream.
+ *
+ * @internal
+ */
+class Pipe {
+    src;
+    dest;
+    opts;
+    ondrain;
+    constructor(src, dest, opts) {
+        this.src = src;
+        this.dest = dest;
+        this.opts = opts;
+        this.ondrain = () => src[RESUME]();
+        this.dest.on('drain', this.ondrain);
+    }
+    unpipe() {
+        this.dest.removeListener('drain', this.ondrain);
+    }
+    // only here for the prototype
+    /* c8 ignore start */
+    proxyErrors(_er) { }
+    /* c8 ignore stop */
+    end() {
+        this.unpipe();
+        if (this.opts.end)
+            this.dest.end();
+    }
+}
+/**
+ * Internal class representing a pipe to a destination stream where
+ * errors are proxied.
+ *
+ * @internal
+ */
+class PipeProxyErrors extends Pipe {
+    unpipe() {
+        this.src.removeListener('error', this.proxyErrors);
+        super.unpipe();
+    }
+    constructor(src, dest, opts) {
+        super(src, dest, opts);
+        this.proxyErrors = er => dest.emit('error', er);
+        src.on('error', this.proxyErrors);
+    }
+}
+const isObjectModeOptions = (o) => !!o.objectMode;
+const isEncodingOptions = (o) => !o.objectMode && !!o.encoding && o.encoding !== 'buffer';
+/**
+ * Main export, the Minipass class
+ *
+ * `RType` is the type of data emitted, defaults to Buffer
+ *
+ * `WType` is the type of data to be written, if RType is buffer or string,
+ * then any {@link Minipass.ContiguousData} is allowed.
+ *
+ * `Events` is the set of event handler signatures that this object
+ * will emit, see {@link Minipass.Events}
+ */
+class Minipass extends node_events_1.EventEmitter {
+    [FLOWING] = false;
+    [PAUSED] = false;
+    [PIPES] = [];
+    [BUFFER] = [];
+    [OBJECTMODE];
+    [ENCODING];
+    [ASYNC];
+    [DECODER];
+    [EOF] = false;
+    [EMITTED_END] = false;
+    [EMITTING_END] = false;
+    [CLOSED] = false;
+    [EMITTED_ERROR] = null;
+    [BUFFERLENGTH] = 0;
+    [DESTROYED] = false;
+    [SIGNAL];
+    [ABORTED] = false;
+    [DATALISTENERS] = 0;
+    [DISCARDED] = false;
+    /**
+     * true if the stream can be written
+     */
+    writable = true;
+    /**
+     * true if the stream can be read
+     */
+    readable = true;
+    /**
+     * If `RType` is Buffer, then options do not need to be provided.
+     * Otherwise, an options object must be provided to specify either
+     * {@link Minipass.SharedOptions.objectMode} or
+     * {@link Minipass.SharedOptions.encoding}, as appropriate.
+     */
+    constructor(...args) {
+        const options = (args[0] ||
+            {});
+        super();
+        if (options.objectMode && typeof options.encoding === 'string') {
+            throw new TypeError('Encoding and objectMode may not be used together');
+        }
+        if (isObjectModeOptions(options)) {
+            this[OBJECTMODE] = true;
+            this[ENCODING] = null;
+        }
+        else if (isEncodingOptions(options)) {
+            this[ENCODING] = options.encoding;
+            this[OBJECTMODE] = false;
+        }
+        else {
+            this[OBJECTMODE] = false;
+            this[ENCODING] = null;
+        }
+        this[ASYNC] = !!options.async;
+        this[DECODER] = this[ENCODING]
+            ? new node_string_decoder_1.StringDecoder(this[ENCODING])
+            : null;
+        //@ts-ignore - private option for debugging and testing
+        if (options && options.debugExposeBuffer === true) {
+            Object.defineProperty(this, 'buffer', { get: () => this[BUFFER] });
+        }
+        //@ts-ignore - private option for debugging and testing
+        if (options && options.debugExposePipes === true) {
+            Object.defineProperty(this, 'pipes', { get: () => this[PIPES] });
+        }
+        const { signal } = options;
+        if (signal) {
+            this[SIGNAL] = signal;
+            if (signal.aborted) {
+                this[ABORT]();
+            }
+            else {
+                signal.addEventListener('abort', () => this[ABORT]());
+            }
+        }
+    }
+    /**
+     * The amount of data stored in the buffer waiting to be read.
+     *
+     * For Buffer strings, this will be the total byte length.
+     * For string encoding streams, this will be the string character length,
+     * according to JavaScript's `string.length` logic.
+     * For objectMode streams, this is a count of the items waiting to be
+     * emitted.
+     */
+    get bufferLength() {
+        return this[BUFFERLENGTH];
+    }
+    /**
+     * The `BufferEncoding` currently in use, or `null`
+     */
+    get encoding() {
+        return this[ENCODING];
+    }
+    /**
+     * @deprecated - This is a read only property
+     */
+    set encoding(_enc) {
+        throw new Error('Encoding must be set at instantiation time');
+    }
+    /**
+     * @deprecated - Encoding may only be set at instantiation time
+     */
+    setEncoding(_enc) {
+        throw new Error('Encoding must be set at instantiation time');
+    }
+    /**
+     * True if this is an objectMode stream
+     */
+    get objectMode() {
+        return this[OBJECTMODE];
+    }
+    /**
+     * @deprecated - This is a read-only property
+     */
+    set objectMode(_om) {
+        throw new Error('objectMode must be set at instantiation time');
+    }
+    /**
+     * true if this is an async stream
+     */
+    get ['async']() {
+        return this[ASYNC];
+    }
+    /**
+     * Set to true to make this stream async.
+     *
+     * Once set, it cannot be unset, as this would potentially cause incorrect
+     * behavior.  Ie, a sync stream can be made async, but an async stream
+     * cannot be safely made sync.
+     */
+    set ['async'](a) {
+        this[ASYNC] = this[ASYNC] || !!a;
+    }
+    // drop everything and get out of the flow completely
+    [ABORT]() {
+        this[ABORTED] = true;
+        this.emit('abort', this[SIGNAL]?.reason);
+        this.destroy(this[SIGNAL]?.reason);
+    }
+    /**
+     * True if the stream has been aborted.
+     */
+    get aborted() {
+        return this[ABORTED];
+    }
+    /**
+     * No-op setter. Stream aborted status is set via the AbortSignal provided
+     * in the constructor options.
+     */
+    set aborted(_) { }
+    write(chunk, encoding, cb) {
+        if (this[ABORTED])
+            return false;
+        if (this[EOF])
+            throw new Error('write after end');
+        if (this[DESTROYED]) {
+            this.emit('error', Object.assign(new Error('Cannot call write after a stream was destroyed'), { code: 'ERR_STREAM_DESTROYED' }));
+            return true;
+        }
+        if (typeof encoding === 'function') {
+            cb = encoding;
+            encoding = 'utf8';
+        }
+        if (!encoding)
+            encoding = 'utf8';
+        const fn = this[ASYNC] ? defer : nodefer;
+        // convert array buffers and typed array views into buffers
+        // at some point in the future, we may want to do the opposite!
+        // leave strings and buffers as-is
+        // anything is only allowed if in object mode, so throw
+        if (!this[OBJECTMODE] && !Buffer.isBuffer(chunk)) {
+            if (isArrayBufferView(chunk)) {
+                //@ts-ignore - sinful unsafe type changing
+                chunk = Buffer.from(chunk.buffer, chunk.byteOffset, chunk.byteLength);
+            }
+            else if (isArrayBufferLike(chunk)) {
+                //@ts-ignore - sinful unsafe type changing
+                chunk = Buffer.from(chunk);
+            }
+            else if (typeof chunk !== 'string') {
+                throw new Error('Non-contiguous data written to non-objectMode stream');
+            }
+        }
+        // handle object mode up front, since it's simpler
+        // this yields better performance, fewer checks later.
+        if (this[OBJECTMODE]) {
+            // maybe impossible?
+            /* c8 ignore start */
+            if (this[FLOWING] && this[BUFFERLENGTH] !== 0)
+                this[FLUSH](true);
+            /* c8 ignore stop */
+            if (this[FLOWING])
+                this.emit('data', chunk);
+            else
+                this[BUFFERPUSH](chunk);
+            if (this[BUFFERLENGTH] !== 0)
+                this.emit('readable');
+            if (cb)
+                fn(cb);
+            return this[FLOWING];
+        }
+        // at this point the chunk is a buffer or string
+        // don't buffer it up or send it to the decoder
+        if (!chunk.length) {
+            if (this[BUFFERLENGTH] !== 0)
+                this.emit('readable');
+            if (cb)
+                fn(cb);
+            return this[FLOWING];
+        }
+        // fast-path writing strings of same encoding to a stream with
+        // an empty buffer, skipping the buffer/decoder dance
+        if (typeof chunk === 'string' &&
+            // unless it is a string already ready for us to use
+            !(encoding === this[ENCODING] && !this[DECODER]?.lastNeed)) {
+            //@ts-ignore - sinful unsafe type change
+            chunk = Buffer.from(chunk, encoding);
+        }
+        if (Buffer.isBuffer(chunk) && this[ENCODING]) {
+            //@ts-ignore - sinful unsafe type change
+            chunk = this[DECODER].write(chunk);
+        }
+        // Note: flushing CAN potentially switch us into not-flowing mode
+        if (this[FLOWING] && this[BUFFERLENGTH] !== 0)
+            this[FLUSH](true);
+        if (this[FLOWING])
+            this.emit('data', chunk);
+        else
+            this[BUFFERPUSH](chunk);
+        if (this[BUFFERLENGTH] !== 0)
+            this.emit('readable');
+        if (cb)
+            fn(cb);
+        return this[FLOWING];
+    }
+    /**
+     * Low-level explicit read method.
+     *
+     * In objectMode, the argument is ignored, and one item is returned if
+     * available.
+     *
+     * `n` is the number of bytes (or in the case of encoding streams,
+     * characters) to consume. If `n` is not provided, then the entire buffer
+     * is returned, or `null` is returned if no data is available.
+     *
+     * If `n` is greater that the amount of data in the internal buffer,
+     * then `null` is returned.
+     */
+    read(n) {
+        if (this[DESTROYED])
+            return null;
+        this[DISCARDED] = false;
+        if (this[BUFFERLENGTH] === 0 ||
+            n === 0 ||
+            (n && n > this[BUFFERLENGTH])) {
+            this[MAYBE_EMIT_END]();
+            return null;
+        }
+        if (this[OBJECTMODE])
+            n = null;
+        if (this[BUFFER].length > 1 && !this[OBJECTMODE]) {
+            // not object mode, so if we have an encoding, then RType is string
+            // otherwise, must be Buffer
+            this[BUFFER] = [
+                (this[ENCODING]
+                    ? this[BUFFER].join('')
+                    : Buffer.concat(this[BUFFER], this[BUFFERLENGTH])),
+            ];
+        }
+        const ret = this[READ](n || null, this[BUFFER][0]);
+        this[MAYBE_EMIT_END]();
+        return ret;
+    }
+    [READ](n, chunk) {
+        if (this[OBJECTMODE])
+            this[BUFFERSHIFT]();
+        else {
+            const c = chunk;
+            if (n === c.length || n === null)
+                this[BUFFERSHIFT]();
+            else if (typeof c === 'string') {
+                this[BUFFER][0] = c.slice(n);
+                chunk = c.slice(0, n);
+                this[BUFFERLENGTH] -= n;
+            }
+            else {
+                this[BUFFER][0] = c.subarray(n);
+                chunk = c.subarray(0, n);
+                this[BUFFERLENGTH] -= n;
+            }
+        }
+        this.emit('data', chunk);
+        if (!this[BUFFER].length && !this[EOF])
+            this.emit('drain');
+        return chunk;
+    }
+    end(chunk, encoding, cb) {
+        if (typeof chunk === 'function') {
+            cb = chunk;
+            chunk = undefined;
+        }
+        if (typeof encoding === 'function') {
+            cb = encoding;
+            encoding = 'utf8';
+        }
+        if (chunk !== undefined)
+            this.write(chunk, encoding);
+        if (cb)
+            this.once('end', cb);
+        this[EOF] = true;
+        this.writable = false;
+        // if we haven't written anything, then go ahead and emit,
+        // even if we're not reading.
+        // we'll re-emit if a new 'end' listener is added anyway.
+        // This makes MP more suitable to write-only use cases.
+        if (this[FLOWING] || !this[PAUSED])
+            this[MAYBE_EMIT_END]();
+        return this;
+    }
+    // don't let the internal resume be overwritten
+    [RESUME]() {
+        if (this[DESTROYED])
+            return;
+        if (!this[DATALISTENERS] && !this[PIPES].length) {
+            this[DISCARDED] = true;
+        }
+        this[PAUSED] = false;
+        this[FLOWING] = true;
+        this.emit('resume');
+        if (this[BUFFER].length)
+            this[FLUSH]();
+        else if (this[EOF])
+            this[MAYBE_EMIT_END]();
+        else
+            this.emit('drain');
+    }
+    /**
+     * Resume the stream if it is currently in a paused state
+     *
+     * If called when there are no pipe destinations or `data` event listeners,
+     * this will place the stream in a "discarded" state, where all data will
+     * be thrown away. The discarded state is removed if a pipe destination or
+     * data handler is added, if pause() is called, or if any synchronous or
+     * asynchronous iteration is started.
+     */
+    resume() {
+        return this[RESUME]();
+    }
+    /**
+     * Pause the stream
+     */
+    pause() {
+        this[FLOWING] = false;
+        this[PAUSED] = true;
+        this[DISCARDED] = false;
+    }
+    /**
+     * true if the stream has been forcibly destroyed
+     */
+    get destroyed() {
+        return this[DESTROYED];
+    }
+    /**
+     * true if the stream is currently in a flowing state, meaning that
+     * any writes will be immediately emitted.
+     */
+    get flowing() {
+        return this[FLOWING];
+    }
+    /**
+     * true if the stream is currently in a paused state
+     */
+    get paused() {
+        return this[PAUSED];
+    }
+    [BUFFERPUSH](chunk) {
+        if (this[OBJECTMODE])
+            this[BUFFERLENGTH] += 1;
+        else
+            this[BUFFERLENGTH] += chunk.length;
+        this[BUFFER].push(chunk);
+    }
+    [BUFFERSHIFT]() {
+        if (this[OBJECTMODE])
+            this[BUFFERLENGTH] -= 1;
+        else
+            this[BUFFERLENGTH] -= this[BUFFER][0].length;
+        return this[BUFFER].shift();
+    }
+    [FLUSH](noDrain = false) {
+        do { } while (this[FLUSHCHUNK](this[BUFFERSHIFT]()) &&
+            this[BUFFER].length);
+        if (!noDrain && !this[BUFFER].length && !this[EOF])
+            this.emit('drain');
+    }
+    [FLUSHCHUNK](chunk) {
+        this.emit('data', chunk);
+        return this[FLOWING];
+    }
+    /**
+     * Pipe all data emitted by this stream into the destination provided.
+     *
+     * Triggers the flow of data.
+     */
+    pipe(dest, opts) {
+        if (this[DESTROYED])
+            return dest;
+        this[DISCARDED] = false;
+        const ended = this[EMITTED_END];
+        opts = opts || {};
+        if (dest === proc.stdout || dest === proc.stderr)
+            opts.end = false;
+        else
+            opts.end = opts.end !== false;
+        opts.proxyErrors = !!opts.proxyErrors;
+        // piping an ended stream ends immediately
+        if (ended) {
+            if (opts.end)
+                dest.end();
+        }
+        else {
+            // "as" here just ignores the WType, which pipes don't care about,
+            // since they're only consuming from us, and writing to the dest
+            this[PIPES].push(!opts.proxyErrors
+                ? new Pipe(this, dest, opts)
+                : new PipeProxyErrors(this, dest, opts));
+            if (this[ASYNC])
+                defer(() => this[RESUME]());
+            else
+                this[RESUME]();
+        }
+        return dest;
+    }
+    /**
+     * Fully unhook a piped destination stream.
+     *
+     * If the destination stream was the only consumer of this stream (ie,
+     * there are no other piped destinations or `'data'` event listeners)
+     * then the flow of data will stop until there is another consumer or
+     * {@link Minipass#resume} is explicitly called.
+     */
+    unpipe(dest) {
+        const p = this[PIPES].find(p => p.dest === dest);
+        if (p) {
+            if (this[PIPES].length === 1) {
+                if (this[FLOWING] && this[DATALISTENERS] === 0) {
+                    this[FLOWING] = false;
+                }
+                this[PIPES] = [];
+            }
+            else
+                this[PIPES].splice(this[PIPES].indexOf(p), 1);
+            p.unpipe();
+        }
+    }
+    /**
+     * Alias for {@link Minipass#on}
+     */
+    addListener(ev, handler) {
+        return this.on(ev, handler);
+    }
+    /**
+     * Mostly identical to `EventEmitter.on`, with the following
+     * behavior differences to prevent data loss and unnecessary hangs:
+     *
+     * - Adding a 'data' event handler will trigger the flow of data
+     *
+     * - Adding a 'readable' event handler when there is data waiting to be read
+     *   will cause 'readable' to be emitted immediately.
+     *
+     * - Adding an 'endish' event handler ('end', 'finish', etc.) which has
+     *   already passed will cause the event to be emitted immediately and all
+     *   handlers removed.
+     *
+     * - Adding an 'error' event handler after an error has been emitted will
+     *   cause the event to be re-emitted immediately with the error previously
+     *   raised.
+     */
+    on(ev, handler) {
+        const ret = super.on(ev, handler);
+        if (ev === 'data') {
+            this[DISCARDED] = false;
+            this[DATALISTENERS]++;
+            if (!this[PIPES].length && !this[FLOWING]) {
+                this[RESUME]();
+            }
+        }
+        else if (ev === 'readable' && this[BUFFERLENGTH] !== 0) {
+            super.emit('readable');
+        }
+        else if (isEndish(ev) && this[EMITTED_END]) {
+            super.emit(ev);
+            this.removeAllListeners(ev);
+        }
+        else if (ev === 'error' && this[EMITTED_ERROR]) {
+            const h = handler;
+            if (this[ASYNC])
+                defer(() => h.call(this, this[EMITTED_ERROR]));
+            else
+                h.call(this, this[EMITTED_ERROR]);
+        }
+        return ret;
+    }
+    /**
+     * Alias for {@link Minipass#off}
+     */
+    removeListener(ev, handler) {
+        return this.off(ev, handler);
+    }
+    /**
+     * Mostly identical to `EventEmitter.off`
+     *
+     * If a 'data' event handler is removed, and it was the last consumer
+     * (ie, there are no pipe destinations or other 'data' event listeners),
+     * then the flow of data will stop until there is another consumer or
+     * {@link Minipass#resume} is explicitly called.
+     */
+    off(ev, handler) {
+        const ret = super.off(ev, handler);
+        // if we previously had listeners, and now we don't, and we don't
+        // have any pipes, then stop the flow, unless it's been explicitly
+        // put in a discarded flowing state via stream.resume().
+        if (ev === 'data') {
+            this[DATALISTENERS] = this.listeners('data').length;
+            if (this[DATALISTENERS] === 0 &&
+                !this[DISCARDED] &&
+                !this[PIPES].length) {
+                this[FLOWING] = false;
+            }
+        }
+        return ret;
+    }
+    /**
+     * Mostly identical to `EventEmitter.removeAllListeners`
+     *
+     * If all 'data' event handlers are removed, and they were the last consumer
+     * (ie, there are no pipe destinations), then the flow of data will stop
+     * until there is another consumer or {@link Minipass#resume} is explicitly
+     * called.
+     */
+    removeAllListeners(ev) {
+        const ret = super.removeAllListeners(ev);
+        if (ev === 'data' || ev === undefined) {
+            this[DATALISTENERS] = 0;
+            if (!this[DISCARDED] && !this[PIPES].length) {
+                this[FLOWING] = false;
+            }
+        }
+        return ret;
+    }
+    /**
+     * true if the 'end' event has been emitted
+     */
+    get emittedEnd() {
+        return this[EMITTED_END];
+    }
+    [MAYBE_EMIT_END]() {
+        if (!this[EMITTING_END] &&
+            !this[EMITTED_END] &&
+            !this[DESTROYED] &&
+            this[BUFFER].length === 0 &&
+            this[EOF]) {
+            this[EMITTING_END] = true;
+            this.emit('end');
+            this.emit('prefinish');
+            this.emit('finish');
+            if (this[CLOSED])
+                this.emit('close');
+            this[EMITTING_END] = false;
+        }
+    }
+    /**
+     * Mostly identical to `EventEmitter.emit`, with the following
+     * behavior differences to prevent data loss and unnecessary hangs:
+     *
+     * If the stream has been destroyed, and the event is something other
+     * than 'close' or 'error', then `false` is returned and no handlers
+     * are called.
+     *
+     * If the event is 'end', and has already been emitted, then the event
+     * is ignored. If the stream is in a paused or non-flowing state, then
+     * the event will be deferred until data flow resumes. If the stream is
+     * async, then handlers will be called on the next tick rather than
+     * immediately.
+     *
+     * If the event is 'close', and 'end' has not yet been emitted, then
+     * the event will be deferred until after 'end' is emitted.
+     *
+     * If the event is 'error', and an AbortSignal was provided for the stream,
+     * and there are no listeners, then the event is ignored, matching the
+     * behavior of node core streams in the presense of an AbortSignal.
+     *
+     * If the event is 'finish' or 'prefinish', then all listeners will be
+     * removed after emitting the event, to prevent double-firing.
+     */
+    emit(ev, ...args) {
+        const data = args[0];
+        // error and close are only events allowed after calling destroy()
+        if (ev !== 'error' &&
+            ev !== 'close' &&
+            ev !== DESTROYED &&
+            this[DESTROYED]) {
+            return false;
+        }
+        else if (ev === 'data') {
+            return !this[OBJECTMODE] && !data
+                ? false
+                : this[ASYNC]
+                    ? (defer(() => this[EMITDATA](data)), true)
+                    : this[EMITDATA](data);
+        }
+        else if (ev === 'end') {
+            return this[EMITEND]();
+        }
+        else if (ev === 'close') {
+            this[CLOSED] = true;
+            // don't emit close before 'end' and 'finish'
+            if (!this[EMITTED_END] && !this[DESTROYED])
+                return false;
+            const ret = super.emit('close');
+            this.removeAllListeners('close');
+            return ret;
+        }
+        else if (ev === 'error') {
+            this[EMITTED_ERROR] = data;
+            super.emit(ERROR, data);
+            const ret = !this[SIGNAL] || this.listeners('error').length
+                ? super.emit('error', data)
+                : false;
+            this[MAYBE_EMIT_END]();
+            return ret;
+        }
+        else if (ev === 'resume') {
+            const ret = super.emit('resume');
+            this[MAYBE_EMIT_END]();
+            return ret;
+        }
+        else if (ev === 'finish' || ev === 'prefinish') {
+            const ret = super.emit(ev);
+            this.removeAllListeners(ev);
+            return ret;
+        }
+        // Some other unknown event
+        const ret = super.emit(ev, ...args);
+        this[MAYBE_EMIT_END]();
+        return ret;
+    }
+    [EMITDATA](data) {
+        for (const p of this[PIPES]) {
+            if (p.dest.write(data) === false)
+                this.pause();
+        }
+        const ret = this[DISCARDED] ? false : super.emit('data', data);
+        this[MAYBE_EMIT_END]();
+        return ret;
+    }
+    [EMITEND]() {
+        if (this[EMITTED_END])
+            return false;
+        this[EMITTED_END] = true;
+        this.readable = false;
+        return this[ASYNC]
+            ? (defer(() => this[EMITEND2]()), true)
+            : this[EMITEND2]();
+    }
+    [EMITEND2]() {
+        if (this[DECODER]) {
+            const data = this[DECODER].end();
+            if (data) {
+                for (const p of this[PIPES]) {
+                    p.dest.write(data);
+                }
+                if (!this[DISCARDED])
+                    super.emit('data', data);
+            }
+        }
+        for (const p of this[PIPES]) {
+            p.end();
+        }
+        const ret = super.emit('end');
+        this.removeAllListeners('end');
+        return ret;
+    }
+    /**
+     * Return a Promise that resolves to an array of all emitted data once
+     * the stream ends.
+     */
+    async collect() {
+        const buf = Object.assign([], {
+            dataLength: 0,
+        });
+        if (!this[OBJECTMODE])
+            buf.dataLength = 0;
+        // set the promise first, in case an error is raised
+        // by triggering the flow here.
+        const p = this.promise();
+        this.on('data', c => {
+            buf.push(c);
+            if (!this[OBJECTMODE])
+                buf.dataLength += c.length;
+        });
+        await p;
+        return buf;
+    }
+    /**
+     * Return a Promise that resolves to the concatenation of all emitted data
+     * once the stream ends.
+     *
+     * Not allowed on objectMode streams.
+     */
+    async concat() {
+        if (this[OBJECTMODE]) {
+            throw new Error('cannot concat in objectMode');
+        }
+        const buf = await this.collect();
+        return (this[ENCODING]
+            ? buf.join('')
+            : Buffer.concat(buf, buf.dataLength));
+    }
+    /**
+     * Return a void Promise that resolves once the stream ends.
+     */
+    async promise() {
+        return new Promise((resolve, reject) => {
+            this.on(DESTROYED, () => reject(new Error('stream destroyed')));
+            this.on('error', er => reject(er));
+            this.on('end', () => resolve());
+        });
+    }
+    /**
+     * Asynchronous `for await of` iteration.
+     *
+     * This will continue emitting all chunks until the stream terminates.
+     */
+    [Symbol.asyncIterator]() {
+        // set this up front, in case the consumer doesn't call next()
+        // right away.
+        this[DISCARDED] = false;
+        let stopped = false;
+        const stop = async () => {
+            this.pause();
+            stopped = true;
+            return { value: undefined, done: true };
+        };
+        const next = () => {
+            if (stopped)
+                return stop();
+            const res = this.read();
+            if (res !== null)
+                return Promise.resolve({ done: false, value: res });
+            if (this[EOF])
+                return stop();
+            let resolve;
+            let reject;
+            const onerr = (er) => {
+                this.off('data', ondata);
+                this.off('end', onend);
+                this.off(DESTROYED, ondestroy);
+                stop();
+                reject(er);
+            };
+            const ondata = (value) => {
+                this.off('error', onerr);
+                this.off('end', onend);
+                this.off(DESTROYED, ondestroy);
+                this.pause();
+                resolve({ value, done: !!this[EOF] });
+            };
+            const onend = () => {
+                this.off('error', onerr);
+                this.off('data', ondata);
+                this.off(DESTROYED, ondestroy);
+                stop();
+                resolve({ done: true, value: undefined });
+            };
+            const ondestroy = () => onerr(new Error('stream destroyed'));
+            return new Promise((res, rej) => {
+                reject = rej;
+                resolve = res;
+                this.once(DESTROYED, ondestroy);
+                this.once('error', onerr);
+                this.once('end', onend);
+                this.once('data', ondata);
+            });
+        };
+        return {
+            next,
+            throw: stop,
+            return: stop,
+            [Symbol.asyncIterator]() {
+                return this;
+            },
+        };
+    }
+    /**
+     * Synchronous `for of` iteration.
+     *
+     * The iteration will terminate when the internal buffer runs out, even
+     * if the stream has not yet terminated.
+     */
+    [Symbol.iterator]() {
+        // set this up front, in case the consumer doesn't call next()
+        // right away.
+        this[DISCARDED] = false;
+        let stopped = false;
+        const stop = () => {
+            this.pause();
+            this.off(ERROR, stop);
+            this.off(DESTROYED, stop);
+            this.off('end', stop);
+            stopped = true;
+            return { done: true, value: undefined };
+        };
+        const next = () => {
+            if (stopped)
+                return stop();
+            const value = this.read();
+            return value === null ? stop() : { done: false, value };
+        };
+        this.once('end', stop);
+        this.once(ERROR, stop);
+        this.once(DESTROYED, stop);
+        return {
+            next,
+            throw: stop,
+            return: stop,
+            [Symbol.iterator]() {
+                return this;
+            },
+        };
+    }
+    /**
+     * Destroy a stream, preventing it from being used for any further purpose.
+     *
+     * If the stream has a `close()` method, then it will be called on
+     * destruction.
+     *
+     * After destruction, any attempt to write data, read data, or emit most
+     * events will be ignored.
+     *
+     * If an error argument is provided, then it will be emitted in an
+     * 'error' event.
+     */
+    destroy(er) {
+        if (this[DESTROYED]) {
+            if (er)
+                this.emit('error', er);
+            else
+                this.emit(DESTROYED);
+            return this;
+        }
+        this[DESTROYED] = true;
+        this[DISCARDED] = true;
+        // throw away all buffered data, it's never coming out
+        this[BUFFER].length = 0;
+        this[BUFFERLENGTH] = 0;
+        const wc = this;
+        if (typeof wc.close === 'function' && !this[CLOSED])
+            wc.close();
+        if (er)
+            this.emit('error', er);
+        // if no error to emit, still reject pending promises
+        else
+            this.emit(DESTROYED);
+        return this;
+    }
+    /**
+     * Alias for {@link isStream}
+     *
+     * Former export location, maintained for backwards compatibility.
+     *
+     * @deprecated
+     */
+    static get isStream() {
+        return exports.isStream;
+    }
+}
+exports.Minipass = Minipass;
+//# sourceMappingURL=index.js.map
+
+/***/ }),
+
+/***/ 1081:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.PathScurry = exports.Path = exports.PathScurryDarwin = exports.PathScurryPosix = exports.PathScurryWin32 = exports.PathScurryBase = exports.PathPosix = exports.PathWin32 = exports.PathBase = exports.ChildrenCache = exports.ResolveCache = void 0;
+const lru_cache_1 = __nccwpck_require__(6091);
+const node_path_1 = __nccwpck_require__(9411);
+const node_url_1 = __nccwpck_require__(1041);
+const fs_1 = __nccwpck_require__(7147);
+const actualFS = __importStar(__nccwpck_require__(7561));
+const realpathSync = fs_1.realpathSync.native;
+// TODO: test perf of fs/promises realpath vs realpathCB,
+// since the promises one uses realpath.native
+const promises_1 = __nccwpck_require__(3977);
+const minipass_1 = __nccwpck_require__(4968);
+const defaultFS = {
+    lstatSync: fs_1.lstatSync,
+    readdir: fs_1.readdir,
+    readdirSync: fs_1.readdirSync,
+    readlinkSync: fs_1.readlinkSync,
+    realpathSync,
+    promises: {
+        lstat: promises_1.lstat,
+        readdir: promises_1.readdir,
+        readlink: promises_1.readlink,
+        realpath: promises_1.realpath,
+    },
+};
+// if they just gave us require('fs') then use our default
+const fsFromOption = (fsOption) => !fsOption || fsOption === defaultFS || fsOption === actualFS ?
+    defaultFS
+    : {
+        ...defaultFS,
+        ...fsOption,
+        promises: {
+            ...defaultFS.promises,
+            ...(fsOption.promises || {}),
+        },
+    };
+// turn something like //?/c:/ into c:\
+const uncDriveRegexp = /^\\\\\?\\([a-z]:)\\?$/i;
+const uncToDrive = (rootPath) => rootPath.replace(/\//g, '\\').replace(uncDriveRegexp, '$1\\');
+// windows paths are separated by either / or \
+const eitherSep = /[\\\/]/;
+const UNKNOWN = 0; // may not even exist, for all we know
+const IFIFO = 0b0001;
+const IFCHR = 0b0010;
+const IFDIR = 0b0100;
+const IFBLK = 0b0110;
+const IFREG = 0b1000;
+const IFLNK = 0b1010;
+const IFSOCK = 0b1100;
+const IFMT = 0b1111;
+// mask to unset low 4 bits
+const IFMT_UNKNOWN = ~IFMT;
+// set after successfully calling readdir() and getting entries.
+const READDIR_CALLED = 0b0000_0001_0000;
+// set after a successful lstat()
+const LSTAT_CALLED = 0b0000_0010_0000;
+// set if an entry (or one of its parents) is definitely not a dir
+const ENOTDIR = 0b0000_0100_0000;
+// set if an entry (or one of its parents) does not exist
+// (can also be set on lstat errors like EACCES or ENAMETOOLONG)
+const ENOENT = 0b0000_1000_0000;
+// cannot have child entries -- also verify &IFMT is either IFDIR or IFLNK
+// set if we fail to readlink
+const ENOREADLINK = 0b0001_0000_0000;
+// set if we know realpath() will fail
+const ENOREALPATH = 0b0010_0000_0000;
+const ENOCHILD = ENOTDIR | ENOENT | ENOREALPATH;
+const TYPEMASK = 0b0011_1111_1111;
+const entToType = (s) => s.isFile() ? IFREG
+    : s.isDirectory() ? IFDIR
+        : s.isSymbolicLink() ? IFLNK
+            : s.isCharacterDevice() ? IFCHR
+                : s.isBlockDevice() ? IFBLK
+                    : s.isSocket() ? IFSOCK
+                        : s.isFIFO() ? IFIFO
+                            : UNKNOWN;
+// normalize unicode path names
+const normalizeCache = new Map();
+const normalize = (s) => {
+    const c = normalizeCache.get(s);
+    if (c)
+        return c;
+    const n = s.normalize('NFKD');
+    normalizeCache.set(s, n);
+    return n;
+};
+const normalizeNocaseCache = new Map();
+const normalizeNocase = (s) => {
+    const c = normalizeNocaseCache.get(s);
+    if (c)
+        return c;
+    const n = normalize(s.toLowerCase());
+    normalizeNocaseCache.set(s, n);
+    return n;
+};
+/**
+ * An LRUCache for storing resolved path strings or Path objects.
+ * @internal
+ */
+class ResolveCache extends lru_cache_1.LRUCache {
+    constructor() {
+        super({ max: 256 });
+    }
+}
+exports.ResolveCache = ResolveCache;
+// In order to prevent blowing out the js heap by allocating hundreds of
+// thousands of Path entries when walking extremely large trees, the "children"
+// in this tree are represented by storing an array of Path entries in an
+// LRUCache, indexed by the parent.  At any time, Path.children() may return an
+// empty array, indicating that it doesn't know about any of its children, and
+// thus has to rebuild that cache.  This is fine, it just means that we don't
+// benefit as much from having the cached entries, but huge directory walks
+// don't blow out the stack, and smaller ones are still as fast as possible.
+//
+//It does impose some complexity when building up the readdir data, because we
+//need to pass a reference to the children array that we started with.
+/**
+ * an LRUCache for storing child entries.
+ * @internal
+ */
+class ChildrenCache extends lru_cache_1.LRUCache {
+    constructor(maxSize = 16 * 1024) {
+        super({
+            maxSize,
+            // parent + children
+            sizeCalculation: a => a.length + 1,
+        });
+    }
+}
+exports.ChildrenCache = ChildrenCache;
+const setAsCwd = Symbol('PathScurry setAsCwd');
+/**
+ * Path objects are sort of like a super-powered
+ * {@link https://nodejs.org/docs/latest/api/fs.html#class-fsdirent fs.Dirent}
+ *
+ * Each one represents a single filesystem entry on disk, which may or may not
+ * exist. It includes methods for reading various types of information via
+ * lstat, readlink, and readdir, and caches all information to the greatest
+ * degree possible.
+ *
+ * Note that fs operations that would normally throw will instead return an
+ * "empty" value. This is in order to prevent excessive overhead from error
+ * stack traces.
+ */
+class PathBase {
+    /**
+     * the basename of this path
+     *
+     * **Important**: *always* test the path name against any test string
+     * usingthe {@link isNamed} method, and not by directly comparing this
+     * string. Otherwise, unicode path strings that the system sees as identical
+     * will not be properly treated as the same path, leading to incorrect
+     * behavior and possible security issues.
+     */
+    name;
+    /**
+     * the Path entry corresponding to the path root.
+     *
+     * @internal
+     */
+    root;
+    /**
+     * All roots found within the current PathScurry family
+     *
+     * @internal
+     */
+    roots;
+    /**
+     * a reference to the parent path, or undefined in the case of root entries
+     *
+     * @internal
+     */
+    parent;
+    /**
+     * boolean indicating whether paths are compared case-insensitively
+     * @internal
+     */
+    nocase;
+    /**
+     * boolean indicating that this path is the current working directory
+     * of the PathScurry collection that contains it.
+     */
+    isCWD = false;
+    // potential default fs override
+    #fs;
+    // Stats fields
+    #dev;
+    get dev() {
+        return this.#dev;
+    }
+    #mode;
+    get mode() {
+        return this.#mode;
+    }
+    #nlink;
+    get nlink() {
+        return this.#nlink;
+    }
+    #uid;
+    get uid() {
+        return this.#uid;
+    }
+    #gid;
+    get gid() {
+        return this.#gid;
+    }
+    #rdev;
+    get rdev() {
+        return this.#rdev;
+    }
+    #blksize;
+    get blksize() {
+        return this.#blksize;
+    }
+    #ino;
+    get ino() {
+        return this.#ino;
+    }
+    #size;
+    get size() {
+        return this.#size;
+    }
+    #blocks;
+    get blocks() {
+        return this.#blocks;
+    }
+    #atimeMs;
+    get atimeMs() {
+        return this.#atimeMs;
+    }
+    #mtimeMs;
+    get mtimeMs() {
+        return this.#mtimeMs;
+    }
+    #ctimeMs;
+    get ctimeMs() {
+        return this.#ctimeMs;
+    }
+    #birthtimeMs;
+    get birthtimeMs() {
+        return this.#birthtimeMs;
+    }
+    #atime;
+    get atime() {
+        return this.#atime;
+    }
+    #mtime;
+    get mtime() {
+        return this.#mtime;
+    }
+    #ctime;
+    get ctime() {
+        return this.#ctime;
+    }
+    #birthtime;
+    get birthtime() {
+        return this.#birthtime;
+    }
+    #matchName;
+    #depth;
+    #fullpath;
+    #fullpathPosix;
+    #relative;
+    #relativePosix;
+    #type;
+    #children;
+    #linkTarget;
+    #realpath;
+    /**
+     * This property is for compatibility with the Dirent class as of
+     * Node v20, where Dirent['parentPath'] refers to the path of the
+     * directory that was passed to readdir. For root entries, it's the path
+     * to the entry itself.
+     */
+    get parentPath() {
+        return (this.parent || this).fullpath();
+    }
+    /**
+     * Deprecated alias for Dirent['parentPath'] Somewhat counterintuitively,
+     * this property refers to the *parent* path, not the path object itself.
+     */
+    get path() {
+        return this.parentPath;
+    }
+    /**
+     * Do not create new Path objects directly.  They should always be accessed
+     * via the PathScurry class or other methods on the Path class.
+     *
+     * @internal
+     */
+    constructor(name, type = UNKNOWN, root, roots, nocase, children, opts) {
+        this.name = name;
+        this.#matchName = nocase ? normalizeNocase(name) : normalize(name);
+        this.#type = type & TYPEMASK;
+        this.nocase = nocase;
+        this.roots = roots;
+        this.root = root || this;
+        this.#children = children;
+        this.#fullpath = opts.fullpath;
+        this.#relative = opts.relative;
+        this.#relativePosix = opts.relativePosix;
+        this.parent = opts.parent;
+        if (this.parent) {
+            this.#fs = this.parent.#fs;
+        }
+        else {
+            this.#fs = fsFromOption(opts.fs);
+        }
+    }
+    /**
+     * Returns the depth of the Path object from its root.
+     *
+     * For example, a path at `/foo/bar` would have a depth of 2.
+     */
+    depth() {
+        if (this.#depth !== undefined)
+            return this.#depth;
+        if (!this.parent)
+            return (this.#depth = 0);
+        return (this.#depth = this.parent.depth() + 1);
+    }
+    /**
+     * @internal
+     */
+    childrenCache() {
+        return this.#children;
+    }
+    /**
+     * Get the Path object referenced by the string path, resolved from this Path
+     */
+    resolve(path) {
+        if (!path) {
+            return this;
+        }
+        const rootPath = this.getRootString(path);
+        const dir = path.substring(rootPath.length);
+        const dirParts = dir.split(this.splitSep);
+        const result = rootPath ?
+            this.getRoot(rootPath).#resolveParts(dirParts)
+            : this.#resolveParts(dirParts);
+        return result;
+    }
+    #resolveParts(dirParts) {
+        let p = this;
+        for (const part of dirParts) {
+            p = p.child(part);
+        }
+        return p;
+    }
+    /**
+     * Returns the cached children Path objects, if still available.  If they
+     * have fallen out of the cache, then returns an empty array, and resets the
+     * READDIR_CALLED bit, so that future calls to readdir() will require an fs
+     * lookup.
+     *
+     * @internal
+     */
+    children() {
+        const cached = this.#children.get(this);
+        if (cached) {
+            return cached;
+        }
+        const children = Object.assign([], { provisional: 0 });
+        this.#children.set(this, children);
+        this.#type &= ~READDIR_CALLED;
+        return children;
+    }
+    /**
+     * Resolves a path portion and returns or creates the child Path.
+     *
+     * Returns `this` if pathPart is `''` or `'.'`, or `parent` if pathPart is
+     * `'..'`.
+     *
+     * This should not be called directly.  If `pathPart` contains any path
+     * separators, it will lead to unsafe undefined behavior.
+     *
+     * Use `Path.resolve()` instead.
+     *
+     * @internal
+     */
+    child(pathPart, opts) {
+        if (pathPart === '' || pathPart === '.') {
+            return this;
+        }
+        if (pathPart === '..') {
+            return this.parent || this;
+        }
+        // find the child
+        const children = this.children();
+        const name = this.nocase ? normalizeNocase(pathPart) : normalize(pathPart);
+        for (const p of children) {
+            if (p.#matchName === name) {
+                return p;
+            }
+        }
+        // didn't find it, create provisional child, since it might not
+        // actually exist.  If we know the parent isn't a dir, then
+        // in fact it CAN'T exist.
+        const s = this.parent ? this.sep : '';
+        const fullpath = this.#fullpath ? this.#fullpath + s + pathPart : undefined;
+        const pchild = this.newChild(pathPart, UNKNOWN, {
+            ...opts,
+            parent: this,
+            fullpath,
+        });
+        if (!this.canReaddir()) {
+            pchild.#type |= ENOENT;
+        }
+        // don't have to update provisional, because if we have real children,
+        // then provisional is set to children.length, otherwise a lower number
+        children.push(pchild);
+        return pchild;
+    }
+    /**
+     * The relative path from the cwd. If it does not share an ancestor with
+     * the cwd, then this ends up being equivalent to the fullpath()
+     */
+    relative() {
+        if (this.isCWD)
+            return '';
+        if (this.#relative !== undefined) {
+            return this.#relative;
+        }
+        const name = this.name;
+        const p = this.parent;
+        if (!p) {
+            return (this.#relative = this.name);
+        }
+        const pv = p.relative();
+        return pv + (!pv || !p.parent ? '' : this.sep) + name;
+    }
+    /**
+     * The relative path from the cwd, using / as the path separator.
+     * If it does not share an ancestor with
+     * the cwd, then this ends up being equivalent to the fullpathPosix()
+     * On posix systems, this is identical to relative().
+     */
+    relativePosix() {
+        if (this.sep === '/')
+            return this.relative();
+        if (this.isCWD)
+            return '';
+        if (this.#relativePosix !== undefined)
+            return this.#relativePosix;
+        const name = this.name;
+        const p = this.parent;
+        if (!p) {
+            return (this.#relativePosix = this.fullpathPosix());
+        }
+        const pv = p.relativePosix();
+        return pv + (!pv || !p.parent ? '' : '/') + name;
+    }
+    /**
+     * The fully resolved path string for this Path entry
+     */
+    fullpath() {
+        if (this.#fullpath !== undefined) {
+            return this.#fullpath;
+        }
+        const name = this.name;
+        const p = this.parent;
+        if (!p) {
+            return (this.#fullpath = this.name);
+        }
+        const pv = p.fullpath();
+        const fp = pv + (!p.parent ? '' : this.sep) + name;
+        return (this.#fullpath = fp);
+    }
+    /**
+     * On platforms other than windows, this is identical to fullpath.
+     *
+     * On windows, this is overridden to return the forward-slash form of the
+     * full UNC path.
+     */
+    fullpathPosix() {
+        if (this.#fullpathPosix !== undefined)
+            return this.#fullpathPosix;
+        if (this.sep === '/')
+            return (this.#fullpathPosix = this.fullpath());
+        if (!this.parent) {
+            const p = this.fullpath().replace(/\\/g, '/');
+            if (/^[a-z]:\//i.test(p)) {
+                return (this.#fullpathPosix = `//?/${p}`);
+            }
+            else {
+                return (this.#fullpathPosix = p);
+            }
+        }
+        const p = this.parent;
+        const pfpp = p.fullpathPosix();
+        const fpp = pfpp + (!pfpp || !p.parent ? '' : '/') + this.name;
+        return (this.#fullpathPosix = fpp);
+    }
+    /**
+     * Is the Path of an unknown type?
+     *
+     * Note that we might know *something* about it if there has been a previous
+     * filesystem operation, for example that it does not exist, or is not a
+     * link, or whether it has child entries.
+     */
+    isUnknown() {
+        return (this.#type & IFMT) === UNKNOWN;
+    }
+    isType(type) {
+        return this[`is${type}`]();
+    }
+    getType() {
+        return (this.isUnknown() ? 'Unknown'
+            : this.isDirectory() ? 'Directory'
+                : this.isFile() ? 'File'
+                    : this.isSymbolicLink() ? 'SymbolicLink'
+                        : this.isFIFO() ? 'FIFO'
+                            : this.isCharacterDevice() ? 'CharacterDevice'
+                                : this.isBlockDevice() ? 'BlockDevice'
+                                    : /* c8 ignore start */ this.isSocket() ? 'Socket'
+                                        : 'Unknown');
+        /* c8 ignore stop */
+    }
+    /**
+     * Is the Path a regular file?
+     */
+    isFile() {
+        return (this.#type & IFMT) === IFREG;
+    }
+    /**
+     * Is the Path a directory?
+     */
+    isDirectory() {
+        return (this.#type & IFMT) === IFDIR;
+    }
+    /**
+     * Is the path a character device?
+     */
+    isCharacterDevice() {
+        return (this.#type & IFMT) === IFCHR;
+    }
+    /**
+     * Is the path a block device?
+     */
+    isBlockDevice() {
+        return (this.#type & IFMT) === IFBLK;
+    }
+    /**
+     * Is the path a FIFO pipe?
+     */
+    isFIFO() {
+        return (this.#type & IFMT) === IFIFO;
+    }
+    /**
+     * Is the path a socket?
+     */
+    isSocket() {
+        return (this.#type & IFMT) === IFSOCK;
+    }
+    /**
+     * Is the path a symbolic link?
+     */
+    isSymbolicLink() {
+        return (this.#type & IFLNK) === IFLNK;
+    }
+    /**
+     * Return the entry if it has been subject of a successful lstat, or
+     * undefined otherwise.
+     *
+     * Does not read the filesystem, so an undefined result *could* simply
+     * mean that we haven't called lstat on it.
+     */
+    lstatCached() {
+        return this.#type & LSTAT_CALLED ? this : undefined;
+    }
+    /**
+     * Return the cached link target if the entry has been the subject of a
+     * successful readlink, or undefined otherwise.
+     *
+     * Does not read the filesystem, so an undefined result *could* just mean we
+     * don't have any cached data. Only use it if you are very sure that a
+     * readlink() has been called at some point.
+     */
+    readlinkCached() {
+        return this.#linkTarget;
+    }
+    /**
+     * Returns the cached realpath target if the entry has been the subject
+     * of a successful realpath, or undefined otherwise.
+     *
+     * Does not read the filesystem, so an undefined result *could* just mean we
+     * don't have any cached data. Only use it if you are very sure that a
+     * realpath() has been called at some point.
+     */
+    realpathCached() {
+        return this.#realpath;
+    }
+    /**
+     * Returns the cached child Path entries array if the entry has been the
+     * subject of a successful readdir(), or [] otherwise.
+     *
+     * Does not read the filesystem, so an empty array *could* just mean we
+     * don't have any cached data. Only use it if you are very sure that a
+     * readdir() has been called recently enough to still be valid.
+     */
+    readdirCached() {
+        const children = this.children();
+        return children.slice(0, children.provisional);
+    }
+    /**
+     * Return true if it's worth trying to readlink.  Ie, we don't (yet) have
+     * any indication that readlink will definitely fail.
+     *
+     * Returns false if the path is known to not be a symlink, if a previous
+     * readlink failed, or if the entry does not exist.
+     */
+    canReadlink() {
+        if (this.#linkTarget)
+            return true;
+        if (!this.parent)
+            return false;
+        // cases where it cannot possibly succeed
+        const ifmt = this.#type & IFMT;
+        return !((ifmt !== UNKNOWN && ifmt !== IFLNK) ||
+            this.#type & ENOREADLINK ||
+            this.#type & ENOENT);
+    }
+    /**
+     * Return true if readdir has previously been successfully called on this
+     * path, indicating that cachedReaddir() is likely valid.
+     */
+    calledReaddir() {
+        return !!(this.#type & READDIR_CALLED);
+    }
+    /**
+     * Returns true if the path is known to not exist. That is, a previous lstat
+     * or readdir failed to verify its existence when that would have been
+     * expected, or a parent entry was marked either enoent or enotdir.
+     */
+    isENOENT() {
+        return !!(this.#type & ENOENT);
+    }
+    /**
+     * Return true if the path is a match for the given path name.  This handles
+     * case sensitivity and unicode normalization.
+     *
+     * Note: even on case-sensitive systems, it is **not** safe to test the
+     * equality of the `.name` property to determine whether a given pathname
+     * matches, due to unicode normalization mismatches.
+     *
+     * Always use this method instead of testing the `path.name` property
+     * directly.
+     */
+    isNamed(n) {
+        return !this.nocase ?
+            this.#matchName === normalize(n)
+            : this.#matchName === normalizeNocase(n);
+    }
+    /**
+     * Return the Path object corresponding to the target of a symbolic link.
+     *
+     * If the Path is not a symbolic link, or if the readlink call fails for any
+     * reason, `undefined` is returned.
+     *
+     * Result is cached, and thus may be outdated if the filesystem is mutated.
+     */
+    async readlink() {
+        const target = this.#linkTarget;
+        if (target) {
+            return target;
+        }
+        if (!this.canReadlink()) {
+            return undefined;
+        }
+        /* c8 ignore start */
+        // already covered by the canReadlink test, here for ts grumples
+        if (!this.parent) {
+            return undefined;
+        }
+        /* c8 ignore stop */
+        try {
+            const read = await this.#fs.promises.readlink(this.fullpath());
+            const linkTarget = (await this.parent.realpath())?.resolve(read);
+            if (linkTarget) {
+                return (this.#linkTarget = linkTarget);
+            }
+        }
+        catch (er) {
+            this.#readlinkFail(er.code);
+            return undefined;
+        }
+    }
+    /**
+     * Synchronous {@link PathBase.readlink}
+     */
+    readlinkSync() {
+        const target = this.#linkTarget;
+        if (target) {
+            return target;
+        }
+        if (!this.canReadlink()) {
+            return undefined;
+        }
+        /* c8 ignore start */
+        // already covered by the canReadlink test, here for ts grumples
+        if (!this.parent) {
+            return undefined;
+        }
+        /* c8 ignore stop */
+        try {
+            const read = this.#fs.readlinkSync(this.fullpath());
+            const linkTarget = this.parent.realpathSync()?.resolve(read);
+            if (linkTarget) {
+                return (this.#linkTarget = linkTarget);
+            }
+        }
+        catch (er) {
+            this.#readlinkFail(er.code);
+            return undefined;
+        }
+    }
+    #readdirSuccess(children) {
+        // succeeded, mark readdir called bit
+        this.#type |= READDIR_CALLED;
+        // mark all remaining provisional children as ENOENT
+        for (let p = children.provisional; p < children.length; p++) {
+            const c = children[p];
+            if (c)
+                c.#markENOENT();
+        }
+    }
+    #markENOENT() {
+        // mark as UNKNOWN and ENOENT
+        if (this.#type & ENOENT)
+            return;
+        this.#type = (this.#type | ENOENT) & IFMT_UNKNOWN;
+        this.#markChildrenENOENT();
+    }
+    #markChildrenENOENT() {
+        // all children are provisional and do not exist
+        const children = this.children();
+        children.provisional = 0;
+        for (const p of children) {
+            p.#markENOENT();
+        }
+    }
+    #markENOREALPATH() {
+        this.#type |= ENOREALPATH;
+        this.#markENOTDIR();
+    }
+    // save the information when we know the entry is not a dir
+    #markENOTDIR() {
+        // entry is not a directory, so any children can't exist.
+        // this *should* be impossible, since any children created
+        // after it's been marked ENOTDIR should be marked ENOENT,
+        // so it won't even get to this point.
+        /* c8 ignore start */
+        if (this.#type & ENOTDIR)
+            return;
+        /* c8 ignore stop */
+        let t = this.#type;
+        // this could happen if we stat a dir, then delete it,
+        // then try to read it or one of its children.
+        if ((t & IFMT) === IFDIR)
+            t &= IFMT_UNKNOWN;
+        this.#type = t | ENOTDIR;
+        this.#markChildrenENOENT();
+    }
+    #readdirFail(code = '') {
+        // markENOTDIR and markENOENT also set provisional=0
+        if (code === 'ENOTDIR' || code === 'EPERM') {
+            this.#markENOTDIR();
+        }
+        else if (code === 'ENOENT') {
+            this.#markENOENT();
+        }
+        else {
+            this.children().provisional = 0;
+        }
+    }
+    #lstatFail(code = '') {
+        // Windows just raises ENOENT in this case, disable for win CI
+        /* c8 ignore start */
+        if (code === 'ENOTDIR') {
+            // already know it has a parent by this point
+            const p = this.parent;
+            p.#markENOTDIR();
+        }
+        else if (code === 'ENOENT') {
+            /* c8 ignore stop */
+            this.#markENOENT();
+        }
+    }
+    #readlinkFail(code = '') {
+        let ter = this.#type;
+        ter |= ENOREADLINK;
+        if (code === 'ENOENT')
+            ter |= ENOENT;
+        // windows gets a weird error when you try to readlink a file
+        if (code === 'EINVAL' || code === 'UNKNOWN') {
+            // exists, but not a symlink, we don't know WHAT it is, so remove
+            // all IFMT bits.
+            ter &= IFMT_UNKNOWN;
+        }
+        this.#type = ter;
+        // windows just gets ENOENT in this case.  We do cover the case,
+        // just disabled because it's impossible on Windows CI
+        /* c8 ignore start */
+        if (code === 'ENOTDIR' && this.parent) {
+            this.parent.#markENOTDIR();
+        }
+        /* c8 ignore stop */
+    }
+    #readdirAddChild(e, c) {
+        return (this.#readdirMaybePromoteChild(e, c) ||
+            this.#readdirAddNewChild(e, c));
+    }
+    #readdirAddNewChild(e, c) {
+        // alloc new entry at head, so it's never provisional
+        const type = entToType(e);
+        const child = this.newChild(e.name, type, { parent: this });
+        const ifmt = child.#type & IFMT;
+        if (ifmt !== IFDIR && ifmt !== IFLNK && ifmt !== UNKNOWN) {
+            child.#type |= ENOTDIR;
+        }
+        c.unshift(child);
+        c.provisional++;
+        return child;
+    }
+    #readdirMaybePromoteChild(e, c) {
+        for (let p = c.provisional; p < c.length; p++) {
+            const pchild = c[p];
+            const name = this.nocase ? normalizeNocase(e.name) : normalize(e.name);
+            if (name !== pchild.#matchName) {
+                continue;
+            }
+            return this.#readdirPromoteChild(e, pchild, p, c);
+        }
+    }
+    #readdirPromoteChild(e, p, index, c) {
+        const v = p.name;
+        // retain any other flags, but set ifmt from dirent
+        p.#type = (p.#type & IFMT_UNKNOWN) | entToType(e);
+        // case sensitivity fixing when we learn the true name.
+        if (v !== e.name)
+            p.name = e.name;
+        // just advance provisional index (potentially off the list),
+        // otherwise we have to splice/pop it out and re-insert at head
+        if (index !== c.provisional) {
+            if (index === c.length - 1)
+                c.pop();
+            else
+                c.splice(index, 1);
+            c.unshift(p);
+        }
+        c.provisional++;
+        return p;
+    }
+    /**
+     * Call lstat() on this Path, and update all known information that can be
+     * determined.
+     *
+     * Note that unlike `fs.lstat()`, the returned value does not contain some
+     * information, such as `mode`, `dev`, `nlink`, and `ino`.  If that
+     * information is required, you will need to call `fs.lstat` yourself.
+     *
+     * If the Path refers to a nonexistent file, or if the lstat call fails for
+     * any reason, `undefined` is returned.  Otherwise the updated Path object is
+     * returned.
+     *
+     * Results are cached, and thus may be out of date if the filesystem is
+     * mutated.
+     */
+    async lstat() {
+        if ((this.#type & ENOENT) === 0) {
+            try {
+                this.#applyStat(await this.#fs.promises.lstat(this.fullpath()));
+                return this;
+            }
+            catch (er) {
+                this.#lstatFail(er.code);
+            }
+        }
+    }
+    /**
+     * synchronous {@link PathBase.lstat}
+     */
+    lstatSync() {
+        if ((this.#type & ENOENT) === 0) {
+            try {
+                this.#applyStat(this.#fs.lstatSync(this.fullpath()));
+                return this;
+            }
+            catch (er) {
+                this.#lstatFail(er.code);
+            }
+        }
+    }
+    #applyStat(st) {
+        const { atime, atimeMs, birthtime, birthtimeMs, blksize, blocks, ctime, ctimeMs, dev, gid, ino, mode, mtime, mtimeMs, nlink, rdev, size, uid, } = st;
+        this.#atime = atime;
+        this.#atimeMs = atimeMs;
+        this.#birthtime = birthtime;
+        this.#birthtimeMs = birthtimeMs;
+        this.#blksize = blksize;
+        this.#blocks = blocks;
+        this.#ctime = ctime;
+        this.#ctimeMs = ctimeMs;
+        this.#dev = dev;
+        this.#gid = gid;
+        this.#ino = ino;
+        this.#mode = mode;
+        this.#mtime = mtime;
+        this.#mtimeMs = mtimeMs;
+        this.#nlink = nlink;
+        this.#rdev = rdev;
+        this.#size = size;
+        this.#uid = uid;
+        const ifmt = entToType(st);
+        // retain any other flags, but set the ifmt
+        this.#type = (this.#type & IFMT_UNKNOWN) | ifmt | LSTAT_CALLED;
+        if (ifmt !== UNKNOWN && ifmt !== IFDIR && ifmt !== IFLNK) {
+            this.#type |= ENOTDIR;
+        }
+    }
+    #onReaddirCB = [];
+    #readdirCBInFlight = false;
+    #callOnReaddirCB(children) {
+        this.#readdirCBInFlight = false;
+        const cbs = this.#onReaddirCB.slice();
+        this.#onReaddirCB.length = 0;
+        cbs.forEach(cb => cb(null, children));
+    }
+    /**
+     * Standard node-style callback interface to get list of directory entries.
+     *
+     * If the Path cannot or does not contain any children, then an empty array
+     * is returned.
+     *
+     * Results are cached, and thus may be out of date if the filesystem is
+     * mutated.
+     *
+     * @param cb The callback called with (er, entries).  Note that the `er`
+     * param is somewhat extraneous, as all readdir() errors are handled and
+     * simply result in an empty set of entries being returned.
+     * @param allowZalgo Boolean indicating that immediately known results should
+     * *not* be deferred with `queueMicrotask`. Defaults to `false`. Release
+     * zalgo at your peril, the dark pony lord is devious and unforgiving.
+     */
+    readdirCB(cb, allowZalgo = false) {
+        if (!this.canReaddir()) {
+            if (allowZalgo)
+                cb(null, []);
+            else
+                queueMicrotask(() => cb(null, []));
+            return;
+        }
+        const children = this.children();
+        if (this.calledReaddir()) {
+            const c = children.slice(0, children.provisional);
+            if (allowZalgo)
+                cb(null, c);
+            else
+                queueMicrotask(() => cb(null, c));
+            return;
+        }
+        // don't have to worry about zalgo at this point.
+        this.#onReaddirCB.push(cb);
+        if (this.#readdirCBInFlight) {
+            return;
+        }
+        this.#readdirCBInFlight = true;
+        // else read the directory, fill up children
+        // de-provisionalize any provisional children.
+        const fullpath = this.fullpath();
+        this.#fs.readdir(fullpath, { withFileTypes: true }, (er, entries) => {
+            if (er) {
+                this.#readdirFail(er.code);
+                children.provisional = 0;
+            }
+            else {
+                // if we didn't get an error, we always get entries.
+                //@ts-ignore
+                for (const e of entries) {
+                    this.#readdirAddChild(e, children);
+                }
+                this.#readdirSuccess(children);
+            }
+            this.#callOnReaddirCB(children.slice(0, children.provisional));
+            return;
+        });
+    }
+    #asyncReaddirInFlight;
+    /**
+     * Return an array of known child entries.
+     *
+     * If the Path cannot or does not contain any children, then an empty array
+     * is returned.
+     *
+     * Results are cached, and thus may be out of date if the filesystem is
+     * mutated.
+     */
+    async readdir() {
+        if (!this.canReaddir()) {
+            return [];
+        }
+        const children = this.children();
+        if (this.calledReaddir()) {
+            return children.slice(0, children.provisional);
+        }
+        // else read the directory, fill up children
+        // de-provisionalize any provisional children.
+        const fullpath = this.fullpath();
+        if (this.#asyncReaddirInFlight) {
+            await this.#asyncReaddirInFlight;
+        }
+        else {
+            /* c8 ignore start */
+            let resolve = () => { };
+            /* c8 ignore stop */
+            this.#asyncReaddirInFlight = new Promise(res => (resolve = res));
+            try {
+                for (const e of await this.#fs.promises.readdir(fullpath, {
+                    withFileTypes: true,
+                })) {
+                    this.#readdirAddChild(e, children);
+                }
+                this.#readdirSuccess(children);
+            }
+            catch (er) {
+                this.#readdirFail(er.code);
+                children.provisional = 0;
+            }
+            this.#asyncReaddirInFlight = undefined;
+            resolve();
+        }
+        return children.slice(0, children.provisional);
+    }
+    /**
+     * synchronous {@link PathBase.readdir}
+     */
+    readdirSync() {
+        if (!this.canReaddir()) {
+            return [];
+        }
+        const children = this.children();
+        if (this.calledReaddir()) {
+            return children.slice(0, children.provisional);
+        }
+        // else read the directory, fill up children
+        // de-provisionalize any provisional children.
+        const fullpath = this.fullpath();
+        try {
+            for (const e of this.#fs.readdirSync(fullpath, {
+                withFileTypes: true,
+            })) {
+                this.#readdirAddChild(e, children);
+            }
+            this.#readdirSuccess(children);
+        }
+        catch (er) {
+            this.#readdirFail(er.code);
+            children.provisional = 0;
+        }
+        return children.slice(0, children.provisional);
+    }
+    canReaddir() {
+        if (this.#type & ENOCHILD)
+            return false;
+        const ifmt = IFMT & this.#type;
+        // we always set ENOTDIR when setting IFMT, so should be impossible
+        /* c8 ignore start */
+        if (!(ifmt === UNKNOWN || ifmt === IFDIR || ifmt === IFLNK)) {
+            return false;
+        }
+        /* c8 ignore stop */
+        return true;
+    }
+    shouldWalk(dirs, walkFilter) {
+        return ((this.#type & IFDIR) === IFDIR &&
+            !(this.#type & ENOCHILD) &&
+            !dirs.has(this) &&
+            (!walkFilter || walkFilter(this)));
+    }
+    /**
+     * Return the Path object corresponding to path as resolved
+     * by realpath(3).
+     *
+     * If the realpath call fails for any reason, `undefined` is returned.
+     *
+     * Result is cached, and thus may be outdated if the filesystem is mutated.
+     * On success, returns a Path object.
+     */
+    async realpath() {
+        if (this.#realpath)
+            return this.#realpath;
+        if ((ENOREALPATH | ENOREADLINK | ENOENT) & this.#type)
+            return undefined;
+        try {
+            const rp = await this.#fs.promises.realpath(this.fullpath());
+            return (this.#realpath = this.resolve(rp));
+        }
+        catch (_) {
+            this.#markENOREALPATH();
+        }
+    }
+    /**
+     * Synchronous {@link realpath}
+     */
+    realpathSync() {
+        if (this.#realpath)
+            return this.#realpath;
+        if ((ENOREALPATH | ENOREADLINK | ENOENT) & this.#type)
+            return undefined;
+        try {
+            const rp = this.#fs.realpathSync(this.fullpath());
+            return (this.#realpath = this.resolve(rp));
+        }
+        catch (_) {
+            this.#markENOREALPATH();
+        }
+    }
+    /**
+     * Internal method to mark this Path object as the scurry cwd,
+     * called by {@link PathScurry#chdir}
+     *
+     * @internal
+     */
+    [setAsCwd](oldCwd) {
+        if (oldCwd === this)
+            return;
+        oldCwd.isCWD = false;
+        this.isCWD = true;
+        const changed = new Set([]);
+        let rp = [];
+        let p = this;
+        while (p && p.parent) {
+            changed.add(p);
+            p.#relative = rp.join(this.sep);
+            p.#relativePosix = rp.join('/');
+            p = p.parent;
+            rp.push('..');
+        }
+        // now un-memoize parents of old cwd
+        p = oldCwd;
+        while (p && p.parent && !changed.has(p)) {
+            p.#relative = undefined;
+            p.#relativePosix = undefined;
+            p = p.parent;
+        }
+    }
+}
+exports.PathBase = PathBase;
+/**
+ * Path class used on win32 systems
+ *
+ * Uses `'\\'` as the path separator for returned paths, either `'\\'` or `'/'`
+ * as the path separator for parsing paths.
+ */
+class PathWin32 extends PathBase {
+    /**
+     * Separator for generating path strings.
+     */
+    sep = '\\';
+    /**
+     * Separator for parsing path strings.
+     */
+    splitSep = eitherSep;
+    /**
+     * Do not create new Path objects directly.  They should always be accessed
+     * via the PathScurry class or other methods on the Path class.
+     *
+     * @internal
+     */
+    constructor(name, type = UNKNOWN, root, roots, nocase, children, opts) {
+        super(name, type, root, roots, nocase, children, opts);
+    }
+    /**
+     * @internal
+     */
+    newChild(name, type = UNKNOWN, opts = {}) {
+        return new PathWin32(name, type, this.root, this.roots, this.nocase, this.childrenCache(), opts);
+    }
+    /**
+     * @internal
+     */
+    getRootString(path) {
+        return node_path_1.win32.parse(path).root;
+    }
+    /**
+     * @internal
+     */
+    getRoot(rootPath) {
+        rootPath = uncToDrive(rootPath.toUpperCase());
+        if (rootPath === this.root.name) {
+            return this.root;
+        }
+        // ok, not that one, check if it matches another we know about
+        for (const [compare, root] of Object.entries(this.roots)) {
+            if (this.sameRoot(rootPath, compare)) {
+                return (this.roots[rootPath] = root);
+            }
+        }
+        // otherwise, have to create a new one.
+        return (this.roots[rootPath] = new PathScurryWin32(rootPath, this).root);
+    }
+    /**
+     * @internal
+     */
+    sameRoot(rootPath, compare = this.root.name) {
+        // windows can (rarely) have case-sensitive filesystem, but
+        // UNC and drive letters are always case-insensitive, and canonically
+        // represented uppercase.
+        rootPath = rootPath
+            .toUpperCase()
+            .replace(/\//g, '\\')
+            .replace(uncDriveRegexp, '$1\\');
+        return rootPath === compare;
+    }
+}
+exports.PathWin32 = PathWin32;
+/**
+ * Path class used on all posix systems.
+ *
+ * Uses `'/'` as the path separator.
+ */
+class PathPosix extends PathBase {
+    /**
+     * separator for parsing path strings
+     */
+    splitSep = '/';
+    /**
+     * separator for generating path strings
+     */
+    sep = '/';
+    /**
+     * Do not create new Path objects directly.  They should always be accessed
+     * via the PathScurry class or other methods on the Path class.
+     *
+     * @internal
+     */
+    constructor(name, type = UNKNOWN, root, roots, nocase, children, opts) {
+        super(name, type, root, roots, nocase, children, opts);
+    }
+    /**
+     * @internal
+     */
+    getRootString(path) {
+        return path.startsWith('/') ? '/' : '';
+    }
+    /**
+     * @internal
+     */
+    getRoot(_rootPath) {
+        return this.root;
+    }
+    /**
+     * @internal
+     */
+    newChild(name, type = UNKNOWN, opts = {}) {
+        return new PathPosix(name, type, this.root, this.roots, this.nocase, this.childrenCache(), opts);
+    }
+}
+exports.PathPosix = PathPosix;
+/**
+ * The base class for all PathScurry classes, providing the interface for path
+ * resolution and filesystem operations.
+ *
+ * Typically, you should *not* instantiate this class directly, but rather one
+ * of the platform-specific classes, or the exported {@link PathScurry} which
+ * defaults to the current platform.
+ */
+class PathScurryBase {
+    /**
+     * The root Path entry for the current working directory of this Scurry
+     */
+    root;
+    /**
+     * The string path for the root of this Scurry's current working directory
+     */
+    rootPath;
+    /**
+     * A collection of all roots encountered, referenced by rootPath
+     */
+    roots;
+    /**
+     * The Path entry corresponding to this PathScurry's current working directory.
+     */
+    cwd;
+    #resolveCache;
+    #resolvePosixCache;
+    #children;
+    /**
+     * Perform path comparisons case-insensitively.
+     *
+     * Defaults true on Darwin and Windows systems, false elsewhere.
+     */
+    nocase;
+    #fs;
+    /**
+     * This class should not be instantiated directly.
+     *
+     * Use PathScurryWin32, PathScurryDarwin, PathScurryPosix, or PathScurry
+     *
+     * @internal
+     */
+    constructor(cwd = process.cwd(), pathImpl, sep, { nocase, childrenCacheSize = 16 * 1024, fs = defaultFS, } = {}) {
+        this.#fs = fsFromOption(fs);
+        if (cwd instanceof URL || cwd.startsWith('file://')) {
+            cwd = (0, node_url_1.fileURLToPath)(cwd);
+        }
+        // resolve and split root, and then add to the store.
+        // this is the only time we call path.resolve()
+        const cwdPath = pathImpl.resolve(cwd);
+        this.roots = Object.create(null);
+        this.rootPath = this.parseRootPath(cwdPath);
+        this.#resolveCache = new ResolveCache();
+        this.#resolvePosixCache = new ResolveCache();
+        this.#children = new ChildrenCache(childrenCacheSize);
+        const split = cwdPath.substring(this.rootPath.length).split(sep);
+        // resolve('/') leaves '', splits to [''], we don't want that.
+        if (split.length === 1 && !split[0]) {
+            split.pop();
+        }
+        /* c8 ignore start */
+        if (nocase === undefined) {
+            throw new TypeError('must provide nocase setting to PathScurryBase ctor');
+        }
+        /* c8 ignore stop */
+        this.nocase = nocase;
+        this.root = this.newRoot(this.#fs);
+        this.roots[this.rootPath] = this.root;
+        let prev = this.root;
+        let len = split.length - 1;
+        const joinSep = pathImpl.sep;
+        let abs = this.rootPath;
+        let sawFirst = false;
+        for (const part of split) {
+            const l = len--;
+            prev = prev.child(part, {
+                relative: new Array(l).fill('..').join(joinSep),
+                relativePosix: new Array(l).fill('..').join('/'),
+                fullpath: (abs += (sawFirst ? '' : joinSep) + part),
+            });
+            sawFirst = true;
+        }
+        this.cwd = prev;
+    }
+    /**
+     * Get the depth of a provided path, string, or the cwd
+     */
+    depth(path = this.cwd) {
+        if (typeof path === 'string') {
+            path = this.cwd.resolve(path);
+        }
+        return path.depth();
+    }
+    /**
+     * Return the cache of child entries.  Exposed so subclasses can create
+     * child Path objects in a platform-specific way.
+     *
+     * @internal
+     */
+    childrenCache() {
+        return this.#children;
+    }
+    /**
+     * Resolve one or more path strings to a resolved string
+     *
+     * Same interface as require('path').resolve.
+     *
+     * Much faster than path.resolve() when called multiple times for the same
+     * path, because the resolved Path objects are cached.  Much slower
+     * otherwise.
+     */
+    resolve(...paths) {
+        // first figure out the minimum number of paths we have to test
+        // we always start at cwd, but any absolutes will bump the start
+        let r = '';
+        for (let i = paths.length - 1; i >= 0; i--) {
+            const p = paths[i];
+            if (!p || p === '.')
+                continue;
+            r = r ? `${p}/${r}` : p;
+            if (this.isAbsolute(p)) {
+                break;
+            }
+        }
+        const cached = this.#resolveCache.get(r);
+        if (cached !== undefined) {
+            return cached;
+        }
+        const result = this.cwd.resolve(r).fullpath();
+        this.#resolveCache.set(r, result);
+        return result;
+    }
+    /**
+     * Resolve one or more path strings to a resolved string, returning
+     * the posix path.  Identical to .resolve() on posix systems, but on
+     * windows will return a forward-slash separated UNC path.
+     *
+     * Same interface as require('path').resolve.
+     *
+     * Much faster than path.resolve() when called multiple times for the same
+     * path, because the resolved Path objects are cached.  Much slower
+     * otherwise.
+     */
+    resolvePosix(...paths) {
+        // first figure out the minimum number of paths we have to test
+        // we always start at cwd, but any absolutes will bump the start
+        let r = '';
+        for (let i = paths.length - 1; i >= 0; i--) {
+            const p = paths[i];
+            if (!p || p === '.')
+                continue;
+            r = r ? `${p}/${r}` : p;
+            if (this.isAbsolute(p)) {
+                break;
+            }
+        }
+        const cached = this.#resolvePosixCache.get(r);
+        if (cached !== undefined) {
+            return cached;
+        }
+        const result = this.cwd.resolve(r).fullpathPosix();
+        this.#resolvePosixCache.set(r, result);
+        return result;
+    }
+    /**
+     * find the relative path from the cwd to the supplied path string or entry
+     */
+    relative(entry = this.cwd) {
+        if (typeof entry === 'string') {
+            entry = this.cwd.resolve(entry);
+        }
+        return entry.relative();
+    }
+    /**
+     * find the relative path from the cwd to the supplied path string or
+     * entry, using / as the path delimiter, even on Windows.
+     */
+    relativePosix(entry = this.cwd) {
+        if (typeof entry === 'string') {
+            entry = this.cwd.resolve(entry);
+        }
+        return entry.relativePosix();
+    }
+    /**
+     * Return the basename for the provided string or Path object
+     */
+    basename(entry = this.cwd) {
+        if (typeof entry === 'string') {
+            entry = this.cwd.resolve(entry);
+        }
+        return entry.name;
+    }
+    /**
+     * Return the dirname for the provided string or Path object
+     */
+    dirname(entry = this.cwd) {
+        if (typeof entry === 'string') {
+            entry = this.cwd.resolve(entry);
+        }
+        return (entry.parent || entry).fullpath();
+    }
+    async readdir(entry = this.cwd, opts = {
+        withFileTypes: true,
+    }) {
+        if (typeof entry === 'string') {
+            entry = this.cwd.resolve(entry);
+        }
+        else if (!(entry instanceof PathBase)) {
+            opts = entry;
+            entry = this.cwd;
+        }
+        const { withFileTypes } = opts;
+        if (!entry.canReaddir()) {
+            return [];
+        }
+        else {
+            const p = await entry.readdir();
+            return withFileTypes ? p : p.map(e => e.name);
+        }
+    }
+    readdirSync(entry = this.cwd, opts = {
+        withFileTypes: true,
+    }) {
+        if (typeof entry === 'string') {
+            entry = this.cwd.resolve(entry);
+        }
+        else if (!(entry instanceof PathBase)) {
+            opts = entry;
+            entry = this.cwd;
+        }
+        const { withFileTypes = true } = opts;
+        if (!entry.canReaddir()) {
+            return [];
+        }
+        else if (withFileTypes) {
+            return entry.readdirSync();
+        }
+        else {
+            return entry.readdirSync().map(e => e.name);
+        }
+    }
+    /**
+     * Call lstat() on the string or Path object, and update all known
+     * information that can be determined.
+     *
+     * Note that unlike `fs.lstat()`, the returned value does not contain some
+     * information, such as `mode`, `dev`, `nlink`, and `ino`.  If that
+     * information is required, you will need to call `fs.lstat` yourself.
+     *
+     * If the Path refers to a nonexistent file, or if the lstat call fails for
+     * any reason, `undefined` is returned.  Otherwise the updated Path object is
+     * returned.
+     *
+     * Results are cached, and thus may be out of date if the filesystem is
+     * mutated.
+     */
+    async lstat(entry = this.cwd) {
+        if (typeof entry === 'string') {
+            entry = this.cwd.resolve(entry);
+        }
+        return entry.lstat();
+    }
+    /**
+     * synchronous {@link PathScurryBase.lstat}
+     */
+    lstatSync(entry = this.cwd) {
+        if (typeof entry === 'string') {
+            entry = this.cwd.resolve(entry);
+        }
+        return entry.lstatSync();
+    }
+    async readlink(entry = this.cwd, { withFileTypes } = {
+        withFileTypes: false,
+    }) {
+        if (typeof entry === 'string') {
+            entry = this.cwd.resolve(entry);
+        }
+        else if (!(entry instanceof PathBase)) {
+            withFileTypes = entry.withFileTypes;
+            entry = this.cwd;
+        }
+        const e = await entry.readlink();
+        return withFileTypes ? e : e?.fullpath();
+    }
+    readlinkSync(entry = this.cwd, { withFileTypes } = {
+        withFileTypes: false,
+    }) {
+        if (typeof entry === 'string') {
+            entry = this.cwd.resolve(entry);
+        }
+        else if (!(entry instanceof PathBase)) {
+            withFileTypes = entry.withFileTypes;
+            entry = this.cwd;
+        }
+        const e = entry.readlinkSync();
+        return withFileTypes ? e : e?.fullpath();
+    }
+    async realpath(entry = this.cwd, { withFileTypes } = {
+        withFileTypes: false,
+    }) {
+        if (typeof entry === 'string') {
+            entry = this.cwd.resolve(entry);
+        }
+        else if (!(entry instanceof PathBase)) {
+            withFileTypes = entry.withFileTypes;
+            entry = this.cwd;
+        }
+        const e = await entry.realpath();
+        return withFileTypes ? e : e?.fullpath();
+    }
+    realpathSync(entry = this.cwd, { withFileTypes } = {
+        withFileTypes: false,
+    }) {
+        if (typeof entry === 'string') {
+            entry = this.cwd.resolve(entry);
+        }
+        else if (!(entry instanceof PathBase)) {
+            withFileTypes = entry.withFileTypes;
+            entry = this.cwd;
+        }
+        const e = entry.realpathSync();
+        return withFileTypes ? e : e?.fullpath();
+    }
+    async walk(entry = this.cwd, opts = {}) {
+        if (typeof entry === 'string') {
+            entry = this.cwd.resolve(entry);
+        }
+        else if (!(entry instanceof PathBase)) {
+            opts = entry;
+            entry = this.cwd;
+        }
+        const { withFileTypes = true, follow = false, filter, walkFilter, } = opts;
+        const results = [];
+        if (!filter || filter(entry)) {
+            results.push(withFileTypes ? entry : entry.fullpath());
+        }
+        const dirs = new Set();
+        const walk = (dir, cb) => {
+            dirs.add(dir);
+            dir.readdirCB((er, entries) => {
+                /* c8 ignore start */
+                if (er) {
+                    return cb(er);
+                }
+                /* c8 ignore stop */
+                let len = entries.length;
+                if (!len)
+                    return cb();
+                const next = () => {
+                    if (--len === 0) {
+                        cb();
+                    }
+                };
+                for (const e of entries) {
+                    if (!filter || filter(e)) {
+                        results.push(withFileTypes ? e : e.fullpath());
+                    }
+                    if (follow && e.isSymbolicLink()) {
+                        e.realpath()
+                            .then(r => (r?.isUnknown() ? r.lstat() : r))
+                            .then(r => r?.shouldWalk(dirs, walkFilter) ? walk(r, next) : next());
+                    }
+                    else {
+                        if (e.shouldWalk(dirs, walkFilter)) {
+                            walk(e, next);
+                        }
+                        else {
+                            next();
+                        }
+                    }
+                }
+            }, true); // zalgooooooo
+        };
+        const start = entry;
+        return new Promise((res, rej) => {
+            walk(start, er => {
+                /* c8 ignore start */
+                if (er)
+                    return rej(er);
+                /* c8 ignore stop */
+                res(results);
+            });
+        });
+    }
+    walkSync(entry = this.cwd, opts = {}) {
+        if (typeof entry === 'string') {
+            entry = this.cwd.resolve(entry);
+        }
+        else if (!(entry instanceof PathBase)) {
+            opts = entry;
+            entry = this.cwd;
+        }
+        const { withFileTypes = true, follow = false, filter, walkFilter, } = opts;
+        const results = [];
+        if (!filter || filter(entry)) {
+            results.push(withFileTypes ? entry : entry.fullpath());
+        }
+        const dirs = new Set([entry]);
+        for (const dir of dirs) {
+            const entries = dir.readdirSync();
+            for (const e of entries) {
+                if (!filter || filter(e)) {
+                    results.push(withFileTypes ? e : e.fullpath());
+                }
+                let r = e;
+                if (e.isSymbolicLink()) {
+                    if (!(follow && (r = e.realpathSync())))
+                        continue;
+                    if (r.isUnknown())
+                        r.lstatSync();
+                }
+                if (r.shouldWalk(dirs, walkFilter)) {
+                    dirs.add(r);
+                }
+            }
+        }
+        return results;
+    }
+    /**
+     * Support for `for await`
+     *
+     * Alias for {@link PathScurryBase.iterate}
+     *
+     * Note: As of Node 19, this is very slow, compared to other methods of
+     * walking.  Consider using {@link PathScurryBase.stream} if memory overhead
+     * and backpressure are concerns, or {@link PathScurryBase.walk} if not.
+     */
+    [Symbol.asyncIterator]() {
+        return this.iterate();
+    }
+    iterate(entry = this.cwd, options = {}) {
+        // iterating async over the stream is significantly more performant,
+        // especially in the warm-cache scenario, because it buffers up directory
+        // entries in the background instead of waiting for a yield for each one.
+        if (typeof entry === 'string') {
+            entry = this.cwd.resolve(entry);
+        }
+        else if (!(entry instanceof PathBase)) {
+            options = entry;
+            entry = this.cwd;
+        }
+        return this.stream(entry, options)[Symbol.asyncIterator]();
+    }
+    /**
+     * Iterating over a PathScurry performs a synchronous walk.
+     *
+     * Alias for {@link PathScurryBase.iterateSync}
+     */
+    [Symbol.iterator]() {
+        return this.iterateSync();
+    }
+    *iterateSync(entry = this.cwd, opts = {}) {
+        if (typeof entry === 'string') {
+            entry = this.cwd.resolve(entry);
+        }
+        else if (!(entry instanceof PathBase)) {
+            opts = entry;
+            entry = this.cwd;
+        }
+        const { withFileTypes = true, follow = false, filter, walkFilter, } = opts;
+        if (!filter || filter(entry)) {
+            yield withFileTypes ? entry : entry.fullpath();
+        }
+        const dirs = new Set([entry]);
+        for (const dir of dirs) {
+            const entries = dir.readdirSync();
+            for (const e of entries) {
+                if (!filter || filter(e)) {
+                    yield withFileTypes ? e : e.fullpath();
+                }
+                let r = e;
+                if (e.isSymbolicLink()) {
+                    if (!(follow && (r = e.realpathSync())))
+                        continue;
+                    if (r.isUnknown())
+                        r.lstatSync();
+                }
+                if (r.shouldWalk(dirs, walkFilter)) {
+                    dirs.add(r);
+                }
+            }
+        }
+    }
+    stream(entry = this.cwd, opts = {}) {
+        if (typeof entry === 'string') {
+            entry = this.cwd.resolve(entry);
+        }
+        else if (!(entry instanceof PathBase)) {
+            opts = entry;
+            entry = this.cwd;
+        }
+        const { withFileTypes = true, follow = false, filter, walkFilter, } = opts;
+        const results = new minipass_1.Minipass({ objectMode: true });
+        if (!filter || filter(entry)) {
+            results.write(withFileTypes ? entry : entry.fullpath());
+        }
+        const dirs = new Set();
+        const queue = [entry];
+        let processing = 0;
+        const process = () => {
+            let paused = false;
+            while (!paused) {
+                const dir = queue.shift();
+                if (!dir) {
+                    if (processing === 0)
+                        results.end();
+                    return;
+                }
+                processing++;
+                dirs.add(dir);
+                const onReaddir = (er, entries, didRealpaths = false) => {
+                    /* c8 ignore start */
+                    if (er)
+                        return results.emit('error', er);
+                    /* c8 ignore stop */
+                    if (follow && !didRealpaths) {
+                        const promises = [];
+                        for (const e of entries) {
+                            if (e.isSymbolicLink()) {
+                                promises.push(e
+                                    .realpath()
+                                    .then((r) => r?.isUnknown() ? r.lstat() : r));
+                            }
+                        }
+                        if (promises.length) {
+                            Promise.all(promises).then(() => onReaddir(null, entries, true));
+                            return;
+                        }
+                    }
+                    for (const e of entries) {
+                        if (e && (!filter || filter(e))) {
+                            if (!results.write(withFileTypes ? e : e.fullpath())) {
+                                paused = true;
+                            }
+                        }
+                    }
+                    processing--;
+                    for (const e of entries) {
+                        const r = e.realpathCached() || e;
+                        if (r.shouldWalk(dirs, walkFilter)) {
+                            queue.push(r);
+                        }
+                    }
+                    if (paused && !results.flowing) {
+                        results.once('drain', process);
+                    }
+                    else if (!sync) {
+                        process();
+                    }
+                };
+                // zalgo containment
+                let sync = true;
+                dir.readdirCB(onReaddir, true);
+                sync = false;
+            }
+        };
+        process();
+        return results;
+    }
+    streamSync(entry = this.cwd, opts = {}) {
+        if (typeof entry === 'string') {
+            entry = this.cwd.resolve(entry);
+        }
+        else if (!(entry instanceof PathBase)) {
+            opts = entry;
+            entry = this.cwd;
+        }
+        const { withFileTypes = true, follow = false, filter, walkFilter, } = opts;
+        const results = new minipass_1.Minipass({ objectMode: true });
+        const dirs = new Set();
+        if (!filter || filter(entry)) {
+            results.write(withFileTypes ? entry : entry.fullpath());
+        }
+        const queue = [entry];
+        let processing = 0;
+        const process = () => {
+            let paused = false;
+            while (!paused) {
+                const dir = queue.shift();
+                if (!dir) {
+                    if (processing === 0)
+                        results.end();
+                    return;
+                }
+                processing++;
+                dirs.add(dir);
+                const entries = dir.readdirSync();
+                for (const e of entries) {
+                    if (!filter || filter(e)) {
+                        if (!results.write(withFileTypes ? e : e.fullpath())) {
+                            paused = true;
+                        }
+                    }
+                }
+                processing--;
+                for (const e of entries) {
+                    let r = e;
+                    if (e.isSymbolicLink()) {
+                        if (!(follow && (r = e.realpathSync())))
+                            continue;
+                        if (r.isUnknown())
+                            r.lstatSync();
+                    }
+                    if (r.shouldWalk(dirs, walkFilter)) {
+                        queue.push(r);
+                    }
+                }
+            }
+            if (paused && !results.flowing)
+                results.once('drain', process);
+        };
+        process();
+        return results;
+    }
+    chdir(path = this.cwd) {
+        const oldCwd = this.cwd;
+        this.cwd = typeof path === 'string' ? this.cwd.resolve(path) : path;
+        this.cwd[setAsCwd](oldCwd);
+    }
+}
+exports.PathScurryBase = PathScurryBase;
+/**
+ * Windows implementation of {@link PathScurryBase}
+ *
+ * Defaults to case insensitve, uses `'\\'` to generate path strings.  Uses
+ * {@link PathWin32} for Path objects.
+ */
+class PathScurryWin32 extends PathScurryBase {
+    /**
+     * separator for generating path strings
+     */
+    sep = '\\';
+    constructor(cwd = process.cwd(), opts = {}) {
+        const { nocase = true } = opts;
+        super(cwd, node_path_1.win32, '\\', { ...opts, nocase });
+        this.nocase = nocase;
+        for (let p = this.cwd; p; p = p.parent) {
+            p.nocase = this.nocase;
+        }
+    }
+    /**
+     * @internal
+     */
+    parseRootPath(dir) {
+        // if the path starts with a single separator, it's not a UNC, and we'll
+        // just get separator as the root, and driveFromUNC will return \
+        // In that case, mount \ on the root from the cwd.
+        return node_path_1.win32.parse(dir).root.toUpperCase();
+    }
+    /**
+     * @internal
+     */
+    newRoot(fs) {
+        return new PathWin32(this.rootPath, IFDIR, undefined, this.roots, this.nocase, this.childrenCache(), { fs });
+    }
+    /**
+     * Return true if the provided path string is an absolute path
+     */
+    isAbsolute(p) {
+        return (p.startsWith('/') || p.startsWith('\\') || /^[a-z]:(\/|\\)/i.test(p));
+    }
+}
+exports.PathScurryWin32 = PathScurryWin32;
+/**
+ * {@link PathScurryBase} implementation for all posix systems other than Darwin.
+ *
+ * Defaults to case-sensitive matching, uses `'/'` to generate path strings.
+ *
+ * Uses {@link PathPosix} for Path objects.
+ */
+class PathScurryPosix extends PathScurryBase {
+    /**
+     * separator for generating path strings
+     */
+    sep = '/';
+    constructor(cwd = process.cwd(), opts = {}) {
+        const { nocase = false } = opts;
+        super(cwd, node_path_1.posix, '/', { ...opts, nocase });
+        this.nocase = nocase;
+    }
+    /**
+     * @internal
+     */
+    parseRootPath(_dir) {
+        return '/';
+    }
+    /**
+     * @internal
+     */
+    newRoot(fs) {
+        return new PathPosix(this.rootPath, IFDIR, undefined, this.roots, this.nocase, this.childrenCache(), { fs });
+    }
+    /**
+     * Return true if the provided path string is an absolute path
+     */
+    isAbsolute(p) {
+        return p.startsWith('/');
+    }
+}
+exports.PathScurryPosix = PathScurryPosix;
+/**
+ * {@link PathScurryBase} implementation for Darwin (macOS) systems.
+ *
+ * Defaults to case-insensitive matching, uses `'/'` for generating path
+ * strings.
+ *
+ * Uses {@link PathPosix} for Path objects.
+ */
+class PathScurryDarwin extends PathScurryPosix {
+    constructor(cwd = process.cwd(), opts = {}) {
+        const { nocase = true } = opts;
+        super(cwd, { ...opts, nocase });
+    }
+}
+exports.PathScurryDarwin = PathScurryDarwin;
+/**
+ * Default {@link PathBase} implementation for the current platform.
+ *
+ * {@link PathWin32} on Windows systems, {@link PathPosix} on all others.
+ */
+exports.Path = process.platform === 'win32' ? PathWin32 : PathPosix;
+/**
+ * Default {@link PathScurryBase} implementation for the current platform.
+ *
+ * {@link PathScurryWin32} on Windows systems, {@link PathScurryDarwin} on
+ * Darwin (macOS) systems, {@link PathScurryPosix} on all others.
+ */
+exports.PathScurry = process.platform === 'win32' ? PathScurryWin32
+    : process.platform === 'darwin' ? PathScurryDarwin
+        : PathScurryPosix;
+//# sourceMappingURL=index.js.map
+
+/***/ }),
+
+/***/ 6091:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+/**
+ * @module LRUCache
+ */
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.LRUCache = void 0;
+const perf = typeof performance === 'object' &&
+    performance &&
+    typeof performance.now === 'function'
+    ? performance
+    : Date;
+const warned = new Set();
+/* c8 ignore start */
+const PROCESS = (typeof process === 'object' && !!process ? process : {});
+/* c8 ignore start */
+const emitWarning = (msg, type, code, fn) => {
+    typeof PROCESS.emitWarning === 'function'
+        ? PROCESS.emitWarning(msg, type, code, fn)
+        : console.error(`[${code}] ${type}: ${msg}`);
+};
+let AC = globalThis.AbortController;
+let AS = globalThis.AbortSignal;
+/* c8 ignore start */
+if (typeof AC === 'undefined') {
+    //@ts-ignore
+    AS = class AbortSignal {
+        onabort;
+        _onabort = [];
+        reason;
+        aborted = false;
+        addEventListener(_, fn) {
+            this._onabort.push(fn);
+        }
+    };
+    //@ts-ignore
+    AC = class AbortController {
+        constructor() {
+            warnACPolyfill();
+        }
+        signal = new AS();
+        abort(reason) {
+            if (this.signal.aborted)
+                return;
+            //@ts-ignore
+            this.signal.reason = reason;
+            //@ts-ignore
+            this.signal.aborted = true;
+            //@ts-ignore
+            for (const fn of this.signal._onabort) {
+                fn(reason);
+            }
+            this.signal.onabort?.(reason);
+        }
+    };
+    let printACPolyfillWarning = PROCESS.env?.LRU_CACHE_IGNORE_AC_WARNING !== '1';
+    const warnACPolyfill = () => {
+        if (!printACPolyfillWarning)
+            return;
+        printACPolyfillWarning = false;
+        emitWarning('AbortController is not defined. If using lru-cache in ' +
+            'node 14, load an AbortController polyfill from the ' +
+            '`node-abort-controller` package. A minimal polyfill is ' +
+            'provided for use by LRUCache.fetch(), but it should not be ' +
+            'relied upon in other contexts (eg, passing it to other APIs that ' +
+            'use AbortController/AbortSignal might have undesirable effects). ' +
+            'You may disable this with LRU_CACHE_IGNORE_AC_WARNING=1 in the env.', 'NO_ABORT_CONTROLLER', 'ENOTSUP', warnACPolyfill);
+    };
+}
+/* c8 ignore stop */
+const shouldWarn = (code) => !warned.has(code);
+const TYPE = Symbol('type');
+const isPosInt = (n) => n && n === Math.floor(n) && n > 0 && isFinite(n);
+/* c8 ignore start */
+// This is a little bit ridiculous, tbh.
+// The maximum array length is 2^32-1 or thereabouts on most JS impls.
+// And well before that point, you're caching the entire world, I mean,
+// that's ~32GB of just integers for the next/prev links, plus whatever
+// else to hold that many keys and values.  Just filling the memory with
+// zeroes at init time is brutal when you get that big.
+// But why not be complete?
+// Maybe in the future, these limits will have expanded.
+const getUintArray = (max) => !isPosInt(max)
+    ? null
+    : max <= Math.pow(2, 8)
+        ? Uint8Array
+        : max <= Math.pow(2, 16)
+            ? Uint16Array
+            : max <= Math.pow(2, 32)
+                ? Uint32Array
+                : max <= Number.MAX_SAFE_INTEGER
+                    ? ZeroArray
+                    : null;
+/* c8 ignore stop */
+class ZeroArray extends Array {
+    constructor(size) {
+        super(size);
+        this.fill(0);
+    }
+}
+class Stack {
+    heap;
+    length;
+    // private constructor
+    static #constructing = false;
+    static create(max) {
+        const HeapCls = getUintArray(max);
+        if (!HeapCls)
+            return [];
+        Stack.#constructing = true;
+        const s = new Stack(max, HeapCls);
+        Stack.#constructing = false;
+        return s;
+    }
+    constructor(max, HeapCls) {
+        /* c8 ignore start */
+        if (!Stack.#constructing) {
+            throw new TypeError('instantiate Stack using Stack.create(n)');
+        }
+        /* c8 ignore stop */
+        this.heap = new HeapCls(max);
+        this.length = 0;
+    }
+    push(n) {
+        this.heap[this.length++] = n;
+    }
+    pop() {
+        return this.heap[--this.length];
+    }
+}
+/**
+ * Default export, the thing you're using this module to get.
+ *
+ * All properties from the options object (with the exception of
+ * {@link OptionsBase.max} and {@link OptionsBase.maxSize}) are added as
+ * normal public members. (`max` and `maxBase` are read-only getters.)
+ * Changing any of these will alter the defaults for subsequent method calls,
+ * but is otherwise safe.
+ */
+class LRUCache {
+    // properties coming in from the options of these, only max and maxSize
+    // really *need* to be protected. The rest can be modified, as they just
+    // set defaults for various methods.
+    #max;
+    #maxSize;
+    #dispose;
+    #disposeAfter;
+    #fetchMethod;
+    /**
+     * {@link LRUCache.OptionsBase.ttl}
+     */
+    ttl;
+    /**
+     * {@link LRUCache.OptionsBase.ttlResolution}
+     */
+    ttlResolution;
+    /**
+     * {@link LRUCache.OptionsBase.ttlAutopurge}
+     */
+    ttlAutopurge;
+    /**
+     * {@link LRUCache.OptionsBase.updateAgeOnGet}
+     */
+    updateAgeOnGet;
+    /**
+     * {@link LRUCache.OptionsBase.updateAgeOnHas}
+     */
+    updateAgeOnHas;
+    /**
+     * {@link LRUCache.OptionsBase.allowStale}
+     */
+    allowStale;
+    /**
+     * {@link LRUCache.OptionsBase.noDisposeOnSet}
+     */
+    noDisposeOnSet;
+    /**
+     * {@link LRUCache.OptionsBase.noUpdateTTL}
+     */
+    noUpdateTTL;
+    /**
+     * {@link LRUCache.OptionsBase.maxEntrySize}
+     */
+    maxEntrySize;
+    /**
+     * {@link LRUCache.OptionsBase.sizeCalculation}
+     */
+    sizeCalculation;
+    /**
+     * {@link LRUCache.OptionsBase.noDeleteOnFetchRejection}
+     */
+    noDeleteOnFetchRejection;
+    /**
+     * {@link LRUCache.OptionsBase.noDeleteOnStaleGet}
+     */
+    noDeleteOnStaleGet;
+    /**
+     * {@link LRUCache.OptionsBase.allowStaleOnFetchAbort}
+     */
+    allowStaleOnFetchAbort;
+    /**
+     * {@link LRUCache.OptionsBase.allowStaleOnFetchRejection}
+     */
+    allowStaleOnFetchRejection;
+    /**
+     * {@link LRUCache.OptionsBase.ignoreFetchAbort}
+     */
+    ignoreFetchAbort;
+    // computed properties
+    #size;
+    #calculatedSize;
+    #keyMap;
+    #keyList;
+    #valList;
+    #next;
+    #prev;
+    #head;
+    #tail;
+    #free;
+    #disposed;
+    #sizes;
+    #starts;
+    #ttls;
+    #hasDispose;
+    #hasFetchMethod;
+    #hasDisposeAfter;
+    /**
+     * Do not call this method unless you need to inspect the
+     * inner workings of the cache.  If anything returned by this
+     * object is modified in any way, strange breakage may occur.
+     *
+     * These fields are private for a reason!
+     *
+     * @internal
+     */
+    static unsafeExposeInternals(c) {
+        return {
+            // properties
+            starts: c.#starts,
+            ttls: c.#ttls,
+            sizes: c.#sizes,
+            keyMap: c.#keyMap,
+            keyList: c.#keyList,
+            valList: c.#valList,
+            next: c.#next,
+            prev: c.#prev,
+            get head() {
+                return c.#head;
+            },
+            get tail() {
+                return c.#tail;
+            },
+            free: c.#free,
+            // methods
+            isBackgroundFetch: (p) => c.#isBackgroundFetch(p),
+            backgroundFetch: (k, index, options, context) => c.#backgroundFetch(k, index, options, context),
+            moveToTail: (index) => c.#moveToTail(index),
+            indexes: (options) => c.#indexes(options),
+            rindexes: (options) => c.#rindexes(options),
+            isStale: (index) => c.#isStale(index),
+        };
+    }
+    // Protected read-only members
+    /**
+     * {@link LRUCache.OptionsBase.max} (read-only)
+     */
+    get max() {
+        return this.#max;
+    }
+    /**
+     * {@link LRUCache.OptionsBase.maxSize} (read-only)
+     */
+    get maxSize() {
+        return this.#maxSize;
+    }
+    /**
+     * The total computed size of items in the cache (read-only)
+     */
+    get calculatedSize() {
+        return this.#calculatedSize;
+    }
+    /**
+     * The number of items stored in the cache (read-only)
+     */
+    get size() {
+        return this.#size;
+    }
+    /**
+     * {@link LRUCache.OptionsBase.fetchMethod} (read-only)
+     */
+    get fetchMethod() {
+        return this.#fetchMethod;
+    }
+    /**
+     * {@link LRUCache.OptionsBase.dispose} (read-only)
+     */
+    get dispose() {
+        return this.#dispose;
+    }
+    /**
+     * {@link LRUCache.OptionsBase.disposeAfter} (read-only)
+     */
+    get disposeAfter() {
+        return this.#disposeAfter;
+    }
+    constructor(options) {
+        const { max = 0, ttl, ttlResolution = 1, ttlAutopurge, updateAgeOnGet, updateAgeOnHas, allowStale, dispose, disposeAfter, noDisposeOnSet, noUpdateTTL, maxSize = 0, maxEntrySize = 0, sizeCalculation, fetchMethod, noDeleteOnFetchRejection, noDeleteOnStaleGet, allowStaleOnFetchRejection, allowStaleOnFetchAbort, ignoreFetchAbort, } = options;
+        if (max !== 0 && !isPosInt(max)) {
+            throw new TypeError('max option must be a nonnegative integer');
+        }
+        const UintArray = max ? getUintArray(max) : Array;
+        if (!UintArray) {
+            throw new Error('invalid max value: ' + max);
+        }
+        this.#max = max;
+        this.#maxSize = maxSize;
+        this.maxEntrySize = maxEntrySize || this.#maxSize;
+        this.sizeCalculation = sizeCalculation;
+        if (this.sizeCalculation) {
+            if (!this.#maxSize && !this.maxEntrySize) {
+                throw new TypeError('cannot set sizeCalculation without setting maxSize or maxEntrySize');
+            }
+            if (typeof this.sizeCalculation !== 'function') {
+                throw new TypeError('sizeCalculation set to non-function');
+            }
+        }
+        if (fetchMethod !== undefined &&
+            typeof fetchMethod !== 'function') {
+            throw new TypeError('fetchMethod must be a function if specified');
+        }
+        this.#fetchMethod = fetchMethod;
+        this.#hasFetchMethod = !!fetchMethod;
+        this.#keyMap = new Map();
+        this.#keyList = new Array(max).fill(undefined);
+        this.#valList = new Array(max).fill(undefined);
+        this.#next = new UintArray(max);
+        this.#prev = new UintArray(max);
+        this.#head = 0;
+        this.#tail = 0;
+        this.#free = Stack.create(max);
+        this.#size = 0;
+        this.#calculatedSize = 0;
+        if (typeof dispose === 'function') {
+            this.#dispose = dispose;
+        }
+        if (typeof disposeAfter === 'function') {
+            this.#disposeAfter = disposeAfter;
+            this.#disposed = [];
+        }
+        else {
+            this.#disposeAfter = undefined;
+            this.#disposed = undefined;
+        }
+        this.#hasDispose = !!this.#dispose;
+        this.#hasDisposeAfter = !!this.#disposeAfter;
+        this.noDisposeOnSet = !!noDisposeOnSet;
+        this.noUpdateTTL = !!noUpdateTTL;
+        this.noDeleteOnFetchRejection = !!noDeleteOnFetchRejection;
+        this.allowStaleOnFetchRejection = !!allowStaleOnFetchRejection;
+        this.allowStaleOnFetchAbort = !!allowStaleOnFetchAbort;
+        this.ignoreFetchAbort = !!ignoreFetchAbort;
+        // NB: maxEntrySize is set to maxSize if it's set
+        if (this.maxEntrySize !== 0) {
+            if (this.#maxSize !== 0) {
+                if (!isPosInt(this.#maxSize)) {
+                    throw new TypeError('maxSize must be a positive integer if specified');
+                }
+            }
+            if (!isPosInt(this.maxEntrySize)) {
+                throw new TypeError('maxEntrySize must be a positive integer if specified');
+            }
+            this.#initializeSizeTracking();
+        }
+        this.allowStale = !!allowStale;
+        this.noDeleteOnStaleGet = !!noDeleteOnStaleGet;
+        this.updateAgeOnGet = !!updateAgeOnGet;
+        this.updateAgeOnHas = !!updateAgeOnHas;
+        this.ttlResolution =
+            isPosInt(ttlResolution) || ttlResolution === 0
+                ? ttlResolution
+                : 1;
+        this.ttlAutopurge = !!ttlAutopurge;
+        this.ttl = ttl || 0;
+        if (this.ttl) {
+            if (!isPosInt(this.ttl)) {
+                throw new TypeError('ttl must be a positive integer if specified');
+            }
+            this.#initializeTTLTracking();
+        }
+        // do not allow completely unbounded caches
+        if (this.#max === 0 && this.ttl === 0 && this.#maxSize === 0) {
+            throw new TypeError('At least one of max, maxSize, or ttl is required');
+        }
+        if (!this.ttlAutopurge && !this.#max && !this.#maxSize) {
+            const code = 'LRU_CACHE_UNBOUNDED';
+            if (shouldWarn(code)) {
+                warned.add(code);
+                const msg = 'TTL caching without ttlAutopurge, max, or maxSize can ' +
+                    'result in unbounded memory consumption.';
+                emitWarning(msg, 'UnboundedCacheWarning', code, LRUCache);
+            }
+        }
+    }
+    /**
+     * Return the remaining TTL time for a given entry key
+     */
+    getRemainingTTL(key) {
+        return this.#keyMap.has(key) ? Infinity : 0;
+    }
+    #initializeTTLTracking() {
+        const ttls = new ZeroArray(this.#max);
+        const starts = new ZeroArray(this.#max);
+        this.#ttls = ttls;
+        this.#starts = starts;
+        this.#setItemTTL = (index, ttl, start = perf.now()) => {
+            starts[index] = ttl !== 0 ? start : 0;
+            ttls[index] = ttl;
+            if (ttl !== 0 && this.ttlAutopurge) {
+                const t = setTimeout(() => {
+                    if (this.#isStale(index)) {
+                        this.delete(this.#keyList[index]);
+                    }
+                }, ttl + 1);
+                // unref() not supported on all platforms
+                /* c8 ignore start */
+                if (t.unref) {
+                    t.unref();
+                }
+                /* c8 ignore stop */
+            }
+        };
+        this.#updateItemAge = index => {
+            starts[index] = ttls[index] !== 0 ? perf.now() : 0;
+        };
+        this.#statusTTL = (status, index) => {
+            if (ttls[index]) {
+                const ttl = ttls[index];
+                const start = starts[index];
+                /* c8 ignore next */
+                if (!ttl || !start)
+                    return;
+                status.ttl = ttl;
+                status.start = start;
+                status.now = cachedNow || getNow();
+                const age = status.now - start;
+                status.remainingTTL = ttl - age;
+            }
+        };
+        // debounce calls to perf.now() to 1s so we're not hitting
+        // that costly call repeatedly.
+        let cachedNow = 0;
+        const getNow = () => {
+            const n = perf.now();
+            if (this.ttlResolution > 0) {
+                cachedNow = n;
+                const t = setTimeout(() => (cachedNow = 0), this.ttlResolution);
+                // not available on all platforms
+                /* c8 ignore start */
+                if (t.unref) {
+                    t.unref();
+                }
+                /* c8 ignore stop */
+            }
+            return n;
+        };
+        this.getRemainingTTL = key => {
+            const index = this.#keyMap.get(key);
+            if (index === undefined) {
+                return 0;
+            }
+            const ttl = ttls[index];
+            const start = starts[index];
+            if (!ttl || !start) {
+                return Infinity;
+            }
+            const age = (cachedNow || getNow()) - start;
+            return ttl - age;
+        };
+        this.#isStale = index => {
+            const s = starts[index];
+            const t = ttls[index];
+            return !!t && !!s && (cachedNow || getNow()) - s > t;
+        };
+    }
+    // conditionally set private methods related to TTL
+    #updateItemAge = () => { };
+    #statusTTL = () => { };
+    #setItemTTL = () => { };
+    /* c8 ignore stop */
+    #isStale = () => false;
+    #initializeSizeTracking() {
+        const sizes = new ZeroArray(this.#max);
+        this.#calculatedSize = 0;
+        this.#sizes = sizes;
+        this.#removeItemSize = index => {
+            this.#calculatedSize -= sizes[index];
+            sizes[index] = 0;
+        };
+        this.#requireSize = (k, v, size, sizeCalculation) => {
+            // provisionally accept background fetches.
+            // actual value size will be checked when they return.
+            if (this.#isBackgroundFetch(v)) {
+                return 0;
+            }
+            if (!isPosInt(size)) {
+                if (sizeCalculation) {
+                    if (typeof sizeCalculation !== 'function') {
+                        throw new TypeError('sizeCalculation must be a function');
+                    }
+                    size = sizeCalculation(v, k);
+                    if (!isPosInt(size)) {
+                        throw new TypeError('sizeCalculation return invalid (expect positive integer)');
+                    }
+                }
+                else {
+                    throw new TypeError('invalid size value (must be positive integer). ' +
+                        'When maxSize or maxEntrySize is used, sizeCalculation ' +
+                        'or size must be set.');
+                }
+            }
+            return size;
+        };
+        this.#addItemSize = (index, size, status) => {
+            sizes[index] = size;
+            if (this.#maxSize) {
+                const maxSize = this.#maxSize - sizes[index];
+                while (this.#calculatedSize > maxSize) {
+                    this.#evict(true);
+                }
+            }
+            this.#calculatedSize += sizes[index];
+            if (status) {
+                status.entrySize = size;
+                status.totalCalculatedSize = this.#calculatedSize;
+            }
+        };
+    }
+    #removeItemSize = _i => { };
+    #addItemSize = (_i, _s, _st) => { };
+    #requireSize = (_k, _v, size, sizeCalculation) => {
+        if (size || sizeCalculation) {
+            throw new TypeError('cannot set size without setting maxSize or maxEntrySize on cache');
+        }
+        return 0;
+    };
+    *#indexes({ allowStale = this.allowStale } = {}) {
+        if (this.#size) {
+            for (let i = this.#tail; true;) {
+                if (!this.#isValidIndex(i)) {
+                    break;
+                }
+                if (allowStale || !this.#isStale(i)) {
+                    yield i;
+                }
+                if (i === this.#head) {
+                    break;
+                }
+                else {
+                    i = this.#prev[i];
+                }
+            }
+        }
+    }
+    *#rindexes({ allowStale = this.allowStale } = {}) {
+        if (this.#size) {
+            for (let i = this.#head; true;) {
+                if (!this.#isValidIndex(i)) {
+                    break;
+                }
+                if (allowStale || !this.#isStale(i)) {
+                    yield i;
+                }
+                if (i === this.#tail) {
+                    break;
+                }
+                else {
+                    i = this.#next[i];
+                }
+            }
+        }
+    }
+    #isValidIndex(index) {
+        return (index !== undefined &&
+            this.#keyMap.get(this.#keyList[index]) === index);
+    }
+    /**
+     * Return a generator yielding `[key, value]` pairs,
+     * in order from most recently used to least recently used.
+     */
+    *entries() {
+        for (const i of this.#indexes()) {
+            if (this.#valList[i] !== undefined &&
+                this.#keyList[i] !== undefined &&
+                !this.#isBackgroundFetch(this.#valList[i])) {
+                yield [this.#keyList[i], this.#valList[i]];
+            }
+        }
+    }
+    /**
+     * Inverse order version of {@link LRUCache.entries}
+     *
+     * Return a generator yielding `[key, value]` pairs,
+     * in order from least recently used to most recently used.
+     */
+    *rentries() {
+        for (const i of this.#rindexes()) {
+            if (this.#valList[i] !== undefined &&
+                this.#keyList[i] !== undefined &&
+                !this.#isBackgroundFetch(this.#valList[i])) {
+                yield [this.#keyList[i], this.#valList[i]];
+            }
+        }
+    }
+    /**
+     * Return a generator yielding the keys in the cache,
+     * in order from most recently used to least recently used.
+     */
+    *keys() {
+        for (const i of this.#indexes()) {
+            const k = this.#keyList[i];
+            if (k !== undefined &&
+                !this.#isBackgroundFetch(this.#valList[i])) {
+                yield k;
+            }
+        }
+    }
+    /**
+     * Inverse order version of {@link LRUCache.keys}
+     *
+     * Return a generator yielding the keys in the cache,
+     * in order from least recently used to most recently used.
+     */
+    *rkeys() {
+        for (const i of this.#rindexes()) {
+            const k = this.#keyList[i];
+            if (k !== undefined &&
+                !this.#isBackgroundFetch(this.#valList[i])) {
+                yield k;
+            }
+        }
+    }
+    /**
+     * Return a generator yielding the values in the cache,
+     * in order from most recently used to least recently used.
+     */
+    *values() {
+        for (const i of this.#indexes()) {
+            const v = this.#valList[i];
+            if (v !== undefined &&
+                !this.#isBackgroundFetch(this.#valList[i])) {
+                yield this.#valList[i];
+            }
+        }
+    }
+    /**
+     * Inverse order version of {@link LRUCache.values}
+     *
+     * Return a generator yielding the values in the cache,
+     * in order from least recently used to most recently used.
+     */
+    *rvalues() {
+        for (const i of this.#rindexes()) {
+            const v = this.#valList[i];
+            if (v !== undefined &&
+                !this.#isBackgroundFetch(this.#valList[i])) {
+                yield this.#valList[i];
+            }
+        }
+    }
+    /**
+     * Iterating over the cache itself yields the same results as
+     * {@link LRUCache.entries}
+     */
+    [Symbol.iterator]() {
+        return this.entries();
+    }
+    /**
+     * A String value that is used in the creation of the default string description of an object.
+     * Called by the built-in method Object.prototype.toString.
+     */
+    [Symbol.toStringTag] = 'LRUCache';
+    /**
+     * Find a value for which the supplied fn method returns a truthy value,
+     * similar to Array.find().  fn is called as fn(value, key, cache).
+     */
+    find(fn, getOptions = {}) {
+        for (const i of this.#indexes()) {
+            const v = this.#valList[i];
+            const value = this.#isBackgroundFetch(v)
+                ? v.__staleWhileFetching
+                : v;
+            if (value === undefined)
+                continue;
+            if (fn(value, this.#keyList[i], this)) {
+                return this.get(this.#keyList[i], getOptions);
+            }
+        }
+    }
+    /**
+     * Call the supplied function on each item in the cache, in order from
+     * most recently used to least recently used.  fn is called as
+     * fn(value, key, cache).  Does not update age or recenty of use.
+     * Does not iterate over stale values.
+     */
+    forEach(fn, thisp = this) {
+        for (const i of this.#indexes()) {
+            const v = this.#valList[i];
+            const value = this.#isBackgroundFetch(v)
+                ? v.__staleWhileFetching
+                : v;
+            if (value === undefined)
+                continue;
+            fn.call(thisp, value, this.#keyList[i], this);
+        }
+    }
+    /**
+     * The same as {@link LRUCache.forEach} but items are iterated over in
+     * reverse order.  (ie, less recently used items are iterated over first.)
+     */
+    rforEach(fn, thisp = this) {
+        for (const i of this.#rindexes()) {
+            const v = this.#valList[i];
+            const value = this.#isBackgroundFetch(v)
+                ? v.__staleWhileFetching
+                : v;
+            if (value === undefined)
+                continue;
+            fn.call(thisp, value, this.#keyList[i], this);
+        }
+    }
+    /**
+     * Delete any stale entries. Returns true if anything was removed,
+     * false otherwise.
+     */
+    purgeStale() {
+        let deleted = false;
+        for (const i of this.#rindexes({ allowStale: true })) {
+            if (this.#isStale(i)) {
+                this.delete(this.#keyList[i]);
+                deleted = true;
+            }
+        }
+        return deleted;
+    }
+    /**
+     * Get the extended info about a given entry, to get its value, size, and
+     * TTL info simultaneously. Like {@link LRUCache#dump}, but just for a
+     * single key. Always returns stale values, if their info is found in the
+     * cache, so be sure to check for expired TTLs if relevant.
+     */
+    info(key) {
+        const i = this.#keyMap.get(key);
+        if (i === undefined)
+            return undefined;
+        const v = this.#valList[i];
+        const value = this.#isBackgroundFetch(v)
+            ? v.__staleWhileFetching
+            : v;
+        if (value === undefined)
+            return undefined;
+        const entry = { value };
+        if (this.#ttls && this.#starts) {
+            const ttl = this.#ttls[i];
+            const start = this.#starts[i];
+            if (ttl && start) {
+                const remain = ttl - (perf.now() - start);
+                entry.ttl = remain;
+                entry.start = Date.now();
+            }
+        }
+        if (this.#sizes) {
+            entry.size = this.#sizes[i];
+        }
+        return entry;
+    }
+    /**
+     * Return an array of [key, {@link LRUCache.Entry}] tuples which can be
+     * passed to cache.load()
+     */
+    dump() {
+        const arr = [];
+        for (const i of this.#indexes({ allowStale: true })) {
+            const key = this.#keyList[i];
+            const v = this.#valList[i];
+            const value = this.#isBackgroundFetch(v)
+                ? v.__staleWhileFetching
+                : v;
+            if (value === undefined || key === undefined)
+                continue;
+            const entry = { value };
+            if (this.#ttls && this.#starts) {
+                entry.ttl = this.#ttls[i];
+                // always dump the start relative to a portable timestamp
+                // it's ok for this to be a bit slow, it's a rare operation.
+                const age = perf.now() - this.#starts[i];
+                entry.start = Math.floor(Date.now() - age);
+            }
+            if (this.#sizes) {
+                entry.size = this.#sizes[i];
+            }
+            arr.unshift([key, entry]);
+        }
+        return arr;
+    }
+    /**
+     * Reset the cache and load in the items in entries in the order listed.
+     * Note that the shape of the resulting cache may be different if the
+     * same options are not used in both caches.
+     */
+    load(arr) {
+        this.clear();
+        for (const [key, entry] of arr) {
+            if (entry.start) {
+                // entry.start is a portable timestamp, but we may be using
+                // node's performance.now(), so calculate the offset, so that
+                // we get the intended remaining TTL, no matter how long it's
+                // been on ice.
+                //
+                // it's ok for this to be a bit slow, it's a rare operation.
+                const age = Date.now() - entry.start;
+                entry.start = perf.now() - age;
+            }
+            this.set(key, entry.value, entry);
+        }
+    }
+    /**
+     * Add a value to the cache.
+     *
+     * Note: if `undefined` is specified as a value, this is an alias for
+     * {@link LRUCache#delete}
+     */
+    set(k, v, setOptions = {}) {
+        if (v === undefined) {
+            this.delete(k);
+            return this;
+        }
+        const { ttl = this.ttl, start, noDisposeOnSet = this.noDisposeOnSet, sizeCalculation = this.sizeCalculation, status, } = setOptions;
+        let { noUpdateTTL = this.noUpdateTTL } = setOptions;
+        const size = this.#requireSize(k, v, setOptions.size || 0, sizeCalculation);
+        // if the item doesn't fit, don't do anything
+        // NB: maxEntrySize set to maxSize by default
+        if (this.maxEntrySize && size > this.maxEntrySize) {
+            if (status) {
+                status.set = 'miss';
+                status.maxEntrySizeExceeded = true;
+            }
+            // have to delete, in case something is there already.
+            this.delete(k);
+            return this;
+        }
+        let index = this.#size === 0 ? undefined : this.#keyMap.get(k);
+        if (index === undefined) {
+            // addition
+            index = (this.#size === 0
+                ? this.#tail
+                : this.#free.length !== 0
+                    ? this.#free.pop()
+                    : this.#size === this.#max
+                        ? this.#evict(false)
+                        : this.#size);
+            this.#keyList[index] = k;
+            this.#valList[index] = v;
+            this.#keyMap.set(k, index);
+            this.#next[this.#tail] = index;
+            this.#prev[index] = this.#tail;
+            this.#tail = index;
+            this.#size++;
+            this.#addItemSize(index, size, status);
+            if (status)
+                status.set = 'add';
+            noUpdateTTL = false;
+        }
+        else {
+            // update
+            this.#moveToTail(index);
+            const oldVal = this.#valList[index];
+            if (v !== oldVal) {
+                if (this.#hasFetchMethod && this.#isBackgroundFetch(oldVal)) {
+                    oldVal.__abortController.abort(new Error('replaced'));
+                    const { __staleWhileFetching: s } = oldVal;
+                    if (s !== undefined && !noDisposeOnSet) {
+                        if (this.#hasDispose) {
+                            this.#dispose?.(s, k, 'set');
+                        }
+                        if (this.#hasDisposeAfter) {
+                            this.#disposed?.push([s, k, 'set']);
+                        }
+                    }
+                }
+                else if (!noDisposeOnSet) {
+                    if (this.#hasDispose) {
+                        this.#dispose?.(oldVal, k, 'set');
+                    }
+                    if (this.#hasDisposeAfter) {
+                        this.#disposed?.push([oldVal, k, 'set']);
+                    }
+                }
+                this.#removeItemSize(index);
+                this.#addItemSize(index, size, status);
+                this.#valList[index] = v;
+                if (status) {
+                    status.set = 'replace';
+                    const oldValue = oldVal && this.#isBackgroundFetch(oldVal)
+                        ? oldVal.__staleWhileFetching
+                        : oldVal;
+                    if (oldValue !== undefined)
+                        status.oldValue = oldValue;
+                }
+            }
+            else if (status) {
+                status.set = 'update';
+            }
+        }
+        if (ttl !== 0 && !this.#ttls) {
+            this.#initializeTTLTracking();
+        }
+        if (this.#ttls) {
+            if (!noUpdateTTL) {
+                this.#setItemTTL(index, ttl, start);
+            }
+            if (status)
+                this.#statusTTL(status, index);
+        }
+        if (!noDisposeOnSet && this.#hasDisposeAfter && this.#disposed) {
+            const dt = this.#disposed;
+            let task;
+            while ((task = dt?.shift())) {
+                this.#disposeAfter?.(...task);
+            }
+        }
+        return this;
+    }
+    /**
+     * Evict the least recently used item, returning its value or
+     * `undefined` if cache is empty.
+     */
+    pop() {
+        try {
+            while (this.#size) {
+                const val = this.#valList[this.#head];
+                this.#evict(true);
+                if (this.#isBackgroundFetch(val)) {
+                    if (val.__staleWhileFetching) {
+                        return val.__staleWhileFetching;
+                    }
+                }
+                else if (val !== undefined) {
+                    return val;
+                }
+            }
+        }
+        finally {
+            if (this.#hasDisposeAfter && this.#disposed) {
+                const dt = this.#disposed;
+                let task;
+                while ((task = dt?.shift())) {
+                    this.#disposeAfter?.(...task);
+                }
+            }
+        }
+    }
+    #evict(free) {
+        const head = this.#head;
+        const k = this.#keyList[head];
+        const v = this.#valList[head];
+        if (this.#hasFetchMethod && this.#isBackgroundFetch(v)) {
+            v.__abortController.abort(new Error('evicted'));
+        }
+        else if (this.#hasDispose || this.#hasDisposeAfter) {
+            if (this.#hasDispose) {
+                this.#dispose?.(v, k, 'evict');
+            }
+            if (this.#hasDisposeAfter) {
+                this.#disposed?.push([v, k, 'evict']);
+            }
+        }
+        this.#removeItemSize(head);
+        // if we aren't about to use the index, then null these out
+        if (free) {
+            this.#keyList[head] = undefined;
+            this.#valList[head] = undefined;
+            this.#free.push(head);
+        }
+        if (this.#size === 1) {
+            this.#head = this.#tail = 0;
+            this.#free.length = 0;
+        }
+        else {
+            this.#head = this.#next[head];
+        }
+        this.#keyMap.delete(k);
+        this.#size--;
+        return head;
+    }
+    /**
+     * Check if a key is in the cache, without updating the recency of use.
+     * Will return false if the item is stale, even though it is technically
+     * in the cache.
+     *
+     * Will not update item age unless
+     * {@link LRUCache.OptionsBase.updateAgeOnHas} is set.
+     */
+    has(k, hasOptions = {}) {
+        const { updateAgeOnHas = this.updateAgeOnHas, status } = hasOptions;
+        const index = this.#keyMap.get(k);
+        if (index !== undefined) {
+            const v = this.#valList[index];
+            if (this.#isBackgroundFetch(v) &&
+                v.__staleWhileFetching === undefined) {
+                return false;
+            }
+            if (!this.#isStale(index)) {
+                if (updateAgeOnHas) {
+                    this.#updateItemAge(index);
+                }
+                if (status) {
+                    status.has = 'hit';
+                    this.#statusTTL(status, index);
+                }
+                return true;
+            }
+            else if (status) {
+                status.has = 'stale';
+                this.#statusTTL(status, index);
+            }
+        }
+        else if (status) {
+            status.has = 'miss';
+        }
+        return false;
+    }
+    /**
+     * Like {@link LRUCache#get} but doesn't update recency or delete stale
+     * items.
+     *
+     * Returns `undefined` if the item is stale, unless
+     * {@link LRUCache.OptionsBase.allowStale} is set.
+     */
+    peek(k, peekOptions = {}) {
+        const { allowStale = this.allowStale } = peekOptions;
+        const index = this.#keyMap.get(k);
+        if (index === undefined ||
+            (!allowStale && this.#isStale(index))) {
+            return;
+        }
+        const v = this.#valList[index];
+        // either stale and allowed, or forcing a refresh of non-stale value
+        return this.#isBackgroundFetch(v) ? v.__staleWhileFetching : v;
+    }
+    #backgroundFetch(k, index, options, context) {
+        const v = index === undefined ? undefined : this.#valList[index];
+        if (this.#isBackgroundFetch(v)) {
+            return v;
+        }
+        const ac = new AC();
+        const { signal } = options;
+        // when/if our AC signals, then stop listening to theirs.
+        signal?.addEventListener('abort', () => ac.abort(signal.reason), {
+            signal: ac.signal,
+        });
+        const fetchOpts = {
+            signal: ac.signal,
+            options,
+            context,
+        };
+        const cb = (v, updateCache = false) => {
+            const { aborted } = ac.signal;
+            const ignoreAbort = options.ignoreFetchAbort && v !== undefined;
+            if (options.status) {
+                if (aborted && !updateCache) {
+                    options.status.fetchAborted = true;
+                    options.status.fetchError = ac.signal.reason;
+                    if (ignoreAbort)
+                        options.status.fetchAbortIgnored = true;
+                }
+                else {
+                    options.status.fetchResolved = true;
+                }
+            }
+            if (aborted && !ignoreAbort && !updateCache) {
+                return fetchFail(ac.signal.reason);
+            }
+            // either we didn't abort, and are still here, or we did, and ignored
+            const bf = p;
+            if (this.#valList[index] === p) {
+                if (v === undefined) {
+                    if (bf.__staleWhileFetching) {
+                        this.#valList[index] = bf.__staleWhileFetching;
+                    }
+                    else {
+                        this.delete(k);
+                    }
+                }
+                else {
+                    if (options.status)
+                        options.status.fetchUpdated = true;
+                    this.set(k, v, fetchOpts.options);
+                }
+            }
+            return v;
+        };
+        const eb = (er) => {
+            if (options.status) {
+                options.status.fetchRejected = true;
+                options.status.fetchError = er;
+            }
+            return fetchFail(er);
+        };
+        const fetchFail = (er) => {
+            const { aborted } = ac.signal;
+            const allowStaleAborted = aborted && options.allowStaleOnFetchAbort;
+            const allowStale = allowStaleAborted || options.allowStaleOnFetchRejection;
+            const noDelete = allowStale || options.noDeleteOnFetchRejection;
+            const bf = p;
+            if (this.#valList[index] === p) {
+                // if we allow stale on fetch rejections, then we need to ensure that
+                // the stale value is not removed from the cache when the fetch fails.
+                const del = !noDelete || bf.__staleWhileFetching === undefined;
+                if (del) {
+                    this.delete(k);
+                }
+                else if (!allowStaleAborted) {
+                    // still replace the *promise* with the stale value,
+                    // since we are done with the promise at this point.
+                    // leave it untouched if we're still waiting for an
+                    // aborted background fetch that hasn't yet returned.
+                    this.#valList[index] = bf.__staleWhileFetching;
+                }
+            }
+            if (allowStale) {
+                if (options.status && bf.__staleWhileFetching !== undefined) {
+                    options.status.returnedStale = true;
+                }
+                return bf.__staleWhileFetching;
+            }
+            else if (bf.__returned === bf) {
+                throw er;
+            }
+        };
+        const pcall = (res, rej) => {
+            const fmp = this.#fetchMethod?.(k, v, fetchOpts);
+            if (fmp && fmp instanceof Promise) {
+                fmp.then(v => res(v === undefined ? undefined : v), rej);
+            }
+            // ignored, we go until we finish, regardless.
+            // defer check until we are actually aborting,
+            // so fetchMethod can override.
+            ac.signal.addEventListener('abort', () => {
+                if (!options.ignoreFetchAbort ||
+                    options.allowStaleOnFetchAbort) {
+                    res(undefined);
+                    // when it eventually resolves, update the cache.
+                    if (options.allowStaleOnFetchAbort) {
+                        res = v => cb(v, true);
+                    }
+                }
+            });
+        };
+        if (options.status)
+            options.status.fetchDispatched = true;
+        const p = new Promise(pcall).then(cb, eb);
+        const bf = Object.assign(p, {
+            __abortController: ac,
+            __staleWhileFetching: v,
+            __returned: undefined,
+        });
+        if (index === undefined) {
+            // internal, don't expose status.
+            this.set(k, bf, { ...fetchOpts.options, status: undefined });
+            index = this.#keyMap.get(k);
+        }
+        else {
+            this.#valList[index] = bf;
+        }
+        return bf;
+    }
+    #isBackgroundFetch(p) {
+        if (!this.#hasFetchMethod)
+            return false;
+        const b = p;
+        return (!!b &&
+            b instanceof Promise &&
+            b.hasOwnProperty('__staleWhileFetching') &&
+            b.__abortController instanceof AC);
+    }
+    async fetch(k, fetchOptions = {}) {
+        const { 
+        // get options
+        allowStale = this.allowStale, updateAgeOnGet = this.updateAgeOnGet, noDeleteOnStaleGet = this.noDeleteOnStaleGet, 
+        // set options
+        ttl = this.ttl, noDisposeOnSet = this.noDisposeOnSet, size = 0, sizeCalculation = this.sizeCalculation, noUpdateTTL = this.noUpdateTTL, 
+        // fetch exclusive options
+        noDeleteOnFetchRejection = this.noDeleteOnFetchRejection, allowStaleOnFetchRejection = this.allowStaleOnFetchRejection, ignoreFetchAbort = this.ignoreFetchAbort, allowStaleOnFetchAbort = this.allowStaleOnFetchAbort, context, forceRefresh = false, status, signal, } = fetchOptions;
+        if (!this.#hasFetchMethod) {
+            if (status)
+                status.fetch = 'get';
+            return this.get(k, {
+                allowStale,
+                updateAgeOnGet,
+                noDeleteOnStaleGet,
+                status,
+            });
+        }
+        const options = {
+            allowStale,
+            updateAgeOnGet,
+            noDeleteOnStaleGet,
+            ttl,
+            noDisposeOnSet,
+            size,
+            sizeCalculation,
+            noUpdateTTL,
+            noDeleteOnFetchRejection,
+            allowStaleOnFetchRejection,
+            allowStaleOnFetchAbort,
+            ignoreFetchAbort,
+            status,
+            signal,
+        };
+        let index = this.#keyMap.get(k);
+        if (index === undefined) {
+            if (status)
+                status.fetch = 'miss';
+            const p = this.#backgroundFetch(k, index, options, context);
+            return (p.__returned = p);
+        }
+        else {
+            // in cache, maybe already fetching
+            const v = this.#valList[index];
+            if (this.#isBackgroundFetch(v)) {
+                const stale = allowStale && v.__staleWhileFetching !== undefined;
+                if (status) {
+                    status.fetch = 'inflight';
+                    if (stale)
+                        status.returnedStale = true;
+                }
+                return stale ? v.__staleWhileFetching : (v.__returned = v);
+            }
+            // if we force a refresh, that means do NOT serve the cached value,
+            // unless we are already in the process of refreshing the cache.
+            const isStale = this.#isStale(index);
+            if (!forceRefresh && !isStale) {
+                if (status)
+                    status.fetch = 'hit';
+                this.#moveToTail(index);
+                if (updateAgeOnGet) {
+                    this.#updateItemAge(index);
+                }
+                if (status)
+                    this.#statusTTL(status, index);
+                return v;
+            }
+            // ok, it is stale or a forced refresh, and not already fetching.
+            // refresh the cache.
+            const p = this.#backgroundFetch(k, index, options, context);
+            const hasStale = p.__staleWhileFetching !== undefined;
+            const staleVal = hasStale && allowStale;
+            if (status) {
+                status.fetch = isStale ? 'stale' : 'refresh';
+                if (staleVal && isStale)
+                    status.returnedStale = true;
+            }
+            return staleVal ? p.__staleWhileFetching : (p.__returned = p);
+        }
+    }
+    /**
+     * Return a value from the cache. Will update the recency of the cache
+     * entry found.
+     *
+     * If the key is not found, get() will return `undefined`.
+     */
+    get(k, getOptions = {}) {
+        const { allowStale = this.allowStale, updateAgeOnGet = this.updateAgeOnGet, noDeleteOnStaleGet = this.noDeleteOnStaleGet, status, } = getOptions;
+        const index = this.#keyMap.get(k);
+        if (index !== undefined) {
+            const value = this.#valList[index];
+            const fetching = this.#isBackgroundFetch(value);
+            if (status)
+                this.#statusTTL(status, index);
+            if (this.#isStale(index)) {
+                if (status)
+                    status.get = 'stale';
+                // delete only if not an in-flight background fetch
+                if (!fetching) {
+                    if (!noDeleteOnStaleGet) {
+                        this.delete(k);
+                    }
+                    if (status && allowStale)
+                        status.returnedStale = true;
+                    return allowStale ? value : undefined;
+                }
+                else {
+                    if (status &&
+                        allowStale &&
+                        value.__staleWhileFetching !== undefined) {
+                        status.returnedStale = true;
+                    }
+                    return allowStale ? value.__staleWhileFetching : undefined;
+                }
+            }
+            else {
+                if (status)
+                    status.get = 'hit';
+                // if we're currently fetching it, we don't actually have it yet
+                // it's not stale, which means this isn't a staleWhileRefetching.
+                // If it's not stale, and fetching, AND has a __staleWhileFetching
+                // value, then that means the user fetched with {forceRefresh:true},
+                // so it's safe to return that value.
+                if (fetching) {
+                    return value.__staleWhileFetching;
+                }
+                this.#moveToTail(index);
+                if (updateAgeOnGet) {
+                    this.#updateItemAge(index);
+                }
+                return value;
+            }
+        }
+        else if (status) {
+            status.get = 'miss';
+        }
+    }
+    #connect(p, n) {
+        this.#prev[n] = p;
+        this.#next[p] = n;
+    }
+    #moveToTail(index) {
+        // if tail already, nothing to do
+        // if head, move head to next[index]
+        // else
+        //   move next[prev[index]] to next[index] (head has no prev)
+        //   move prev[next[index]] to prev[index]
+        // prev[index] = tail
+        // next[tail] = index
+        // tail = index
+        if (index !== this.#tail) {
+            if (index === this.#head) {
+                this.#head = this.#next[index];
+            }
+            else {
+                this.#connect(this.#prev[index], this.#next[index]);
+            }
+            this.#connect(this.#tail, index);
+            this.#tail = index;
+        }
+    }
+    /**
+     * Deletes a key out of the cache.
+     * Returns true if the key was deleted, false otherwise.
+     */
+    delete(k) {
+        let deleted = false;
+        if (this.#size !== 0) {
+            const index = this.#keyMap.get(k);
+            if (index !== undefined) {
+                deleted = true;
+                if (this.#size === 1) {
+                    this.clear();
+                }
+                else {
+                    this.#removeItemSize(index);
+                    const v = this.#valList[index];
+                    if (this.#isBackgroundFetch(v)) {
+                        v.__abortController.abort(new Error('deleted'));
+                    }
+                    else if (this.#hasDispose || this.#hasDisposeAfter) {
+                        if (this.#hasDispose) {
+                            this.#dispose?.(v, k, 'delete');
+                        }
+                        if (this.#hasDisposeAfter) {
+                            this.#disposed?.push([v, k, 'delete']);
+                        }
+                    }
+                    this.#keyMap.delete(k);
+                    this.#keyList[index] = undefined;
+                    this.#valList[index] = undefined;
+                    if (index === this.#tail) {
+                        this.#tail = this.#prev[index];
+                    }
+                    else if (index === this.#head) {
+                        this.#head = this.#next[index];
+                    }
+                    else {
+                        const pi = this.#prev[index];
+                        this.#next[pi] = this.#next[index];
+                        const ni = this.#next[index];
+                        this.#prev[ni] = this.#prev[index];
+                    }
+                    this.#size--;
+                    this.#free.push(index);
+                }
+            }
+        }
+        if (this.#hasDisposeAfter && this.#disposed?.length) {
+            const dt = this.#disposed;
+            let task;
+            while ((task = dt?.shift())) {
+                this.#disposeAfter?.(...task);
+            }
+        }
+        return deleted;
+    }
+    /**
+     * Clear the cache entirely, throwing away all values.
+     */
+    clear() {
+        for (const index of this.#rindexes({ allowStale: true })) {
+            const v = this.#valList[index];
+            if (this.#isBackgroundFetch(v)) {
+                v.__abortController.abort(new Error('deleted'));
+            }
+            else {
+                const k = this.#keyList[index];
+                if (this.#hasDispose) {
+                    this.#dispose?.(v, k, 'delete');
+                }
+                if (this.#hasDisposeAfter) {
+                    this.#disposed?.push([v, k, 'delete']);
+                }
+            }
+        }
+        this.#keyMap.clear();
+        this.#valList.fill(undefined);
+        this.#keyList.fill(undefined);
+        if (this.#ttls && this.#starts) {
+            this.#ttls.fill(0);
+            this.#starts.fill(0);
+        }
+        if (this.#sizes) {
+            this.#sizes.fill(0);
+        }
+        this.#head = 0;
+        this.#tail = 0;
+        this.#free.length = 0;
+        this.#calculatedSize = 0;
+        this.#size = 0;
+        if (this.#hasDisposeAfter && this.#disposed) {
+            const dt = this.#disposed;
+            let task;
+            while ((task = dt?.shift())) {
+                this.#disposeAfter?.(...task);
+            }
+        }
+    }
+}
+exports.LRUCache = LRUCache;
+//# sourceMappingURL=index.js.map
 
 /***/ }),
 
@@ -34233,6 +43611,7 @@ function composeDoc(options, directives, { offset, start, value, end }, onError)
         next: value ?? end?.[0],
         offset,
         onError,
+        parentIndent: 0,
         startOnNewline: true
     });
     if (props.found) {
@@ -34375,7 +43754,7 @@ var resolveFlowScalar = __nccwpck_require__(7578);
 
 function composeScalar(ctx, token, tagToken, onError) {
     const { value, type, comment, range } = token.type === 'block-scalar'
-        ? resolveBlockScalar.resolveBlockScalar(token, ctx.options.strict, onError)
+        ? resolveBlockScalar.resolveBlockScalar(ctx, token, onError)
         : resolveFlowScalar.resolveFlowScalar(token, ctx.options.strict, onError);
     const tagName = tagToken
         ? ctx.directives.tagName(tagToken.source, msg => onError(tagToken, 'TAG_RESOLVE_FAILED', msg))
@@ -34710,6 +44089,7 @@ function resolveBlockMap({ composeNode, composeEmptyNode }, ctx, bm, onError, ta
             next: key ?? sep?.[0],
             offset,
             onError,
+            parentIndent: bm.indent,
             startOnNewline: true
         });
         const implicitKey = !keyProps.found;
@@ -34752,6 +44132,7 @@ function resolveBlockMap({ composeNode, composeEmptyNode }, ctx, bm, onError, ta
             next: value,
             offset: keyNode.range[2],
             onError,
+            parentIndent: bm.indent,
             startOnNewline: !key || key.type === 'block-scalar'
         });
         offset = valueProps.end;
@@ -34810,9 +44191,9 @@ exports.resolveBlockMap = resolveBlockMap;
 
 var Scalar = __nccwpck_require__(9338);
 
-function resolveBlockScalar(scalar, strict, onError) {
+function resolveBlockScalar(ctx, scalar, onError) {
     const start = scalar.offset;
-    const header = parseBlockScalarHeader(scalar, strict, onError);
+    const header = parseBlockScalarHeader(scalar, ctx.options.strict, onError);
     if (!header)
         return { value: '', type: null, comment: '', range: [start, start, start] };
     const type = header.mode === '>' ? Scalar.Scalar.BLOCK_FOLDED : Scalar.Scalar.BLOCK_LITERAL;
@@ -34854,6 +44235,10 @@ function resolveBlockScalar(scalar, strict, onError) {
             if (header.indent === 0)
                 trimIndent = indent.length;
             contentStart = i;
+            if (trimIndent === 0 && !ctx.atRoot) {
+                const message = 'Block scalar values in collections must be indented';
+                onError(offset, 'BAD_INDENT', message);
+            }
             break;
         }
         offset += indent.length + content.length + 1;
@@ -35029,6 +44414,7 @@ function resolveBlockSeq({ composeNode, composeEmptyNode }, ctx, bs, onError, ta
             next: value,
             offset,
             onError,
+            parentIndent: bs.indent,
             startOnNewline: true
         });
         if (!props.found) {
@@ -35145,6 +44531,7 @@ function resolveFlowCollection({ composeNode, composeEmptyNode }, ctx, fc, onErr
             next: key ?? sep?.[0],
             offset,
             onError,
+            parentIndent: fc.indent,
             startOnNewline: false
         });
         if (!props.found) {
@@ -35226,6 +44613,7 @@ function resolveFlowCollection({ composeNode, composeEmptyNode }, ctx, fc, onErr
                 next: value,
                 offset: keyNode.range[2],
                 onError,
+                parentIndent: fc.indent,
                 startOnNewline: false
             });
             if (valueProps.found) {
@@ -35515,19 +44903,19 @@ function foldNewline(source, offset) {
     return { fold, offset };
 }
 const escapeCodes = {
-    '0': '\0',
-    a: '\x07',
-    b: '\b',
-    e: '\x1b',
-    f: '\f',
-    n: '\n',
-    r: '\r',
-    t: '\t',
-    v: '\v',
-    N: '\u0085',
-    _: '\u00a0',
-    L: '\u2028',
-    P: '\u2029',
+    '0': '\0', // null character
+    a: '\x07', // bell character
+    b: '\b', // backspace
+    e: '\x1b', // escape character
+    f: '\f', // form feed
+    n: '\n', // line feed
+    r: '\r', // carriage return
+    t: '\t', // horizontal tab
+    v: '\v', // vertical tab
+    N: '\u0085', // Unicode next line
+    _: '\u00a0', // Unicode non-breaking space
+    L: '\u2028', // Unicode line separator
+    P: '\u2029', // Unicode paragraph separator
     ' ': ' ',
     '"': '"',
     '/': '/',
@@ -35557,7 +44945,7 @@ exports.resolveFlowScalar = resolveFlowScalar;
 "use strict";
 
 
-function resolveProps(tokens, { flow, indicator, next, offset, onError, startOnNewline }) {
+function resolveProps(tokens, { flow, indicator, next, offset, onError, parentIndent, startOnNewline }) {
     let spaceBefore = false;
     let atNewline = startOnNewline;
     let hasSpace = startOnNewline;
@@ -35566,6 +44954,7 @@ function resolveProps(tokens, { flow, indicator, next, offset, onError, startOnN
     let hasNewline = false;
     let hasNewlineAfterProp = false;
     let reqSpace = false;
+    let tab = null;
     let anchor = null;
     let tag = null;
     let comma = null;
@@ -35579,16 +44968,22 @@ function resolveProps(tokens, { flow, indicator, next, offset, onError, startOnN
                 onError(token.offset, 'MISSING_CHAR', 'Tags and anchors must be separated from the next token by white space');
             reqSpace = false;
         }
+        if (tab) {
+            if (atNewline && token.type !== 'comment' && token.type !== 'newline') {
+                onError(tab, 'TAB_AS_INDENT', 'Tabs are not allowed as indentation');
+            }
+            tab = null;
+        }
         switch (token.type) {
             case 'space':
                 // At the doc level, tabs at line start may be parsed
                 // as leading white space rather than indentation.
                 // In a flow collection, only the parser handles indent.
                 if (!flow &&
-                    atNewline &&
-                    indicator !== 'doc-start' &&
-                    token.source[0] === '\t')
-                    onError(token, 'TAB_AS_INDENT', 'Tabs are not allowed as indentation');
+                    (indicator !== 'doc-start' || next?.type !== 'flow-collection') &&
+                    token.source.includes('\t')) {
+                    tab = token;
+                }
                 hasSpace = true;
                 break;
             case 'comment': {
@@ -35648,7 +45043,8 @@ function resolveProps(tokens, { flow, indicator, next, offset, onError, startOnN
                 if (found)
                     onError(token, 'UNEXPECTED_TOKEN', `Unexpected ${token.source} in ${flow ?? 'collection'}`);
                 found = token;
-                atNewline = false;
+                atNewline =
+                    indicator === 'seq-item-ind' || indicator === 'explicit-key-ind';
                 hasSpace = false;
                 break;
             case 'comma':
@@ -35674,8 +45070,14 @@ function resolveProps(tokens, { flow, indicator, next, offset, onError, startOnN
         next.type !== 'space' &&
         next.type !== 'newline' &&
         next.type !== 'comma' &&
-        (next.type !== 'scalar' || next.source !== ''))
+        (next.type !== 'scalar' || next.source !== '')) {
         onError(next.offset, 'MISSING_CHAR', 'Tags and anchors must be separated from the next token by white space');
+    }
+    if (tab &&
+        ((atNewline && tab.indent <= parentIndent) ||
+            next?.type === 'block-map' ||
+            next?.type === 'block-seq'))
+        onError(tab, 'TAB_AS_INDENT', 'Tabs are not allowed as indentation');
     return {
         comma,
         found,
@@ -36544,12 +45946,19 @@ class Directives {
                 onError('Verbatim tags must end with a >');
             return verbatim;
         }
-        const [, handle, suffix] = source.match(/^(.*!)([^!]*)$/);
+        const [, handle, suffix] = source.match(/^(.*!)([^!]*)$/s);
         if (!suffix)
             onError(`The ${source} tag has no suffix`);
         const prefix = this.tags[handle];
-        if (prefix)
-            return prefix + decodeURIComponent(suffix);
+        if (prefix) {
+            try {
+                return prefix + decodeURIComponent(suffix);
+            }
+            catch (error) {
+                onError(String(error));
+                return null;
+            }
+        }
         if (handle === '!')
             return source; // local tag
         onError(`Could not resolve tag: ${source}`);
@@ -37681,7 +47090,7 @@ function resolveAsScalar(token, strict = true, onError) {
             case 'double-quoted-scalar':
                 return resolveFlowScalar.resolveFlowScalar(token, strict, _onError);
             case 'block-scalar':
-                return resolveBlockScalar.resolveBlockScalar(token, strict, _onError);
+                return resolveBlockScalar.resolveBlockScalar({ options: { strict } }, token, _onError);
         }
     }
     return null;
@@ -38266,11 +47675,11 @@ function isEmpty(ch) {
             return false;
     }
 }
-const hexDigits = '0123456789ABCDEFabcdef'.split('');
-const tagChars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-#;/?:@&=+$_.!~*'()".split('');
-const invalidFlowScalarChars = ',[]{}'.split('');
-const invalidAnchorChars = ' ,[]{}\n\r\t'.split('');
-const isNotAnchorChar = (ch) => !ch || invalidAnchorChars.includes(ch);
+const hexDigits = new Set('0123456789ABCDEFabcdef');
+const tagChars = new Set("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-#;/?:@&=+$_.!~*'()");
+const flowIndicatorChars = new Set(',[]{}');
+const invalidAnchorChars = new Set(' ,[]{}\n\r\t');
+const isNotAnchorChar = (ch) => !ch || invalidAnchorChars.has(ch);
 /**
  * Splits an input string into lexical tokens, i.e. smaller strings that are
  * easily identifiable by `tokens.tokenType()`.
@@ -38336,6 +47745,8 @@ class Lexer {
      */
     *lex(source, incomplete = false) {
         if (source) {
+            if (typeof source !== 'string')
+                throw TypeError('source is not a string');
             this.buffer = this.buffer ? this.buffer + source : source;
             this.lineEndPos = null;
         }
@@ -38435,11 +47846,16 @@ class Lexer {
         }
         if (line[0] === '%') {
             let dirEnd = line.length;
-            const cs = line.indexOf('#');
-            if (cs !== -1) {
+            let cs = line.indexOf('#');
+            while (cs !== -1) {
                 const ch = line[cs - 1];
-                if (ch === ' ' || ch === '\t')
+                if (ch === ' ' || ch === '\t') {
                     dirEnd = cs - 1;
+                    break;
+                }
+                else {
+                    cs = line.indexOf('#', cs + 1);
+                }
             }
             while (true) {
                 const ch = line[dirEnd - 1];
@@ -38705,8 +48121,10 @@ class Lexer {
         if (indent >= this.indentNext) {
             if (this.blockScalarIndent === -1)
                 this.indentNext = indent;
-            else
-                this.indentNext += this.blockScalarIndent;
+            else {
+                this.indentNext =
+                    this.blockScalarIndent + (this.indentNext === 0 ? 1 : this.indentNext);
+            }
             do {
                 const cs = this.continueScalar(nl + 1);
                 if (cs === -1)
@@ -38719,14 +48137,25 @@ class Lexer {
                 nl = this.buffer.length;
             }
         }
-        if (!this.blockScalarKeep) {
+        // Trailing insufficiently indented tabs are invalid.
+        // To catch that during parsing, we include them in the block scalar value.
+        let i = nl + 1;
+        ch = this.buffer[i];
+        while (ch === ' ')
+            ch = this.buffer[++i];
+        if (ch === '\t') {
+            while (ch === '\t' || ch === ' ' || ch === '\r' || ch === '\n')
+                ch = this.buffer[++i];
+            nl = i - 1;
+        }
+        else if (!this.blockScalarKeep) {
             do {
                 let i = nl - 1;
                 let ch = this.buffer[i];
                 if (ch === '\r')
                     ch = this.buffer[--i];
                 const lastChar = i; // Drop the line if last char not more indented
-                while (ch === ' ' || ch === '\t')
+                while (ch === ' ')
                     ch = this.buffer[--i];
                 if (ch === '\n' && i >= this.pos && i + 1 + indent > lastChar)
                     nl = i;
@@ -38746,7 +48175,7 @@ class Lexer {
         while ((ch = this.buffer[++i])) {
             if (ch === ':') {
                 const next = this.buffer[i + 1];
-                if (isEmpty(next) || (inFlow && next === ','))
+                if (isEmpty(next) || (inFlow && flowIndicatorChars.has(next)))
                     break;
                 end = i;
             }
@@ -38761,7 +48190,7 @@ class Lexer {
                     else
                         end = i;
                 }
-                if (next === '#' || (inFlow && invalidFlowScalarChars.includes(next)))
+                if (next === '#' || (inFlow && flowIndicatorChars.has(next)))
                     break;
                 if (ch === '\n') {
                     const cs = this.continueScalar(i + 1);
@@ -38771,7 +48200,7 @@ class Lexer {
                 }
             }
             else {
-                if (inFlow && invalidFlowScalarChars.includes(ch))
+                if (inFlow && flowIndicatorChars.has(ch))
                     break;
                 end = i;
             }
@@ -38816,7 +48245,7 @@ class Lexer {
             case ':': {
                 const inFlow = this.flowLevel > 0;
                 const ch1 = this.charAt(1);
-                if (isEmpty(ch1) || (inFlow && invalidFlowScalarChars.includes(ch1))) {
+                if (isEmpty(ch1) || (inFlow && flowIndicatorChars.has(ch1))) {
                     if (!inFlow)
                         this.indentNext = this.indentValue + 1;
                     else if (this.flowKey)
@@ -38841,11 +48270,11 @@ class Lexer {
             let i = this.pos + 1;
             let ch = this.buffer[i];
             while (ch) {
-                if (tagChars.includes(ch))
+                if (tagChars.has(ch))
                     ch = this.buffer[++i];
                 else if (ch === '%' &&
-                    hexDigits.includes(this.buffer[i + 1]) &&
-                    hexDigits.includes(this.buffer[i + 2])) {
+                    hexDigits.has(this.buffer[i + 1]) &&
+                    hexDigits.has(this.buffer[i + 2])) {
                     ch = this.buffer[(i += 3)];
                 }
                 else
@@ -39253,7 +48682,7 @@ class Parser {
                     }
                     else {
                         Object.assign(it, { key: token, sep: [] });
-                        this.onKeyLine = !includesToken(it.start, 'explicit-key-ind');
+                        this.onKeyLine = !it.explicitKey;
                         return;
                     }
                     break;
@@ -39462,7 +48891,10 @@ class Parser {
                 return;
         }
         if (this.indent >= map.indent) {
-            const atNextItem = !this.onKeyLine && this.indent === map.indent && it.sep;
+            const atMapIndent = !this.onKeyLine && this.indent === map.indent;
+            const atNextItem = atMapIndent &&
+                (it.sep || it.explicitKey) &&
+                this.type !== 'seq-item-ind';
             // For empty nodes, assign newline-separated not indented empty tokens to following node
             let start = [];
             if (atNextItem && it.sep && !it.value) {
@@ -39502,25 +48934,26 @@ class Parser {
                     }
                     return;
                 case 'explicit-key-ind':
-                    if (!it.sep && !includesToken(it.start, 'explicit-key-ind')) {
+                    if (!it.sep && !it.explicitKey) {
                         it.start.push(this.sourceToken);
+                        it.explicitKey = true;
                     }
                     else if (atNextItem || it.value) {
                         start.push(this.sourceToken);
-                        map.items.push({ start });
+                        map.items.push({ start, explicitKey: true });
                     }
                     else {
                         this.stack.push({
                             type: 'block-map',
                             offset: this.offset,
                             indent: this.indent,
-                            items: [{ start: [this.sourceToken] }]
+                            items: [{ start: [this.sourceToken], explicitKey: true }]
                         });
                     }
                     this.onKeyLine = true;
                     return;
                 case 'map-value-ind':
-                    if (includesToken(it.start, 'explicit-key-ind')) {
+                    if (it.explicitKey) {
                         if (!it.sep) {
                             if (includesToken(it.start, 'newline')) {
                                 Object.assign(it, { key: null, sep: [this.sourceToken] });
@@ -39611,9 +49044,7 @@ class Parser {
                 default: {
                     const bv = this.startBlockValue(map);
                     if (bv) {
-                        if (atNextItem &&
-                            bv.type !== 'block-seq' &&
-                            includesToken(it.start, 'explicit-key-ind')) {
+                        if (atMapIndent && bv.type !== 'block-seq') {
                             map.items.push({ start });
                         }
                         this.stack.push(bv);
@@ -39834,7 +49265,7 @@ class Parser {
                     type: 'block-map',
                     offset: this.offset,
                     indent: this.indent,
-                    items: [{ start }]
+                    items: [{ start, explicitKey: true }]
                 };
             }
             case 'map-value-ind': {
@@ -40206,7 +49637,7 @@ const floatNaN = {
     identify: value => typeof value === 'number',
     default: true,
     tag: 'tag:yaml.org,2002:float',
-    test: /^(?:[-+]?\.(?:inf|Inf|INF|nan|NaN|NAN))$/,
+    test: /^(?:[-+]?\.(?:inf|Inf|INF)|\.nan|\.NaN|\.NAN)$/,
     resolve: str => str.slice(-3).toLowerCase() === 'nan'
         ? NaN
         : str[0] === '-'
@@ -40507,7 +49938,7 @@ var Scalar = __nccwpck_require__(9338);
 var stringifyString = __nccwpck_require__(6226);
 
 const binary = {
-    identify: value => value instanceof Uint8Array,
+    identify: value => value instanceof Uint8Array, // Buffer inherits from Uint8Array
     default: false,
     tag: 'tag:yaml.org,2002:binary',
     /**
@@ -40599,7 +50030,7 @@ const falseTag = {
     identify: value => value === false,
     default: true,
     tag: 'tag:yaml.org,2002:bool',
-    test: /^(?:N|n|[Nn]o|NO|[Ff]alse|FALSE|[Oo]ff|OFF)$/i,
+    test: /^(?:N|n|[Nn]o|NO|[Ff]alse|FALSE|[Oo]ff|OFF)$/,
     resolve: () => new Scalar.Scalar(false),
     stringify: boolStringify
 };
@@ -40623,7 +50054,7 @@ const floatNaN = {
     identify: value => typeof value === 'number',
     default: true,
     tag: 'tag:yaml.org,2002:float',
-    test: /^[-+]?\.(?:inf|Inf|INF|nan|NaN|NAN)$/,
+    test: /^(?:[-+]?\.(?:inf|Inf|INF)|\.nan|\.NaN|\.NAN)$/,
     resolve: (str) => str.slice(-3).toLowerCase() === 'nan'
         ? NaN
         : str[0] === '-'
@@ -41227,7 +50658,7 @@ function foldFlowLines(text, indent, mode = 'flow', { indentAtStart, lineWidth =
     let escStart = -1;
     let escEnd = -1;
     if (mode === FOLD_BLOCK) {
-        i = consumeMoreIndentedLines(text, i);
+        i = consumeMoreIndentedLines(text, i, indent.length);
         if (i !== -1)
             end = i + endStep;
     }
@@ -41251,8 +50682,8 @@ function foldFlowLines(text, indent, mode = 'flow', { indentAtStart, lineWidth =
         }
         if (ch === '\n') {
             if (mode === FOLD_BLOCK)
-                i = consumeMoreIndentedLines(text, i);
-            end = i + endStep;
+                i = consumeMoreIndentedLines(text, i, indent.length);
+            end = i + indent.length + endStep;
             split = undefined;
         }
         else {
@@ -41320,15 +50751,24 @@ function foldFlowLines(text, indent, mode = 'flow', { indentAtStart, lineWidth =
  * Presumes `i + 1` is at the start of a line
  * @returns index of last newline in more-indented block
  */
-function consumeMoreIndentedLines(text, i) {
-    let ch = text[i + 1];
+function consumeMoreIndentedLines(text, i, indent) {
+    let end = i;
+    let start = i + 1;
+    let ch = text[start];
     while (ch === ' ' || ch === '\t') {
-        do {
-            ch = text[(i += 1)];
-        } while (ch && ch !== '\n');
-        ch = text[i + 1];
+        if (i < start + indent) {
+            ch = text[++i];
+        }
+        else {
+            do {
+                ch = text[++i];
+            } while (ch && ch !== '\n');
+            end = i;
+            start = i + 1;
+            ch = text[start];
+        }
     }
-    return i;
+    return end;
 }
 
 exports.FOLD_BLOCK = FOLD_BLOCK;
@@ -41480,7 +50920,6 @@ exports.stringify = stringify;
 "use strict";
 
 
-var Collection = __nccwpck_require__(3466);
 var identity = __nccwpck_require__(5589);
 var stringify = __nccwpck_require__(8409);
 var stringifyComment = __nccwpck_require__(5182);
@@ -41541,7 +50980,7 @@ function stringifyBlockCollection({ comment, items }, ctx, { blockItemPrefix, fl
         onChompKeep();
     return str;
 }
-function stringifyFlowCollection({ comment, items }, ctx, { flowChars, itemIndent, onComment }) {
+function stringifyFlowCollection({ items }, ctx, { flowChars, itemIndent }) {
     const { indent, indentStep, flowCollectionPadding: fcPadding, options: { commentString } } = ctx;
     itemIndent += indentStep;
     const itemCtx = Object.assign({}, ctx, {
@@ -41594,32 +51033,25 @@ function stringifyFlowCollection({ comment, items }, ctx, { flowChars, itemInden
         lines.push(str);
         linesAtValue = lines.length;
     }
-    let str;
     const { start, end } = flowChars;
     if (lines.length === 0) {
-        str = start + end;
+        return start + end;
     }
     else {
         if (!reqNewline) {
             const len = lines.reduce((sum, line) => sum + line.length + 2, 2);
-            reqNewline = len > Collection.Collection.maxFlowStringSingleLineLength;
+            reqNewline = ctx.options.lineWidth > 0 && len > ctx.options.lineWidth;
         }
         if (reqNewline) {
-            str = start;
+            let str = start;
             for (const line of lines)
                 str += line ? `\n${indentStep}${indent}${line}` : '\n';
-            str += `\n${indent}${end}`;
+            return `${str}\n${indent}${end}`;
         }
         else {
-            str = `${start}${fcPadding}${lines.join(' ')}${fcPadding}${end}`;
+            return `${start}${fcPadding}${lines.join(' ')}${fcPadding}${end}`;
         }
     }
-    if (comment) {
-        str += stringifyComment.lineComment(str, indent, commentString(comment));
-        if (onComment)
-            onComment();
-    }
-    return str;
 }
 function addCommentBefore({ indent, options: { commentString } }, lines, comment, chompKeep) {
     if (comment && chompKeep)
@@ -41814,7 +51246,7 @@ function stringifyPair({ key, value }, ctx, onComment, onChompKeep) {
         if (keyComment) {
             throw new Error('With simple keys, key nodes cannot have comments');
         }
-        if (identity.isCollection(key)) {
+        if (identity.isCollection(key) || (!identity.isNode(key) && typeof key === 'object')) {
             const msg = 'With simple keys, collection cannot be used as a key value';
             throw new Error(msg);
         }
@@ -42542,7 +51974,7 @@ exports.visitAsync = visitAsync;
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
-// Axios v1.5.0 Copyright (c) 2023 Matt Zabriskie and contributors
+// Axios v1.7.4 Copyright (c) 2024 Matt Zabriskie and contributors
 
 
 const FormData$1 = __nccwpck_require__(4334);
@@ -42554,7 +51986,7 @@ const util = __nccwpck_require__(3837);
 const followRedirects = __nccwpck_require__(7707);
 const zlib = __nccwpck_require__(9796);
 const stream = __nccwpck_require__(2781);
-const EventEmitter = __nccwpck_require__(2361);
+const events = __nccwpck_require__(2361);
 
 function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e : { 'default': e }; }
 
@@ -42566,7 +51998,6 @@ const util__default = /*#__PURE__*/_interopDefaultLegacy(util);
 const followRedirects__default = /*#__PURE__*/_interopDefaultLegacy(followRedirects);
 const zlib__default = /*#__PURE__*/_interopDefaultLegacy(zlib);
 const stream__default = /*#__PURE__*/_interopDefaultLegacy(stream);
-const EventEmitter__default = /*#__PURE__*/_interopDefaultLegacy(EventEmitter);
 
 function bind(fn, thisArg) {
   return function wrap() {
@@ -42780,6 +52211,8 @@ const isFormData = (thing) => {
  * @returns {boolean} True if value is a URLSearchParams object, otherwise false
  */
 const isURLSearchParams = kindOfTest('URLSearchParams');
+
+const [isReadableStream, isRequest, isResponse, isHeaders] = ['ReadableStream', 'Request', 'Response', 'Headers'].map(kindOfTest);
 
 /**
  * Trim excess whitespace off the beginning and end of a string
@@ -43169,8 +52602,7 @@ const toObjectSet = (arrayOrString, delimiter) => {
 const noop = () => {};
 
 const toFiniteNumber = (value, defaultValue) => {
-  value = +value;
-  return Number.isFinite(value) ? value : defaultValue;
+  return value != null && Number.isFinite(value = +value) ? value : defaultValue;
 };
 
 const ALPHA = 'abcdefghijklmnopqrstuvwxyz';
@@ -43240,7 +52672,37 @@ const isAsyncFn = kindOfTest('AsyncFunction');
 const isThenable = (thing) =>
   thing && (isObject(thing) || isFunction(thing)) && isFunction(thing.then) && isFunction(thing.catch);
 
-const utils = {
+// original code
+// https://github.com/DigitalBrainJS/AxiosPromise/blob/16deab13710ec09779922131f3fa5954320f83ab/lib/utils.js#L11-L34
+
+const _setImmediate = ((setImmediateSupported, postMessageSupported) => {
+  if (setImmediateSupported) {
+    return setImmediate;
+  }
+
+  return postMessageSupported ? ((token, callbacks) => {
+    _global.addEventListener("message", ({source, data}) => {
+      if (source === _global && data === token) {
+        callbacks.length && callbacks.shift()();
+      }
+    }, false);
+
+    return (cb) => {
+      callbacks.push(cb);
+      _global.postMessage(token, "*");
+    }
+  })(`axios@${Math.random()}`, []) : (cb) => setTimeout(cb);
+})(
+  typeof setImmediate === 'function',
+  isFunction(_global.postMessage)
+);
+
+const asap = typeof queueMicrotask !== 'undefined' ?
+  queueMicrotask.bind(_global) : ( typeof process !== 'undefined' && process.nextTick || _setImmediate);
+
+// *********************
+
+const utils$1 = {
   isArray,
   isArrayBuffer,
   isBuffer,
@@ -43251,6 +52713,10 @@ const utils = {
   isBoolean,
   isObject,
   isPlainObject,
+  isReadableStream,
+  isRequest,
+  isResponse,
+  isHeaders,
   isUndefined,
   isDate,
   isFile,
@@ -43291,7 +52757,9 @@ const utils = {
   isSpecCompliantForm,
   toJSONObject,
   isAsyncFn,
-  isThenable
+  isThenable,
+  setImmediate: _setImmediate,
+  asap
 };
 
 /**
@@ -43322,7 +52790,7 @@ function AxiosError(message, code, config, request, response) {
   response && (this.response = response);
 }
 
-utils.inherits(AxiosError, Error, {
+utils$1.inherits(AxiosError, Error, {
   toJSON: function toJSON() {
     return {
       // Standard
@@ -43337,7 +52805,7 @@ utils.inherits(AxiosError, Error, {
       columnNumber: this.columnNumber,
       stack: this.stack,
       // Axios
-      config: utils.toJSONObject(this.config),
+      config: utils$1.toJSONObject(this.config),
       code: this.code,
       status: this.response && this.response.status ? this.response.status : null
     };
@@ -43372,7 +52840,7 @@ Object.defineProperty(prototype$1, 'isAxiosError', {value: true});
 AxiosError.from = (error, code, config, request, response, customProps) => {
   const axiosError = Object.create(prototype$1);
 
-  utils.toFlatObject(error, axiosError, function filter(obj) {
+  utils$1.toFlatObject(error, axiosError, function filter(obj) {
     return obj !== Error.prototype;
   }, prop => {
     return prop !== 'isAxiosError';
@@ -43397,7 +52865,7 @@ AxiosError.from = (error, code, config, request, response, customProps) => {
  * @returns {boolean}
  */
 function isVisitable(thing) {
-  return utils.isPlainObject(thing) || utils.isArray(thing);
+  return utils$1.isPlainObject(thing) || utils$1.isArray(thing);
 }
 
 /**
@@ -43408,7 +52876,7 @@ function isVisitable(thing) {
  * @returns {string} the key without the brackets.
  */
 function removeBrackets(key) {
-  return utils.endsWith(key, '[]') ? key.slice(0, -2) : key;
+  return utils$1.endsWith(key, '[]') ? key.slice(0, -2) : key;
 }
 
 /**
@@ -43437,10 +52905,10 @@ function renderKey(path, key, dots) {
  * @returns {boolean}
  */
 function isFlatArray(arr) {
-  return utils.isArray(arr) && !arr.some(isVisitable);
+  return utils$1.isArray(arr) && !arr.some(isVisitable);
 }
 
-const predicates = utils.toFlatObject(utils, {}, null, function filter(prop) {
+const predicates = utils$1.toFlatObject(utils$1, {}, null, function filter(prop) {
   return /^is[A-Z]/.test(prop);
 });
 
@@ -43468,7 +52936,7 @@ const predicates = utils.toFlatObject(utils, {}, null, function filter(prop) {
  * @returns
  */
 function toFormData(obj, formData, options) {
-  if (!utils.isObject(obj)) {
+  if (!utils$1.isObject(obj)) {
     throw new TypeError('target must be an object');
   }
 
@@ -43476,13 +52944,13 @@ function toFormData(obj, formData, options) {
   formData = formData || new (FormData__default["default"] || FormData)();
 
   // eslint-disable-next-line no-param-reassign
-  options = utils.toFlatObject(options, {
+  options = utils$1.toFlatObject(options, {
     metaTokens: true,
     dots: false,
     indexes: false
   }, false, function defined(option, source) {
     // eslint-disable-next-line no-eq-null,eqeqeq
-    return !utils.isUndefined(source[option]);
+    return !utils$1.isUndefined(source[option]);
   });
 
   const metaTokens = options.metaTokens;
@@ -43491,24 +52959,24 @@ function toFormData(obj, formData, options) {
   const dots = options.dots;
   const indexes = options.indexes;
   const _Blob = options.Blob || typeof Blob !== 'undefined' && Blob;
-  const useBlob = _Blob && utils.isSpecCompliantForm(formData);
+  const useBlob = _Blob && utils$1.isSpecCompliantForm(formData);
 
-  if (!utils.isFunction(visitor)) {
+  if (!utils$1.isFunction(visitor)) {
     throw new TypeError('visitor must be a function');
   }
 
   function convertValue(value) {
     if (value === null) return '';
 
-    if (utils.isDate(value)) {
+    if (utils$1.isDate(value)) {
       return value.toISOString();
     }
 
-    if (!useBlob && utils.isBlob(value)) {
+    if (!useBlob && utils$1.isBlob(value)) {
       throw new AxiosError('Blob is not supported. Use a Buffer instead.');
     }
 
-    if (utils.isArrayBuffer(value) || utils.isTypedArray(value)) {
+    if (utils$1.isArrayBuffer(value) || utils$1.isTypedArray(value)) {
       return useBlob && typeof Blob === 'function' ? new Blob([value]) : Buffer.from(value);
     }
 
@@ -43529,20 +52997,20 @@ function toFormData(obj, formData, options) {
     let arr = value;
 
     if (value && !path && typeof value === 'object') {
-      if (utils.endsWith(key, '{}')) {
+      if (utils$1.endsWith(key, '{}')) {
         // eslint-disable-next-line no-param-reassign
         key = metaTokens ? key : key.slice(0, -2);
         // eslint-disable-next-line no-param-reassign
         value = JSON.stringify(value);
       } else if (
-        (utils.isArray(value) && isFlatArray(value)) ||
-        ((utils.isFileList(value) || utils.endsWith(key, '[]')) && (arr = utils.toArray(value))
+        (utils$1.isArray(value) && isFlatArray(value)) ||
+        ((utils$1.isFileList(value) || utils$1.endsWith(key, '[]')) && (arr = utils$1.toArray(value))
         )) {
         // eslint-disable-next-line no-param-reassign
         key = removeBrackets(key);
 
         arr.forEach(function each(el, index) {
-          !(utils.isUndefined(el) || el === null) && formData.append(
+          !(utils$1.isUndefined(el) || el === null) && formData.append(
             // eslint-disable-next-line no-nested-ternary
             indexes === true ? renderKey([key], index, dots) : (indexes === null ? key : key + '[]'),
             convertValue(el)
@@ -43570,7 +53038,7 @@ function toFormData(obj, formData, options) {
   });
 
   function build(value, path) {
-    if (utils.isUndefined(value)) return;
+    if (utils$1.isUndefined(value)) return;
 
     if (stack.indexOf(value) !== -1) {
       throw Error('Circular reference detected in ' + path.join('.'));
@@ -43578,9 +53046,9 @@ function toFormData(obj, formData, options) {
 
     stack.push(value);
 
-    utils.forEach(value, function each(el, key) {
-      const result = !(utils.isUndefined(el) || el === null) && visitor.call(
-        formData, el, utils.isString(key) ? key.trim() : key, path, exposedHelpers
+    utils$1.forEach(value, function each(el, key) {
+      const result = !(utils$1.isUndefined(el) || el === null) && visitor.call(
+        formData, el, utils$1.isString(key) ? key.trim() : key, path, exposedHelpers
       );
 
       if (result === true) {
@@ -43591,7 +53059,7 @@ function toFormData(obj, formData, options) {
     stack.pop();
   }
 
-  if (!utils.isObject(obj)) {
+  if (!utils$1.isObject(obj)) {
     throw new TypeError('data must be an object');
   }
 
@@ -43695,7 +53163,7 @@ function buildURL(url, params, options) {
   if (serializeFn) {
     serializedParams = serializeFn(params, options);
   } else {
-    serializedParams = utils.isURLSearchParams(params) ?
+    serializedParams = utils$1.isURLSearchParams(params) ?
       params.toString() :
       new AxiosURLSearchParams(params, options).toString(_encode);
   }
@@ -43770,7 +53238,7 @@ class InterceptorManager {
    * @returns {void}
    */
   forEach(fn) {
-    utils.forEach(this.handlers, function forEachHandler(h) {
+    utils$1.forEach(this.handlers, function forEachHandler(h) {
       if (h !== null) {
         fn(h);
       }
@@ -43788,7 +53256,7 @@ const transitionalDefaults = {
 
 const URLSearchParams = url__default["default"].URLSearchParams;
 
-const platform = {
+const platform$1 = {
   isNode: true,
   classes: {
     URLSearchParams,
@@ -43798,10 +53266,67 @@ const platform = {
   protocols: [ 'http', 'https', 'file', 'data' ]
 };
 
+const hasBrowserEnv = typeof window !== 'undefined' && typeof document !== 'undefined';
+
+/**
+ * Determine if we're running in a standard browser environment
+ *
+ * This allows axios to run in a web worker, and react-native.
+ * Both environments support XMLHttpRequest, but not fully standard globals.
+ *
+ * web workers:
+ *  typeof window -> undefined
+ *  typeof document -> undefined
+ *
+ * react-native:
+ *  navigator.product -> 'ReactNative'
+ * nativescript
+ *  navigator.product -> 'NativeScript' or 'NS'
+ *
+ * @returns {boolean}
+ */
+const hasStandardBrowserEnv = (
+  (product) => {
+    return hasBrowserEnv && ['ReactNative', 'NativeScript', 'NS'].indexOf(product) < 0
+  })(typeof navigator !== 'undefined' && navigator.product);
+
+/**
+ * Determine if we're running in a standard browser webWorker environment
+ *
+ * Although the `isStandardBrowserEnv` method indicates that
+ * `allows axios to run in a web worker`, the WebWorker will still be
+ * filtered out due to its judgment standard
+ * `typeof window !== 'undefined' && typeof document !== 'undefined'`.
+ * This leads to a problem when axios post `FormData` in webWorker
+ */
+const hasStandardBrowserWebWorkerEnv = (() => {
+  return (
+    typeof WorkerGlobalScope !== 'undefined' &&
+    // eslint-disable-next-line no-undef
+    self instanceof WorkerGlobalScope &&
+    typeof self.importScripts === 'function'
+  );
+})();
+
+const origin = hasBrowserEnv && window.location.href || 'http://localhost';
+
+const utils = /*#__PURE__*/Object.freeze({
+  __proto__: null,
+  hasBrowserEnv: hasBrowserEnv,
+  hasStandardBrowserWebWorkerEnv: hasStandardBrowserWebWorkerEnv,
+  hasStandardBrowserEnv: hasStandardBrowserEnv,
+  origin: origin
+});
+
+const platform = {
+  ...utils,
+  ...platform$1
+};
+
 function toURLEncodedForm(data, options) {
   return toFormData(data, new platform.classes.URLSearchParams(), Object.assign({
     visitor: function(value, key, path, helpers) {
-      if (utils.isBuffer(value)) {
+      if (platform.isNode && utils$1.isBuffer(value)) {
         this.append(key, value.toString('base64'));
         return false;
       }
@@ -43823,7 +53348,7 @@ function parsePropPath(name) {
   // foo.x.y.z
   // foo-x-y-z
   // foo x y z
-  return utils.matchAll(/\w+|\[(\w*)]/g, name).map(match => {
+  return utils$1.matchAll(/\w+|\[(\w*)]/g, name).map(match => {
     return match[0] === '[]' ? '' : match[1] || match[0];
   });
 }
@@ -43858,12 +53383,15 @@ function arrayToObject(arr) {
 function formDataToJSON(formData) {
   function buildPath(path, value, target, index) {
     let name = path[index++];
+
+    if (name === '__proto__') return true;
+
     const isNumericKey = Number.isFinite(+name);
     const isLast = index >= path.length;
-    name = !name && utils.isArray(target) ? target.length : name;
+    name = !name && utils$1.isArray(target) ? target.length : name;
 
     if (isLast) {
-      if (utils.hasOwnProp(target, name)) {
+      if (utils$1.hasOwnProp(target, name)) {
         target[name] = [target[name], value];
       } else {
         target[name] = value;
@@ -43872,23 +53400,23 @@ function formDataToJSON(formData) {
       return !isNumericKey;
     }
 
-    if (!target[name] || !utils.isObject(target[name])) {
+    if (!target[name] || !utils$1.isObject(target[name])) {
       target[name] = [];
     }
 
     const result = buildPath(path, value, target[name], index);
 
-    if (result && utils.isArray(target[name])) {
+    if (result && utils$1.isArray(target[name])) {
       target[name] = arrayToObject(target[name]);
     }
 
     return !isNumericKey;
   }
 
-  if (utils.isFormData(formData) && utils.isFunction(formData.entries)) {
+  if (utils$1.isFormData(formData) && utils$1.isFunction(formData.entries)) {
     const obj = {};
 
-    utils.forEachEntry(formData, (name, value) => {
+    utils$1.forEachEntry(formData, (name, value) => {
       buildPath(parsePropPath(name), value, obj, 0);
     });
 
@@ -43909,10 +53437,10 @@ function formDataToJSON(formData) {
  * @returns {string} A stringified version of the rawValue.
  */
 function stringifySafely(rawValue, parser, encoder) {
-  if (utils.isString(rawValue)) {
+  if (utils$1.isString(rawValue)) {
     try {
       (parser || JSON.parse)(rawValue);
-      return utils.trim(rawValue);
+      return utils$1.trim(rawValue);
     } catch (e) {
       if (e.name !== 'SyntaxError') {
         throw e;
@@ -43927,38 +53455,36 @@ const defaults = {
 
   transitional: transitionalDefaults,
 
-  adapter: 'http' ,
+  adapter: ['xhr', 'http', 'fetch'],
 
   transformRequest: [function transformRequest(data, headers) {
     const contentType = headers.getContentType() || '';
     const hasJSONContentType = contentType.indexOf('application/json') > -1;
-    const isObjectPayload = utils.isObject(data);
+    const isObjectPayload = utils$1.isObject(data);
 
-    if (isObjectPayload && utils.isHTMLForm(data)) {
+    if (isObjectPayload && utils$1.isHTMLForm(data)) {
       data = new FormData(data);
     }
 
-    const isFormData = utils.isFormData(data);
+    const isFormData = utils$1.isFormData(data);
 
     if (isFormData) {
-      if (!hasJSONContentType) {
-        return data;
-      }
       return hasJSONContentType ? JSON.stringify(formDataToJSON(data)) : data;
     }
 
-    if (utils.isArrayBuffer(data) ||
-      utils.isBuffer(data) ||
-      utils.isStream(data) ||
-      utils.isFile(data) ||
-      utils.isBlob(data)
+    if (utils$1.isArrayBuffer(data) ||
+      utils$1.isBuffer(data) ||
+      utils$1.isStream(data) ||
+      utils$1.isFile(data) ||
+      utils$1.isBlob(data) ||
+      utils$1.isReadableStream(data)
     ) {
       return data;
     }
-    if (utils.isArrayBufferView(data)) {
+    if (utils$1.isArrayBufferView(data)) {
       return data.buffer;
     }
-    if (utils.isURLSearchParams(data)) {
+    if (utils$1.isURLSearchParams(data)) {
       headers.setContentType('application/x-www-form-urlencoded;charset=utf-8', false);
       return data.toString();
     }
@@ -43970,7 +53496,7 @@ const defaults = {
         return toURLEncodedForm(data, this.formSerializer).toString();
       }
 
-      if ((isFileList = utils.isFileList(data)) || contentType.indexOf('multipart/form-data') > -1) {
+      if ((isFileList = utils$1.isFileList(data)) || contentType.indexOf('multipart/form-data') > -1) {
         const _FormData = this.env && this.env.FormData;
 
         return toFormData(
@@ -43994,7 +53520,11 @@ const defaults = {
     const forcedJSONParsing = transitional && transitional.forcedJSONParsing;
     const JSONRequested = this.responseType === 'json';
 
-    if (data && utils.isString(data) && ((forcedJSONParsing && !this.responseType) || JSONRequested)) {
+    if (utils$1.isResponse(data) || utils$1.isReadableStream(data)) {
+      return data;
+    }
+
+    if (data && utils$1.isString(data) && ((forcedJSONParsing && !this.responseType) || JSONRequested)) {
       const silentJSONParsing = transitional && transitional.silentJSONParsing;
       const strictJSONParsing = !silentJSONParsing && JSONRequested;
 
@@ -44042,7 +53572,7 @@ const defaults = {
   }
 };
 
-utils.forEach(['delete', 'get', 'head', 'post', 'put', 'patch'], (method) => {
+utils$1.forEach(['delete', 'get', 'head', 'post', 'put', 'patch'], (method) => {
   defaults.headers[method] = {};
 });
 
@@ -44050,7 +53580,7 @@ const defaults$1 = defaults;
 
 // RawAxiosHeaders whose duplicates are ignored by node
 // c.f. https://nodejs.org/api/http.html#http_message_headers
-const ignoreDuplicateOf = utils.toObjectSet([
+const ignoreDuplicateOf = utils$1.toObjectSet([
   'age', 'authorization', 'content-length', 'content-type', 'etag',
   'expires', 'from', 'host', 'if-modified-since', 'if-unmodified-since',
   'last-modified', 'location', 'max-forwards', 'proxy-authorization',
@@ -44111,7 +53641,7 @@ function normalizeValue(value) {
     return value;
   }
 
-  return utils.isArray(value) ? value.map(normalizeValue) : String(value);
+  return utils$1.isArray(value) ? value.map(normalizeValue) : String(value);
 }
 
 function parseTokens(str) {
@@ -44129,7 +53659,7 @@ function parseTokens(str) {
 const isValidHeaderName = (str) => /^[-_a-zA-Z0-9^`|~,!#$%&'*+.]+$/.test(str.trim());
 
 function matchHeaderValue(context, value, header, filter, isHeaderNameFilter) {
-  if (utils.isFunction(filter)) {
+  if (utils$1.isFunction(filter)) {
     return filter.call(this, value, header);
   }
 
@@ -44137,13 +53667,13 @@ function matchHeaderValue(context, value, header, filter, isHeaderNameFilter) {
     value = header;
   }
 
-  if (!utils.isString(value)) return;
+  if (!utils$1.isString(value)) return;
 
-  if (utils.isString(filter)) {
+  if (utils$1.isString(filter)) {
     return value.indexOf(filter) !== -1;
   }
 
-  if (utils.isRegExp(filter)) {
+  if (utils$1.isRegExp(filter)) {
     return filter.test(value);
   }
 }
@@ -44156,7 +53686,7 @@ function formatHeader(header) {
 }
 
 function buildAccessors(obj, header) {
-  const accessorName = utils.toCamelCase(' ' + header);
+  const accessorName = utils$1.toCamelCase(' ' + header);
 
   ['get', 'set', 'has'].forEach(methodName => {
     Object.defineProperty(obj, methodName + accessorName, {
@@ -44183,7 +53713,7 @@ class AxiosHeaders {
         throw new Error('header name must be a non-empty string');
       }
 
-      const key = utils.findKey(self, lHeader);
+      const key = utils$1.findKey(self, lHeader);
 
       if(!key || self[key] === undefined || _rewrite === true || (_rewrite === undefined && self[key] !== false)) {
         self[key || _header] = normalizeValue(_value);
@@ -44191,12 +53721,16 @@ class AxiosHeaders {
     }
 
     const setHeaders = (headers, _rewrite) =>
-      utils.forEach(headers, (_value, _header) => setHeader(_value, _header, _rewrite));
+      utils$1.forEach(headers, (_value, _header) => setHeader(_value, _header, _rewrite));
 
-    if (utils.isPlainObject(header) || header instanceof this.constructor) {
+    if (utils$1.isPlainObject(header) || header instanceof this.constructor) {
       setHeaders(header, valueOrRewrite);
-    } else if(utils.isString(header) && (header = header.trim()) && !isValidHeaderName(header)) {
+    } else if(utils$1.isString(header) && (header = header.trim()) && !isValidHeaderName(header)) {
       setHeaders(parseHeaders(header), valueOrRewrite);
+    } else if (utils$1.isHeaders(header)) {
+      for (const [key, value] of header.entries()) {
+        setHeader(value, key, rewrite);
+      }
     } else {
       header != null && setHeader(valueOrRewrite, header, rewrite);
     }
@@ -44208,7 +53742,7 @@ class AxiosHeaders {
     header = normalizeHeader(header);
 
     if (header) {
-      const key = utils.findKey(this, header);
+      const key = utils$1.findKey(this, header);
 
       if (key) {
         const value = this[key];
@@ -44221,11 +53755,11 @@ class AxiosHeaders {
           return parseTokens(value);
         }
 
-        if (utils.isFunction(parser)) {
+        if (utils$1.isFunction(parser)) {
           return parser.call(this, value, key);
         }
 
-        if (utils.isRegExp(parser)) {
+        if (utils$1.isRegExp(parser)) {
           return parser.exec(value);
         }
 
@@ -44238,7 +53772,7 @@ class AxiosHeaders {
     header = normalizeHeader(header);
 
     if (header) {
-      const key = utils.findKey(this, header);
+      const key = utils$1.findKey(this, header);
 
       return !!(key && this[key] !== undefined && (!matcher || matchHeaderValue(this, this[key], key, matcher)));
     }
@@ -44254,7 +53788,7 @@ class AxiosHeaders {
       _header = normalizeHeader(_header);
 
       if (_header) {
-        const key = utils.findKey(self, _header);
+        const key = utils$1.findKey(self, _header);
 
         if (key && (!matcher || matchHeaderValue(self, self[key], key, matcher))) {
           delete self[key];
@@ -44264,7 +53798,7 @@ class AxiosHeaders {
       }
     }
 
-    if (utils.isArray(header)) {
+    if (utils$1.isArray(header)) {
       header.forEach(deleteHeader);
     } else {
       deleteHeader(header);
@@ -44293,8 +53827,8 @@ class AxiosHeaders {
     const self = this;
     const headers = {};
 
-    utils.forEach(this, (value, header) => {
-      const key = utils.findKey(headers, header);
+    utils$1.forEach(this, (value, header) => {
+      const key = utils$1.findKey(headers, header);
 
       if (key) {
         self[key] = normalizeValue(value);
@@ -44323,8 +53857,8 @@ class AxiosHeaders {
   toJSON(asStrings) {
     const obj = Object.create(null);
 
-    utils.forEach(this, (value, header) => {
-      value != null && value !== false && (obj[header] = asStrings && utils.isArray(value) ? value.join(', ') : value);
+    utils$1.forEach(this, (value, header) => {
+      value != null && value !== false && (obj[header] = asStrings && utils$1.isArray(value) ? value.join(', ') : value);
     });
 
     return obj;
@@ -44371,7 +53905,7 @@ class AxiosHeaders {
       }
     }
 
-    utils.isArray(header) ? header.forEach(defineAccessor) : defineAccessor(header);
+    utils$1.isArray(header) ? header.forEach(defineAccessor) : defineAccessor(header);
 
     return this;
   }
@@ -44380,7 +53914,7 @@ class AxiosHeaders {
 AxiosHeaders.accessor(['Content-Type', 'Content-Length', 'Accept', 'Accept-Encoding', 'User-Agent', 'Authorization']);
 
 // reserved names hotfix
-utils.reduceDescriptors(AxiosHeaders.prototype, ({value}, key) => {
+utils$1.reduceDescriptors(AxiosHeaders.prototype, ({value}, key) => {
   let mapped = key[0].toUpperCase() + key.slice(1); // map `set` => `Set`
   return {
     get: () => value,
@@ -44390,7 +53924,7 @@ utils.reduceDescriptors(AxiosHeaders.prototype, ({value}, key) => {
   }
 });
 
-utils.freezeMethods(AxiosHeaders);
+utils$1.freezeMethods(AxiosHeaders);
 
 const AxiosHeaders$1 = AxiosHeaders;
 
@@ -44408,7 +53942,7 @@ function transformData(fns, response) {
   const headers = AxiosHeaders$1.from(context.headers);
   let data = context.data;
 
-  utils.forEach(fns, function transform(fn) {
+  utils$1.forEach(fns, function transform(fn) {
     data = fn.call(config, data, headers.normalize(), response ? response.status : undefined);
   });
 
@@ -44436,7 +53970,7 @@ function CanceledError(message, config, request) {
   this.name = 'CanceledError';
 }
 
-utils.inherits(CanceledError, AxiosError, {
+utils$1.inherits(CanceledError, AxiosError, {
   __CANCEL__: true
 });
 
@@ -44488,7 +54022,7 @@ function isAbsoluteURL(url) {
  */
 function combineURLs(baseURL, relativeURL) {
   return relativeURL
-    ? baseURL.replace(/\/+$/, '') + '/' + relativeURL.replace(/^\/+/, '')
+    ? baseURL.replace(/\/?\/$/, '') + '/' + relativeURL.replace(/^\/+/, '')
     : baseURL;
 }
 
@@ -44509,7 +54043,7 @@ function buildFullPath(baseURL, requestedURL) {
   return requestedURL;
 }
 
-const VERSION = "1.5.0";
+const VERSION = "1.7.4";
 
 function parseProtocol(url) {
   const match = /^([-+\w]{1,25})(:?\/\/|:)/.exec(url);
@@ -44564,93 +54098,11 @@ function fromDataURI(uri, asBlob, options) {
   throw new AxiosError('Unsupported protocol ' + protocol, AxiosError.ERR_NOT_SUPPORT);
 }
 
-/**
- * Throttle decorator
- * @param {Function} fn
- * @param {Number} freq
- * @return {Function}
- */
-function throttle(fn, freq) {
-  let timestamp = 0;
-  const threshold = 1000 / freq;
-  let timer = null;
-  return function throttled(force, args) {
-    const now = Date.now();
-    if (force || now - timestamp > threshold) {
-      if (timer) {
-        clearTimeout(timer);
-        timer = null;
-      }
-      timestamp = now;
-      return fn.apply(null, args);
-    }
-    if (!timer) {
-      timer = setTimeout(() => {
-        timer = null;
-        timestamp = Date.now();
-        return fn.apply(null, args);
-      }, threshold - (now - timestamp));
-    }
-  };
-}
-
-/**
- * Calculate data maxRate
- * @param {Number} [samplesCount= 10]
- * @param {Number} [min= 1000]
- * @returns {Function}
- */
-function speedometer(samplesCount, min) {
-  samplesCount = samplesCount || 10;
-  const bytes = new Array(samplesCount);
-  const timestamps = new Array(samplesCount);
-  let head = 0;
-  let tail = 0;
-  let firstSampleTS;
-
-  min = min !== undefined ? min : 1000;
-
-  return function push(chunkLength) {
-    const now = Date.now();
-
-    const startedAt = timestamps[tail];
-
-    if (!firstSampleTS) {
-      firstSampleTS = now;
-    }
-
-    bytes[head] = chunkLength;
-    timestamps[head] = now;
-
-    let i = tail;
-    let bytesCount = 0;
-
-    while (i !== head) {
-      bytesCount += bytes[i++];
-      i = i % samplesCount;
-    }
-
-    head = (head + 1) % samplesCount;
-
-    if (head === tail) {
-      tail = (tail + 1) % samplesCount;
-    }
-
-    if (now - firstSampleTS < min) {
-      return;
-    }
-
-    const passed = startedAt && now - startedAt;
-
-    return passed ? Math.round(bytesCount * 1000 / passed) : undefined;
-  };
-}
-
 const kInternals = Symbol('internals');
 
 class AxiosTransformStream extends stream__default["default"].Transform{
   constructor(options) {
-    options = utils.toFlatObject(options, {
+    options = utils$1.toFlatObject(options, {
       maxRate: 0,
       chunkSize: 64 * 1024,
       minChunkSize: 100,
@@ -44658,19 +54110,15 @@ class AxiosTransformStream extends stream__default["default"].Transform{
       ticksRate: 2,
       samplesCount: 15
     }, null, (prop, source) => {
-      return !utils.isUndefined(source[prop]);
+      return !utils$1.isUndefined(source[prop]);
     });
 
     super({
       readableHighWaterMark: options.chunkSize
     });
 
-    const self = this;
-
     const internals = this[kInternals] = {
-      length: options.length,
       timeWindow: options.timeWindow,
-      ticksRate: options.ticksRate,
       chunkSize: options.chunkSize,
       maxRate: options.maxRate,
       minChunkSize: options.minChunkSize,
@@ -44682,8 +54130,6 @@ class AxiosTransformStream extends stream__default["default"].Transform{
       onReadCallback: null
     };
 
-    const _speedometer = speedometer(internals.ticksRate * options.samplesCount, internals.timeWindow);
-
     this.on('newListener', event => {
       if (event === 'progress') {
         if (!internals.isCaptured) {
@@ -44691,38 +54137,6 @@ class AxiosTransformStream extends stream__default["default"].Transform{
         }
       }
     });
-
-    let bytesNotified = 0;
-
-    internals.updateProgress = throttle(function throttledHandler() {
-      const totalBytes = internals.length;
-      const bytesTransferred = internals.bytesSeen;
-      const progressBytes = bytesTransferred - bytesNotified;
-      if (!progressBytes || self.destroyed) return;
-
-      const rate = _speedometer(progressBytes);
-
-      bytesNotified = bytesTransferred;
-
-      process.nextTick(() => {
-        self.emit('progress', {
-          'loaded': bytesTransferred,
-          'total': totalBytes,
-          'progress': totalBytes ? (bytesTransferred / totalBytes) : undefined,
-          'bytes': progressBytes,
-          'rate': rate ? rate : undefined,
-          'estimated': rate && totalBytes && bytesTransferred <= totalBytes ?
-            (totalBytes - bytesTransferred) / rate : undefined
-        });
-      });
-    }, internals.ticksRate);
-
-    const onFinish = () => {
-      internals.updateProgress(true);
-    };
-
-    this.once('end', onFinish);
-    this.once('error', onFinish);
   }
 
   _read(size) {
@@ -44736,7 +54150,6 @@ class AxiosTransformStream extends stream__default["default"].Transform{
   }
 
   _transform(chunk, encoding, callback) {
-    const self = this;
     const internals = this[kInternals];
     const maxRate = internals.maxRate;
 
@@ -44748,16 +54161,14 @@ class AxiosTransformStream extends stream__default["default"].Transform{
     const bytesThreshold = (maxRate / divider);
     const minChunkSize = internals.minChunkSize !== false ? Math.max(internals.minChunkSize, bytesThreshold * 0.01) : 0;
 
-    function pushChunk(_chunk, _callback) {
+    const pushChunk = (_chunk, _callback) => {
       const bytes = Buffer.byteLength(_chunk);
       internals.bytesSeen += bytes;
       internals.bytes += bytes;
 
-      if (internals.isCaptured) {
-        internals.updateProgress();
-      }
+      internals.isCaptured && this.emit('progress', internals.bytesSeen);
 
-      if (self.push(_chunk)) {
+      if (this.push(_chunk)) {
         process.nextTick(_callback);
       } else {
         internals.onReadCallback = () => {
@@ -44765,7 +54176,7 @@ class AxiosTransformStream extends stream__default["default"].Transform{
           process.nextTick(_callback);
         };
       }
-    }
+    };
 
     const transformChunk = (_chunk, _callback) => {
       const chunkSize = Buffer.byteLength(_chunk);
@@ -44822,11 +54233,6 @@ class AxiosTransformStream extends stream__default["default"].Transform{
       }
     });
   }
-
-  setLength(length) {
-    this[kInternals].length = +length;
-    return this;
-  }
 }
 
 const AxiosTransformStream$1 = AxiosTransformStream;
@@ -44847,7 +54253,7 @@ const readBlob = async function* (blob) {
 
 const readBlob$1 = readBlob;
 
-const BOUNDARY_ALPHABET = utils.ALPHABET.ALPHA_DIGIT + '-_';
+const BOUNDARY_ALPHABET = utils$1.ALPHABET.ALPHA_DIGIT + '-_';
 
 const textEncoder = new util.TextEncoder();
 
@@ -44858,7 +54264,7 @@ const CRLF_BYTES_COUNT = 2;
 class FormDataPart {
   constructor(name, value) {
     const {escapeName} = this.constructor;
-    const isStringValue = utils.isString(value);
+    const isStringValue = utils$1.isString(value);
 
     let headers = `Content-Disposition: form-data; name="${escapeName(name)}"${
       !isStringValue && value.name ? `; filename="${escapeName(value.name)}"` : ''
@@ -44885,7 +54291,7 @@ class FormDataPart {
 
     const {value} = this;
 
-    if(utils.isTypedArray(value)) {
+    if(utils$1.isTypedArray(value)) {
       yield value;
     } else {
       yield* readBlob$1(value);
@@ -44907,10 +54313,10 @@ const formDataToStream = (form, headersHandler, options) => {
   const {
     tag = 'form-data-boundary',
     size = 25,
-    boundary = tag + '-' + utils.generateString(size, BOUNDARY_ALPHABET)
+    boundary = tag + '-' + utils$1.generateString(size, BOUNDARY_ALPHABET)
   } = options || {};
 
-  if(!utils.isFormData(form)) {
+  if(!utils$1.isFormData(form)) {
     throw TypeError('FormData instance required');
   }
 
@@ -44930,7 +54336,7 @@ const formDataToStream = (form, headersHandler, options) => {
 
   contentLength += boundaryBytes.byteLength * parts.length;
 
-  contentLength = utils.toFiniteNumber(contentLength);
+  contentLength = utils$1.toFiniteNumber(contentLength);
 
   const computedHeaders = {
     'Content-Type': `multipart/form-data; boundary=${boundary}`
@@ -44980,7 +54386,7 @@ class ZlibHeaderTransformStream extends stream__default["default"].Transform {
 const ZlibHeaderTransformStream$1 = ZlibHeaderTransformStream;
 
 const callbackify = (fn, reducer) => {
-  return utils.isAsyncFn(fn) ? function (...args) {
+  return utils$1.isAsyncFn(fn) ? function (...args) {
     const cb = args.pop();
     fn.apply(this, args).then((value) => {
       try {
@@ -44994,6 +54400,142 @@ const callbackify = (fn, reducer) => {
 
 const callbackify$1 = callbackify;
 
+/**
+ * Calculate data maxRate
+ * @param {Number} [samplesCount= 10]
+ * @param {Number} [min= 1000]
+ * @returns {Function}
+ */
+function speedometer(samplesCount, min) {
+  samplesCount = samplesCount || 10;
+  const bytes = new Array(samplesCount);
+  const timestamps = new Array(samplesCount);
+  let head = 0;
+  let tail = 0;
+  let firstSampleTS;
+
+  min = min !== undefined ? min : 1000;
+
+  return function push(chunkLength) {
+    const now = Date.now();
+
+    const startedAt = timestamps[tail];
+
+    if (!firstSampleTS) {
+      firstSampleTS = now;
+    }
+
+    bytes[head] = chunkLength;
+    timestamps[head] = now;
+
+    let i = tail;
+    let bytesCount = 0;
+
+    while (i !== head) {
+      bytesCount += bytes[i++];
+      i = i % samplesCount;
+    }
+
+    head = (head + 1) % samplesCount;
+
+    if (head === tail) {
+      tail = (tail + 1) % samplesCount;
+    }
+
+    if (now - firstSampleTS < min) {
+      return;
+    }
+
+    const passed = startedAt && now - startedAt;
+
+    return passed ? Math.round(bytesCount * 1000 / passed) : undefined;
+  };
+}
+
+/**
+ * Throttle decorator
+ * @param {Function} fn
+ * @param {Number} freq
+ * @return {Function}
+ */
+function throttle(fn, freq) {
+  let timestamp = 0;
+  let threshold = 1000 / freq;
+  let lastArgs;
+  let timer;
+
+  const invoke = (args, now = Date.now()) => {
+    timestamp = now;
+    lastArgs = null;
+    if (timer) {
+      clearTimeout(timer);
+      timer = null;
+    }
+    fn.apply(null, args);
+  };
+
+  const throttled = (...args) => {
+    const now = Date.now();
+    const passed = now - timestamp;
+    if ( passed >= threshold) {
+      invoke(args, now);
+    } else {
+      lastArgs = args;
+      if (!timer) {
+        timer = setTimeout(() => {
+          timer = null;
+          invoke(lastArgs);
+        }, threshold - passed);
+      }
+    }
+  };
+
+  const flush = () => lastArgs && invoke(lastArgs);
+
+  return [throttled, flush];
+}
+
+const progressEventReducer = (listener, isDownloadStream, freq = 3) => {
+  let bytesNotified = 0;
+  const _speedometer = speedometer(50, 250);
+
+  return throttle(e => {
+    const loaded = e.loaded;
+    const total = e.lengthComputable ? e.total : undefined;
+    const progressBytes = loaded - bytesNotified;
+    const rate = _speedometer(progressBytes);
+    const inRange = loaded <= total;
+
+    bytesNotified = loaded;
+
+    const data = {
+      loaded,
+      total,
+      progress: total ? (loaded / total) : undefined,
+      bytes: progressBytes,
+      rate: rate ? rate : undefined,
+      estimated: rate && total && inRange ? (total - loaded) / rate : undefined,
+      event: e,
+      lengthComputable: total != null,
+      [isDownloadStream ? 'download' : 'upload']: true
+    };
+
+    listener(data);
+  }, freq);
+};
+
+const progressEventDecorator = (total, throttled) => {
+  const lengthComputable = total != null;
+
+  return [(loaded) => throttled[0]({
+    lengthComputable,
+    total,
+    loaded
+  }), throttled[1]];
+};
+
+const asyncDecorator = (fn) => (...args) => utils$1.asap(() => fn(...args));
+
 const zlibOptions = {
   flush: zlib__default["default"].constants.Z_SYNC_FLUSH,
   finishFlush: zlib__default["default"].constants.Z_SYNC_FLUSH
@@ -45004,7 +54546,7 @@ const brotliOptions = {
   finishFlush: zlib__default["default"].constants.BROTLI_OPERATION_FLUSH
 };
 
-const isBrotliSupported = utils.isFunction(zlib__default["default"].createBrotliDecompress);
+const isBrotliSupported = utils$1.isFunction(zlib__default["default"].createBrotliDecompress);
 
 const {http: httpFollow, https: httpsFollow} = followRedirects__default["default"];
 
@@ -45014,6 +54556,14 @@ const supportedProtocols = platform.protocols.map(protocol => {
   return protocol + ':';
 });
 
+const flushOnFinish = (stream, [throttled, flush]) => {
+  stream
+    .on('end', flush)
+    .on('error', flush);
+
+  return throttled;
+};
+
 /**
  * If the proxy or config beforeRedirects functions are defined, call them with the options
  * object.
@@ -45022,12 +54572,12 @@ const supportedProtocols = platform.protocols.map(protocol => {
  *
  * @returns {Object<string, any>}
  */
-function dispatchBeforeRedirect(options) {
+function dispatchBeforeRedirect(options, responseDetails) {
   if (options.beforeRedirects.proxy) {
     options.beforeRedirects.proxy(options);
   }
   if (options.beforeRedirects.config) {
-    options.beforeRedirects.config(options);
+    options.beforeRedirects.config(options, responseDetails);
   }
 }
 
@@ -45084,7 +54634,7 @@ function setProxy(options, configProxy, location) {
   };
 }
 
-const isHttpAdapterSupported = typeof process !== 'undefined' && utils.kindOf(process) === 'process';
+const isHttpAdapterSupported = typeof process !== 'undefined' && utils$1.kindOf(process) === 'process';
 
 // temporary hotfix
 
@@ -45113,6 +54663,18 @@ const wrapAsync = (asyncExecutor) => {
   })
 };
 
+const resolveFamily = ({address, family}) => {
+  if (!utils$1.isString(address)) {
+    throw TypeError('address must be a string');
+  }
+  return ({
+    address,
+    family: family || (address.indexOf('.') < 0 ? 6 : 4)
+  });
+};
+
+const buildAddressEntry = (address, family) => resolveFamily(utils$1.isObject(address) ? address : {address, family});
+
 /*eslint consistent-return:0*/
 const httpAdapter = isHttpAdapterSupported && function httpAdapter(config) {
   return wrapAsync(async function dispatchHttpRequest(resolve, reject, onDone) {
@@ -45123,19 +54685,24 @@ const httpAdapter = isHttpAdapterSupported && function httpAdapter(config) {
     let rejected = false;
     let req;
 
-    if (lookup && utils.isAsyncFn(lookup)) {
-      lookup = callbackify$1(lookup, (entry) => {
-        if(utils.isString(entry)) {
-          entry = [entry, entry.indexOf('.') < 0 ? 6 : 4];
-        } else if (!utils.isArray(entry)) {
-          throw new TypeError('lookup async function must return an array [ip: string, family: number]]')
-        }
-        return entry;
-      });
+    if (lookup) {
+      const _lookup = callbackify$1(lookup, (value) => utils$1.isArray(value) ? value : [value]);
+      // hotfix to support opt.all option which is required for node 20.x
+      lookup = (hostname, opt, cb) => {
+        _lookup(hostname, opt, (err, arg0, arg1) => {
+          if (err) {
+            return cb(err);
+          }
+
+          const addresses = utils$1.isArray(arg0) ? arg0.map(addr => buildAddressEntry(addr)) : [buildAddressEntry(arg0, arg1)];
+
+          opt.all ? cb(err, addresses) : cb(err, addresses[0].address, addresses[0].family);
+        });
+      };
     }
 
     // temporary internal emitter until the AxiosRequest class will be implemented
-    const emitter = new EventEmitter__default["default"]();
+    const emitter = new events.EventEmitter();
 
     const onFinished = () => {
       if (config.cancelToken) {
@@ -45172,7 +54739,7 @@ const httpAdapter = isHttpAdapterSupported && function httpAdapter(config) {
 
     // Parse url
     const fullPath = buildFullPath(config.baseURL, config.url);
-    const parsed = new URL(fullPath, 'http://localhost');
+    const parsed = new URL(fullPath, utils$1.hasBrowserEnv ? platform.origin : undefined);
     const protocol = parsed.protocol || supportedProtocols[0];
 
     if (protocol === 'data:') {
@@ -45199,7 +54766,7 @@ const httpAdapter = isHttpAdapterSupported && function httpAdapter(config) {
         convertedData = convertedData.toString(responseEncoding);
 
         if (!responseEncoding || responseEncoding === 'utf8') {
-          convertedData = utils.stripBOM(convertedData);
+          convertedData = utils$1.stripBOM(convertedData);
         }
       } else if (responseType === 'stream') {
         convertedData = stream__default["default"].Readable.from(convertedData);
@@ -45230,14 +54797,13 @@ const httpAdapter = isHttpAdapterSupported && function httpAdapter(config) {
     // Only set header if it hasn't been set in config
     headers.set('User-Agent', 'axios/' + VERSION, false);
 
-    const onDownloadProgress = config.onDownloadProgress;
-    const onUploadProgress = config.onUploadProgress;
+    const {onUploadProgress, onDownloadProgress} = config;
     const maxRate = config.maxRate;
     let maxUploadRate = undefined;
     let maxDownloadRate = undefined;
 
     // support for spec compliant FormData objects
-    if (utils.isSpecCompliantForm(data)) {
+    if (utils$1.isSpecCompliantForm(data)) {
       const userBoundary = headers.getContentType(/boundary=([-_\w\d]{10,70})/i);
 
       data = formDataToStream$1(data, (formHeaders) => {
@@ -45247,7 +54813,7 @@ const httpAdapter = isHttpAdapterSupported && function httpAdapter(config) {
         boundary: userBoundary && userBoundary[1] || undefined
       });
       // support for https://www.npmjs.com/package/form-data api
-    } else if (utils.isFormData(data) && utils.isFunction(data.getHeaders)) {
+    } else if (utils$1.isFormData(data) && utils$1.isFunction(data.getHeaders)) {
       headers.set(data.getHeaders());
 
       if (!headers.hasContentLength()) {
@@ -45258,14 +54824,14 @@ const httpAdapter = isHttpAdapterSupported && function httpAdapter(config) {
         } catch (e) {
         }
       }
-    } else if (utils.isBlob(data)) {
+    } else if (utils$1.isBlob(data)) {
       data.size && headers.setContentType(data.type || 'application/octet-stream');
       headers.setContentLength(data.size || 0);
       data = stream__default["default"].Readable.from(readBlob$1(data));
-    } else if (data && !utils.isStream(data)) {
-      if (Buffer.isBuffer(data)) ; else if (utils.isArrayBuffer(data)) {
+    } else if (data && !utils$1.isStream(data)) {
+      if (Buffer.isBuffer(data)) ; else if (utils$1.isArrayBuffer(data)) {
         data = Buffer.from(new Uint8Array(data));
-      } else if (utils.isString(data)) {
+      } else if (utils$1.isString(data)) {
         data = Buffer.from(data, 'utf-8');
       } else {
         return reject(new AxiosError(
@@ -45287,9 +54853,9 @@ const httpAdapter = isHttpAdapterSupported && function httpAdapter(config) {
       }
     }
 
-    const contentLength = utils.toFiniteNumber(headers.getContentLength());
+    const contentLength = utils$1.toFiniteNumber(headers.getContentLength());
 
-    if (utils.isArray(maxRate)) {
+    if (utils$1.isArray(maxRate)) {
       maxUploadRate = maxRate[0];
       maxDownloadRate = maxRate[1];
     } else {
@@ -45297,20 +54863,21 @@ const httpAdapter = isHttpAdapterSupported && function httpAdapter(config) {
     }
 
     if (data && (onUploadProgress || maxUploadRate)) {
-      if (!utils.isStream(data)) {
+      if (!utils$1.isStream(data)) {
         data = stream__default["default"].Readable.from(data, {objectMode: false});
       }
 
       data = stream__default["default"].pipeline([data, new AxiosTransformStream$1({
-        length: contentLength,
-        maxRate: utils.toFiniteNumber(maxUploadRate)
-      })], utils.noop);
+        maxRate: utils$1.toFiniteNumber(maxUploadRate)
+      })], utils$1.noop);
 
-      onUploadProgress && data.on('progress', progress => {
-        onUploadProgress(Object.assign(progress, {
-          upload: true
-        }));
-      });
+      onUploadProgress && data.on('progress', flushOnFinish(
+        data,
+        progressEventDecorator(
+          contentLength,
+          progressEventReducer(asyncDecorator(onUploadProgress), false, 3)
+        )
+      ));
     }
 
     // HTTP basic authentication
@@ -45363,7 +54930,7 @@ const httpAdapter = isHttpAdapterSupported && function httpAdapter(config) {
     };
 
     // cacheable-lookup integration hotfix
-    !utils.isUndefined(lookup) && (options.lookup = lookup);
+    !utils$1.isUndefined(lookup) && (options.lookup = lookup);
 
     if (config.socketPath) {
       options.socketPath = config.socketPath;
@@ -45409,17 +54976,18 @@ const httpAdapter = isHttpAdapterSupported && function httpAdapter(config) {
 
       const responseLength = +res.headers['content-length'];
 
-      if (onDownloadProgress) {
+      if (onDownloadProgress || maxDownloadRate) {
         const transformStream = new AxiosTransformStream$1({
-          length: utils.toFiniteNumber(responseLength),
-          maxRate: utils.toFiniteNumber(maxDownloadRate)
+          maxRate: utils$1.toFiniteNumber(maxDownloadRate)
         });
 
-        onDownloadProgress && transformStream.on('progress', progress => {
-          onDownloadProgress(Object.assign(progress, {
-            download: true
-          }));
-        });
+        onDownloadProgress && transformStream.on('progress', flushOnFinish(
+          transformStream,
+          progressEventDecorator(
+            responseLength,
+            progressEventReducer(asyncDecorator(onDownloadProgress), true, 3)
+          )
+        ));
 
         streams.push(transformStream);
       }
@@ -45438,7 +55006,7 @@ const httpAdapter = isHttpAdapterSupported && function httpAdapter(config) {
           delete res.headers['content-encoding'];
         }
 
-        switch (res.headers['content-encoding']) {
+        switch ((res.headers['content-encoding'] || '').toLowerCase()) {
         /*eslint default-case:0*/
         case 'gzip':
         case 'x-gzip':
@@ -45467,7 +55035,7 @@ const httpAdapter = isHttpAdapterSupported && function httpAdapter(config) {
         }
       }
 
-      responseStream = streams.length > 1 ? stream__default["default"].pipeline(streams, utils.noop) : streams[0];
+      responseStream = streams.length > 1 ? stream__default["default"].pipeline(streams, utils$1.noop) : streams[0];
 
       const offListeners = stream__default["default"].finished(responseStream, () => {
         offListeners();
@@ -45529,12 +55097,12 @@ const httpAdapter = isHttpAdapterSupported && function httpAdapter(config) {
             if (responseType !== 'arraybuffer') {
               responseData = responseData.toString(responseEncoding);
               if (!responseEncoding || responseEncoding === 'utf8') {
-                responseData = utils.stripBOM(responseData);
+                responseData = utils$1.stripBOM(responseData);
               }
             }
             response.data = responseData;
           } catch (err) {
-            reject(AxiosError.from(err, null, config, response.request, response));
+            return reject(AxiosError.from(err, null, config, response.request, response));
           }
           settle(resolve, reject, response);
         });
@@ -45571,7 +55139,7 @@ const httpAdapter = isHttpAdapterSupported && function httpAdapter(config) {
       // This is forcing a int timeout to avoid problems if the `req` interface doesn't handle other types.
       const timeout = parseInt(config.timeout, 10);
 
-      if (isNaN(timeout)) {
+      if (Number.isNaN(timeout)) {
         reject(new AxiosError(
           'error trying to parse `config.timeout` to int',
           AxiosError.ERR_BAD_OPTION_VALUE,
@@ -45606,7 +55174,7 @@ const httpAdapter = isHttpAdapterSupported && function httpAdapter(config) {
 
 
     // Send the request
-    if (utils.isStream(data)) {
+    if (utils$1.isStream(data)) {
       let ended = false;
       let errored = false;
 
@@ -45632,55 +55200,7 @@ const httpAdapter = isHttpAdapterSupported && function httpAdapter(config) {
   });
 };
 
-const cookies = platform.isStandardBrowserEnv ?
-
-// Standard browser envs support document.cookie
-  (function standardBrowserEnv() {
-    return {
-      write: function write(name, value, expires, path, domain, secure) {
-        const cookie = [];
-        cookie.push(name + '=' + encodeURIComponent(value));
-
-        if (utils.isNumber(expires)) {
-          cookie.push('expires=' + new Date(expires).toGMTString());
-        }
-
-        if (utils.isString(path)) {
-          cookie.push('path=' + path);
-        }
-
-        if (utils.isString(domain)) {
-          cookie.push('domain=' + domain);
-        }
-
-        if (secure === true) {
-          cookie.push('secure');
-        }
-
-        document.cookie = cookie.join('; ');
-      },
-
-      read: function read(name) {
-        const match = document.cookie.match(new RegExp('(^|;\\s*)(' + name + ')=([^;]*)'));
-        return (match ? decodeURIComponent(match[3]) : null);
-      },
-
-      remove: function remove(name) {
-        this.write(name, '', Date.now() - 86400000);
-      }
-    };
-  })() :
-
-// Non standard browser env (web workers, react-native) lack needed support.
-  (function nonStandardBrowserEnv() {
-    return {
-      write: function write() {},
-      read: function read() { return null; },
-      remove: function remove() {}
-    };
-  })();
-
-const isURLSameOrigin = platform.isStandardBrowserEnv ?
+const isURLSameOrigin = platform.hasStandardBrowserEnv ?
 
 // Standard browser envs have full support of the APIs needed to test
 // whether the request URL is of the same origin as current location.
@@ -45690,7 +55210,7 @@ const isURLSameOrigin = platform.isStandardBrowserEnv ?
     let originURL;
 
     /**
-    * Parse a URL to discover it's components
+    * Parse a URL to discover its components
     *
     * @param {String} url The URL to be parsed
     * @returns {Object}
@@ -45730,7 +55250,7 @@ const isURLSameOrigin = platform.isStandardBrowserEnv ?
     * @returns {boolean} True if URL shares the same origin, otherwise false
     */
     return function isURLSameOrigin(requestURL) {
-      const parsed = (utils.isString(requestURL)) ? resolveURL(requestURL) : requestURL;
+      const parsed = (utils$1.isString(requestURL)) ? resolveURL(requestURL) : requestURL;
       return (parsed.protocol === originURL.protocol &&
           parsed.host === originURL.host);
     };
@@ -45743,76 +55263,222 @@ const isURLSameOrigin = platform.isStandardBrowserEnv ?
     };
   })();
 
-function progressEventReducer(listener, isDownloadStream) {
-  let bytesNotified = 0;
-  const _speedometer = speedometer(50, 250);
+const cookies = platform.hasStandardBrowserEnv ?
 
-  return e => {
-    const loaded = e.loaded;
-    const total = e.lengthComputable ? e.total : undefined;
-    const progressBytes = loaded - bytesNotified;
-    const rate = _speedometer(progressBytes);
-    const inRange = loaded <= total;
+  // Standard browser envs support document.cookie
+  {
+    write(name, value, expires, path, domain, secure) {
+      const cookie = [name + '=' + encodeURIComponent(value)];
 
-    bytesNotified = loaded;
+      utils$1.isNumber(expires) && cookie.push('expires=' + new Date(expires).toGMTString());
 
-    const data = {
-      loaded,
-      total,
-      progress: total ? (loaded / total) : undefined,
-      bytes: progressBytes,
-      rate: rate ? rate : undefined,
-      estimated: rate && total && inRange ? (total - loaded) / rate : undefined,
-      event: e
-    };
+      utils$1.isString(path) && cookie.push('path=' + path);
 
-    data[isDownloadStream ? 'download' : 'upload'] = true;
+      utils$1.isString(domain) && cookie.push('domain=' + domain);
 
-    listener(data);
+      secure === true && cookie.push('secure');
+
+      document.cookie = cookie.join('; ');
+    },
+
+    read(name) {
+      const match = document.cookie.match(new RegExp('(^|;\\s*)(' + name + ')=([^;]*)'));
+      return (match ? decodeURIComponent(match[3]) : null);
+    },
+
+    remove(name) {
+      this.write(name, '', Date.now() - 86400000);
+    }
+  }
+
+  :
+
+  // Non-standard browser env (web workers, react-native) lack needed support.
+  {
+    write() {},
+    read() {
+      return null;
+    },
+    remove() {}
   };
+
+const headersToObject = (thing) => thing instanceof AxiosHeaders$1 ? { ...thing } : thing;
+
+/**
+ * Config-specific merge-function which creates a new config-object
+ * by merging two configuration objects together.
+ *
+ * @param {Object} config1
+ * @param {Object} config2
+ *
+ * @returns {Object} New object resulting from merging config2 to config1
+ */
+function mergeConfig(config1, config2) {
+  // eslint-disable-next-line no-param-reassign
+  config2 = config2 || {};
+  const config = {};
+
+  function getMergedValue(target, source, caseless) {
+    if (utils$1.isPlainObject(target) && utils$1.isPlainObject(source)) {
+      return utils$1.merge.call({caseless}, target, source);
+    } else if (utils$1.isPlainObject(source)) {
+      return utils$1.merge({}, source);
+    } else if (utils$1.isArray(source)) {
+      return source.slice();
+    }
+    return source;
+  }
+
+  // eslint-disable-next-line consistent-return
+  function mergeDeepProperties(a, b, caseless) {
+    if (!utils$1.isUndefined(b)) {
+      return getMergedValue(a, b, caseless);
+    } else if (!utils$1.isUndefined(a)) {
+      return getMergedValue(undefined, a, caseless);
+    }
+  }
+
+  // eslint-disable-next-line consistent-return
+  function valueFromConfig2(a, b) {
+    if (!utils$1.isUndefined(b)) {
+      return getMergedValue(undefined, b);
+    }
+  }
+
+  // eslint-disable-next-line consistent-return
+  function defaultToConfig2(a, b) {
+    if (!utils$1.isUndefined(b)) {
+      return getMergedValue(undefined, b);
+    } else if (!utils$1.isUndefined(a)) {
+      return getMergedValue(undefined, a);
+    }
+  }
+
+  // eslint-disable-next-line consistent-return
+  function mergeDirectKeys(a, b, prop) {
+    if (prop in config2) {
+      return getMergedValue(a, b);
+    } else if (prop in config1) {
+      return getMergedValue(undefined, a);
+    }
+  }
+
+  const mergeMap = {
+    url: valueFromConfig2,
+    method: valueFromConfig2,
+    data: valueFromConfig2,
+    baseURL: defaultToConfig2,
+    transformRequest: defaultToConfig2,
+    transformResponse: defaultToConfig2,
+    paramsSerializer: defaultToConfig2,
+    timeout: defaultToConfig2,
+    timeoutMessage: defaultToConfig2,
+    withCredentials: defaultToConfig2,
+    withXSRFToken: defaultToConfig2,
+    adapter: defaultToConfig2,
+    responseType: defaultToConfig2,
+    xsrfCookieName: defaultToConfig2,
+    xsrfHeaderName: defaultToConfig2,
+    onUploadProgress: defaultToConfig2,
+    onDownloadProgress: defaultToConfig2,
+    decompress: defaultToConfig2,
+    maxContentLength: defaultToConfig2,
+    maxBodyLength: defaultToConfig2,
+    beforeRedirect: defaultToConfig2,
+    transport: defaultToConfig2,
+    httpAgent: defaultToConfig2,
+    httpsAgent: defaultToConfig2,
+    cancelToken: defaultToConfig2,
+    socketPath: defaultToConfig2,
+    responseEncoding: defaultToConfig2,
+    validateStatus: mergeDirectKeys,
+    headers: (a, b) => mergeDeepProperties(headersToObject(a), headersToObject(b), true)
+  };
+
+  utils$1.forEach(Object.keys(Object.assign({}, config1, config2)), function computeConfigValue(prop) {
+    const merge = mergeMap[prop] || mergeDeepProperties;
+    const configValue = merge(config1[prop], config2[prop], prop);
+    (utils$1.isUndefined(configValue) && merge !== mergeDirectKeys) || (config[prop] = configValue);
+  });
+
+  return config;
 }
+
+const resolveConfig = (config) => {
+  const newConfig = mergeConfig({}, config);
+
+  let {data, withXSRFToken, xsrfHeaderName, xsrfCookieName, headers, auth} = newConfig;
+
+  newConfig.headers = headers = AxiosHeaders$1.from(headers);
+
+  newConfig.url = buildURL(buildFullPath(newConfig.baseURL, newConfig.url), config.params, config.paramsSerializer);
+
+  // HTTP basic authentication
+  if (auth) {
+    headers.set('Authorization', 'Basic ' +
+      btoa((auth.username || '') + ':' + (auth.password ? unescape(encodeURIComponent(auth.password)) : ''))
+    );
+  }
+
+  let contentType;
+
+  if (utils$1.isFormData(data)) {
+    if (platform.hasStandardBrowserEnv || platform.hasStandardBrowserWebWorkerEnv) {
+      headers.setContentType(undefined); // Let the browser set it
+    } else if ((contentType = headers.getContentType()) !== false) {
+      // fix semicolon duplication issue for ReactNative FormData implementation
+      const [type, ...tokens] = contentType ? contentType.split(';').map(token => token.trim()).filter(Boolean) : [];
+      headers.setContentType([type || 'multipart/form-data', ...tokens].join('; '));
+    }
+  }
+
+  // Add xsrf header
+  // This is only done if running in a standard browser environment.
+  // Specifically not if we're in a web worker, or react-native.
+
+  if (platform.hasStandardBrowserEnv) {
+    withXSRFToken && utils$1.isFunction(withXSRFToken) && (withXSRFToken = withXSRFToken(newConfig));
+
+    if (withXSRFToken || (withXSRFToken !== false && isURLSameOrigin(newConfig.url))) {
+      // Add xsrf header
+      const xsrfValue = xsrfHeaderName && xsrfCookieName && cookies.read(xsrfCookieName);
+
+      if (xsrfValue) {
+        headers.set(xsrfHeaderName, xsrfValue);
+      }
+    }
+  }
+
+  return newConfig;
+};
 
 const isXHRAdapterSupported = typeof XMLHttpRequest !== 'undefined';
 
 const xhrAdapter = isXHRAdapterSupported && function (config) {
   return new Promise(function dispatchXhrRequest(resolve, reject) {
-    let requestData = config.data;
-    const requestHeaders = AxiosHeaders$1.from(config.headers).normalize();
-    const responseType = config.responseType;
+    const _config = resolveConfig(config);
+    let requestData = _config.data;
+    const requestHeaders = AxiosHeaders$1.from(_config.headers).normalize();
+    let {responseType, onUploadProgress, onDownloadProgress} = _config;
     let onCanceled;
+    let uploadThrottled, downloadThrottled;
+    let flushUpload, flushDownload;
+
     function done() {
-      if (config.cancelToken) {
-        config.cancelToken.unsubscribe(onCanceled);
-      }
+      flushUpload && flushUpload(); // flush events
+      flushDownload && flushDownload(); // flush events
 
-      if (config.signal) {
-        config.signal.removeEventListener('abort', onCanceled);
-      }
-    }
+      _config.cancelToken && _config.cancelToken.unsubscribe(onCanceled);
 
-    if (utils.isFormData(requestData)) {
-      if (platform.isStandardBrowserEnv || platform.isStandardBrowserWebWorkerEnv) {
-        requestHeaders.setContentType(false); // Let the browser set it
-      } else {
-        requestHeaders.setContentType('multipart/form-data;', false); // mobile/desktop app frameworks
-      }
+      _config.signal && _config.signal.removeEventListener('abort', onCanceled);
     }
 
     let request = new XMLHttpRequest();
 
-    // HTTP basic authentication
-    if (config.auth) {
-      const username = config.auth.username || '';
-      const password = config.auth.password ? unescape(encodeURIComponent(config.auth.password)) : '';
-      requestHeaders.set('Authorization', 'Basic ' + btoa(username + ':' + password));
-    }
-
-    const fullPath = buildFullPath(config.baseURL, config.url);
-
-    request.open(config.method.toUpperCase(), buildURL(fullPath, config.params, config.paramsSerializer), true);
+    request.open(_config.method.toUpperCase(), _config.url, true);
 
     // Set the request timeout in MS
-    request.timeout = config.timeout;
+    request.timeout = _config.timeout;
 
     function onloadend() {
       if (!request) {
@@ -45892,10 +55558,10 @@ const xhrAdapter = isXHRAdapterSupported && function (config) {
 
     // Handle timeout
     request.ontimeout = function handleTimeout() {
-      let timeoutErrorMessage = config.timeout ? 'timeout of ' + config.timeout + 'ms exceeded' : 'timeout exceeded';
-      const transitional = config.transitional || transitionalDefaults;
-      if (config.timeoutErrorMessage) {
-        timeoutErrorMessage = config.timeoutErrorMessage;
+      let timeoutErrorMessage = _config.timeout ? 'timeout of ' + _config.timeout + 'ms exceeded' : 'timeout exceeded';
+      const transitional = _config.transitional || transitionalDefaults;
+      if (_config.timeoutErrorMessage) {
+        timeoutErrorMessage = _config.timeoutErrorMessage;
       }
       reject(new AxiosError(
         timeoutErrorMessage,
@@ -45907,50 +55573,42 @@ const xhrAdapter = isXHRAdapterSupported && function (config) {
       request = null;
     };
 
-    // Add xsrf header
-    // This is only done if running in a standard browser environment.
-    // Specifically not if we're in a web worker, or react-native.
-    if (platform.isStandardBrowserEnv) {
-      // Add xsrf header
-      const xsrfValue = (config.withCredentials || isURLSameOrigin(fullPath))
-        && config.xsrfCookieName && cookies.read(config.xsrfCookieName);
-
-      if (xsrfValue) {
-        requestHeaders.set(config.xsrfHeaderName, xsrfValue);
-      }
-    }
-
     // Remove Content-Type if data is undefined
     requestData === undefined && requestHeaders.setContentType(null);
 
     // Add headers to the request
     if ('setRequestHeader' in request) {
-      utils.forEach(requestHeaders.toJSON(), function setRequestHeader(val, key) {
+      utils$1.forEach(requestHeaders.toJSON(), function setRequestHeader(val, key) {
         request.setRequestHeader(key, val);
       });
     }
 
     // Add withCredentials to request if needed
-    if (!utils.isUndefined(config.withCredentials)) {
-      request.withCredentials = !!config.withCredentials;
+    if (!utils$1.isUndefined(_config.withCredentials)) {
+      request.withCredentials = !!_config.withCredentials;
     }
 
     // Add responseType to request if needed
     if (responseType && responseType !== 'json') {
-      request.responseType = config.responseType;
+      request.responseType = _config.responseType;
     }
 
     // Handle progress if needed
-    if (typeof config.onDownloadProgress === 'function') {
-      request.addEventListener('progress', progressEventReducer(config.onDownloadProgress, true));
+    if (onDownloadProgress) {
+      ([downloadThrottled, flushDownload] = progressEventReducer(onDownloadProgress, true));
+      request.addEventListener('progress', downloadThrottled);
     }
 
     // Not all browsers support upload events
-    if (typeof config.onUploadProgress === 'function' && request.upload) {
-      request.upload.addEventListener('progress', progressEventReducer(config.onUploadProgress));
+    if (onUploadProgress && request.upload) {
+      ([uploadThrottled, flushUpload] = progressEventReducer(onUploadProgress));
+
+      request.upload.addEventListener('progress', uploadThrottled);
+
+      request.upload.addEventListener('loadend', flushUpload);
     }
 
-    if (config.cancelToken || config.signal) {
+    if (_config.cancelToken || _config.signal) {
       // Handle cancellation
       // eslint-disable-next-line func-names
       onCanceled = cancel => {
@@ -45962,13 +55620,13 @@ const xhrAdapter = isXHRAdapterSupported && function (config) {
         request = null;
       };
 
-      config.cancelToken && config.cancelToken.subscribe(onCanceled);
-      if (config.signal) {
-        config.signal.aborted ? onCanceled() : config.signal.addEventListener('abort', onCanceled);
+      _config.cancelToken && _config.cancelToken.subscribe(onCanceled);
+      if (_config.signal) {
+        _config.signal.aborted ? onCanceled() : _config.signal.addEventListener('abort', onCanceled);
       }
     }
 
-    const protocol = parseProtocol(fullPath);
+    const protocol = parseProtocol(_config.url);
 
     if (protocol && platform.protocols.indexOf(protocol) === -1) {
       reject(new AxiosError('Unsupported protocol ' + protocol + ':', AxiosError.ERR_BAD_REQUEST, config));
@@ -45981,13 +55639,343 @@ const xhrAdapter = isXHRAdapterSupported && function (config) {
   });
 };
 
-const knownAdapters = {
-  http: httpAdapter,
-  xhr: xhrAdapter
+const composeSignals = (signals, timeout) => {
+  let controller = new AbortController();
+
+  let aborted;
+
+  const onabort = function (cancel) {
+    if (!aborted) {
+      aborted = true;
+      unsubscribe();
+      const err = cancel instanceof Error ? cancel : this.reason;
+      controller.abort(err instanceof AxiosError ? err : new CanceledError(err instanceof Error ? err.message : err));
+    }
+  };
+
+  let timer = timeout && setTimeout(() => {
+    onabort(new AxiosError(`timeout ${timeout} of ms exceeded`, AxiosError.ETIMEDOUT));
+  }, timeout);
+
+  const unsubscribe = () => {
+    if (signals) {
+      timer && clearTimeout(timer);
+      timer = null;
+      signals.forEach(signal => {
+        signal &&
+        (signal.removeEventListener ? signal.removeEventListener('abort', onabort) : signal.unsubscribe(onabort));
+      });
+      signals = null;
+    }
+  };
+
+  signals.forEach((signal) => signal && signal.addEventListener && signal.addEventListener('abort', onabort));
+
+  const {signal} = controller;
+
+  signal.unsubscribe = unsubscribe;
+
+  return [signal, () => {
+    timer && clearTimeout(timer);
+    timer = null;
+  }];
 };
 
-utils.forEach(knownAdapters, (fn, value) => {
-  if(fn) {
+const composeSignals$1 = composeSignals;
+
+const streamChunk = function* (chunk, chunkSize) {
+  let len = chunk.byteLength;
+
+  if (!chunkSize || len < chunkSize) {
+    yield chunk;
+    return;
+  }
+
+  let pos = 0;
+  let end;
+
+  while (pos < len) {
+    end = pos + chunkSize;
+    yield chunk.slice(pos, end);
+    pos = end;
+  }
+};
+
+const readBytes = async function* (iterable, chunkSize, encode) {
+  for await (const chunk of iterable) {
+    yield* streamChunk(ArrayBuffer.isView(chunk) ? chunk : (await encode(String(chunk))), chunkSize);
+  }
+};
+
+const trackStream = (stream, chunkSize, onProgress, onFinish, encode) => {
+  const iterator = readBytes(stream, chunkSize, encode);
+
+  let bytes = 0;
+  let done;
+  let _onFinish = (e) => {
+    if (!done) {
+      done = true;
+      onFinish && onFinish(e);
+    }
+  };
+
+  return new ReadableStream({
+    async pull(controller) {
+      try {
+        const {done, value} = await iterator.next();
+
+        if (done) {
+         _onFinish();
+          controller.close();
+          return;
+        }
+
+        let len = value.byteLength;
+        if (onProgress) {
+          let loadedBytes = bytes += len;
+          onProgress(loadedBytes);
+        }
+        controller.enqueue(new Uint8Array(value));
+      } catch (err) {
+        _onFinish(err);
+        throw err;
+      }
+    },
+    cancel(reason) {
+      _onFinish(reason);
+      return iterator.return();
+    }
+  }, {
+    highWaterMark: 2
+  })
+};
+
+const isFetchSupported = typeof fetch === 'function' && typeof Request === 'function' && typeof Response === 'function';
+const isReadableStreamSupported = isFetchSupported && typeof ReadableStream === 'function';
+
+// used only inside the fetch adapter
+const encodeText = isFetchSupported && (typeof TextEncoder === 'function' ?
+    ((encoder) => (str) => encoder.encode(str))(new TextEncoder()) :
+    async (str) => new Uint8Array(await new Response(str).arrayBuffer())
+);
+
+const test = (fn, ...args) => {
+  try {
+    return !!fn(...args);
+  } catch (e) {
+    return false
+  }
+};
+
+const supportsRequestStream = isReadableStreamSupported && test(() => {
+  let duplexAccessed = false;
+
+  const hasContentType = new Request(platform.origin, {
+    body: new ReadableStream(),
+    method: 'POST',
+    get duplex() {
+      duplexAccessed = true;
+      return 'half';
+    },
+  }).headers.has('Content-Type');
+
+  return duplexAccessed && !hasContentType;
+});
+
+const DEFAULT_CHUNK_SIZE = 64 * 1024;
+
+const supportsResponseStream = isReadableStreamSupported &&
+  test(() => utils$1.isReadableStream(new Response('').body));
+
+
+const resolvers = {
+  stream: supportsResponseStream && ((res) => res.body)
+};
+
+isFetchSupported && (((res) => {
+  ['text', 'arrayBuffer', 'blob', 'formData', 'stream'].forEach(type => {
+    !resolvers[type] && (resolvers[type] = utils$1.isFunction(res[type]) ? (res) => res[type]() :
+      (_, config) => {
+        throw new AxiosError(`Response type '${type}' is not supported`, AxiosError.ERR_NOT_SUPPORT, config);
+      });
+  });
+})(new Response));
+
+const getBodyLength = async (body) => {
+  if (body == null) {
+    return 0;
+  }
+
+  if(utils$1.isBlob(body)) {
+    return body.size;
+  }
+
+  if(utils$1.isSpecCompliantForm(body)) {
+    return (await new Request(body).arrayBuffer()).byteLength;
+  }
+
+  if(utils$1.isArrayBufferView(body) || utils$1.isArrayBuffer(body)) {
+    return body.byteLength;
+  }
+
+  if(utils$1.isURLSearchParams(body)) {
+    body = body + '';
+  }
+
+  if(utils$1.isString(body)) {
+    return (await encodeText(body)).byteLength;
+  }
+};
+
+const resolveBodyLength = async (headers, body) => {
+  const length = utils$1.toFiniteNumber(headers.getContentLength());
+
+  return length == null ? getBodyLength(body) : length;
+};
+
+const fetchAdapter = isFetchSupported && (async (config) => {
+  let {
+    url,
+    method,
+    data,
+    signal,
+    cancelToken,
+    timeout,
+    onDownloadProgress,
+    onUploadProgress,
+    responseType,
+    headers,
+    withCredentials = 'same-origin',
+    fetchOptions
+  } = resolveConfig(config);
+
+  responseType = responseType ? (responseType + '').toLowerCase() : 'text';
+
+  let [composedSignal, stopTimeout] = (signal || cancelToken || timeout) ?
+    composeSignals$1([signal, cancelToken], timeout) : [];
+
+  let finished, request;
+
+  const onFinish = () => {
+    !finished && setTimeout(() => {
+      composedSignal && composedSignal.unsubscribe();
+    });
+
+    finished = true;
+  };
+
+  let requestContentLength;
+
+  try {
+    if (
+      onUploadProgress && supportsRequestStream && method !== 'get' && method !== 'head' &&
+      (requestContentLength = await resolveBodyLength(headers, data)) !== 0
+    ) {
+      let _request = new Request(url, {
+        method: 'POST',
+        body: data,
+        duplex: "half"
+      });
+
+      let contentTypeHeader;
+
+      if (utils$1.isFormData(data) && (contentTypeHeader = _request.headers.get('content-type'))) {
+        headers.setContentType(contentTypeHeader);
+      }
+
+      if (_request.body) {
+        const [onProgress, flush] = progressEventDecorator(
+          requestContentLength,
+          progressEventReducer(asyncDecorator(onUploadProgress))
+        );
+
+        data = trackStream(_request.body, DEFAULT_CHUNK_SIZE, onProgress, flush, encodeText);
+      }
+    }
+
+    if (!utils$1.isString(withCredentials)) {
+      withCredentials = withCredentials ? 'include' : 'omit';
+    }
+
+    request = new Request(url, {
+      ...fetchOptions,
+      signal: composedSignal,
+      method: method.toUpperCase(),
+      headers: headers.normalize().toJSON(),
+      body: data,
+      duplex: "half",
+      credentials: withCredentials
+    });
+
+    let response = await fetch(request);
+
+    const isStreamResponse = supportsResponseStream && (responseType === 'stream' || responseType === 'response');
+
+    if (supportsResponseStream && (onDownloadProgress || isStreamResponse)) {
+      const options = {};
+
+      ['status', 'statusText', 'headers'].forEach(prop => {
+        options[prop] = response[prop];
+      });
+
+      const responseContentLength = utils$1.toFiniteNumber(response.headers.get('content-length'));
+
+      const [onProgress, flush] = onDownloadProgress && progressEventDecorator(
+        responseContentLength,
+        progressEventReducer(asyncDecorator(onDownloadProgress), true)
+      ) || [];
+
+      response = new Response(
+        trackStream(response.body, DEFAULT_CHUNK_SIZE, onProgress, () => {
+          flush && flush();
+          isStreamResponse && onFinish();
+        }, encodeText),
+        options
+      );
+    }
+
+    responseType = responseType || 'text';
+
+    let responseData = await resolvers[utils$1.findKey(resolvers, responseType) || 'text'](response, config);
+
+    !isStreamResponse && onFinish();
+
+    stopTimeout && stopTimeout();
+
+    return await new Promise((resolve, reject) => {
+      settle(resolve, reject, {
+        data: responseData,
+        headers: AxiosHeaders$1.from(response.headers),
+        status: response.status,
+        statusText: response.statusText,
+        config,
+        request
+      });
+    })
+  } catch (err) {
+    onFinish();
+
+    if (err && err.name === 'TypeError' && /fetch/i.test(err.message)) {
+      throw Object.assign(
+        new AxiosError('Network Error', AxiosError.ERR_NETWORK, config, request),
+        {
+          cause: err.cause || err
+        }
+      )
+    }
+
+    throw AxiosError.from(err, err && err.code, config, request);
+  }
+});
+
+const knownAdapters = {
+  http: httpAdapter,
+  xhr: xhrAdapter,
+  fetch: fetchAdapter
+};
+
+utils$1.forEach(knownAdapters, (fn, value) => {
+  if (fn) {
     try {
       Object.defineProperty(fn, 'name', {value});
     } catch (e) {
@@ -45997,38 +55985,56 @@ utils.forEach(knownAdapters, (fn, value) => {
   }
 });
 
+const renderReason = (reason) => `- ${reason}`;
+
+const isResolvedHandle = (adapter) => utils$1.isFunction(adapter) || adapter === null || adapter === false;
+
 const adapters = {
   getAdapter: (adapters) => {
-    adapters = utils.isArray(adapters) ? adapters : [adapters];
+    adapters = utils$1.isArray(adapters) ? adapters : [adapters];
 
     const {length} = adapters;
     let nameOrAdapter;
     let adapter;
 
+    const rejectedReasons = {};
+
     for (let i = 0; i < length; i++) {
       nameOrAdapter = adapters[i];
-      if((adapter = utils.isString(nameOrAdapter) ? knownAdapters[nameOrAdapter.toLowerCase()] : nameOrAdapter)) {
+      let id;
+
+      adapter = nameOrAdapter;
+
+      if (!isResolvedHandle(nameOrAdapter)) {
+        adapter = knownAdapters[(id = String(nameOrAdapter)).toLowerCase()];
+
+        if (adapter === undefined) {
+          throw new AxiosError(`Unknown adapter '${id}'`);
+        }
+      }
+
+      if (adapter) {
         break;
       }
+
+      rejectedReasons[id || '#' + i] = adapter;
     }
 
     if (!adapter) {
-      if (adapter === false) {
-        throw new AxiosError(
-          `Adapter ${nameOrAdapter} is not supported by the environment`,
-          'ERR_NOT_SUPPORT'
+
+      const reasons = Object.entries(rejectedReasons)
+        .map(([id, state]) => `adapter ${id} ` +
+          (state === false ? 'is not supported by the environment' : 'is not available in the build')
         );
-      }
 
-      throw new Error(
-        utils.hasOwnProp(knownAdapters, nameOrAdapter) ?
-          `Adapter '${nameOrAdapter}' is not available in the build` :
-          `Unknown adapter '${nameOrAdapter}'`
+      let s = length ?
+        (reasons.length > 1 ? 'since :\n' + reasons.map(renderReason).join('\n') : ' ' + renderReason(reasons[0])) :
+        'as no adapter specified';
+
+      throw new AxiosError(
+        `There is no suitable adapter to dispatch the request ` + s,
+        'ERR_NOT_SUPPORT'
       );
-    }
-
-    if (!utils.isFunction(adapter)) {
-      throw new TypeError('adapter is not a function');
     }
 
     return adapter;
@@ -46107,107 +56113,6 @@ function dispatchRequest(config) {
 
     return Promise.reject(reason);
   });
-}
-
-const headersToObject = (thing) => thing instanceof AxiosHeaders$1 ? thing.toJSON() : thing;
-
-/**
- * Config-specific merge-function which creates a new config-object
- * by merging two configuration objects together.
- *
- * @param {Object} config1
- * @param {Object} config2
- *
- * @returns {Object} New object resulting from merging config2 to config1
- */
-function mergeConfig(config1, config2) {
-  // eslint-disable-next-line no-param-reassign
-  config2 = config2 || {};
-  const config = {};
-
-  function getMergedValue(target, source, caseless) {
-    if (utils.isPlainObject(target) && utils.isPlainObject(source)) {
-      return utils.merge.call({caseless}, target, source);
-    } else if (utils.isPlainObject(source)) {
-      return utils.merge({}, source);
-    } else if (utils.isArray(source)) {
-      return source.slice();
-    }
-    return source;
-  }
-
-  // eslint-disable-next-line consistent-return
-  function mergeDeepProperties(a, b, caseless) {
-    if (!utils.isUndefined(b)) {
-      return getMergedValue(a, b, caseless);
-    } else if (!utils.isUndefined(a)) {
-      return getMergedValue(undefined, a, caseless);
-    }
-  }
-
-  // eslint-disable-next-line consistent-return
-  function valueFromConfig2(a, b) {
-    if (!utils.isUndefined(b)) {
-      return getMergedValue(undefined, b);
-    }
-  }
-
-  // eslint-disable-next-line consistent-return
-  function defaultToConfig2(a, b) {
-    if (!utils.isUndefined(b)) {
-      return getMergedValue(undefined, b);
-    } else if (!utils.isUndefined(a)) {
-      return getMergedValue(undefined, a);
-    }
-  }
-
-  // eslint-disable-next-line consistent-return
-  function mergeDirectKeys(a, b, prop) {
-    if (prop in config2) {
-      return getMergedValue(a, b);
-    } else if (prop in config1) {
-      return getMergedValue(undefined, a);
-    }
-  }
-
-  const mergeMap = {
-    url: valueFromConfig2,
-    method: valueFromConfig2,
-    data: valueFromConfig2,
-    baseURL: defaultToConfig2,
-    transformRequest: defaultToConfig2,
-    transformResponse: defaultToConfig2,
-    paramsSerializer: defaultToConfig2,
-    timeout: defaultToConfig2,
-    timeoutMessage: defaultToConfig2,
-    withCredentials: defaultToConfig2,
-    adapter: defaultToConfig2,
-    responseType: defaultToConfig2,
-    xsrfCookieName: defaultToConfig2,
-    xsrfHeaderName: defaultToConfig2,
-    onUploadProgress: defaultToConfig2,
-    onDownloadProgress: defaultToConfig2,
-    decompress: defaultToConfig2,
-    maxContentLength: defaultToConfig2,
-    maxBodyLength: defaultToConfig2,
-    beforeRedirect: defaultToConfig2,
-    transport: defaultToConfig2,
-    httpAgent: defaultToConfig2,
-    httpsAgent: defaultToConfig2,
-    cancelToken: defaultToConfig2,
-    socketPath: defaultToConfig2,
-    responseEncoding: defaultToConfig2,
-    validateStatus: mergeDirectKeys,
-    headers: (a, b) => mergeDeepProperties(headersToObject(a), headersToObject(b), true)
-  };
-
-  utils.forEach(Object.keys(Object.assign({}, config1, config2)), function computeConfigValue(prop) {
-    const merge = mergeMap[prop] || mergeDeepProperties;
-    const configValue = merge(config1[prop], config2[prop], prop);
-    (utils.isUndefined(configValue) && merge !== mergeDirectKeys) || (config[prop] = configValue);
-  });
-
-  return config;
 }
 
 const validators$1 = {};
@@ -46323,7 +56228,34 @@ class Axios {
    *
    * @returns {Promise} The Promise to be fulfilled
    */
-  request(configOrUrl, config) {
+  async request(configOrUrl, config) {
+    try {
+      return await this._request(configOrUrl, config);
+    } catch (err) {
+      if (err instanceof Error) {
+        let dummy;
+
+        Error.captureStackTrace ? Error.captureStackTrace(dummy = {}) : (dummy = new Error());
+
+        // slice off the Error: ... line
+        const stack = dummy.stack ? dummy.stack.replace(/^.+\n/, '') : '';
+        try {
+          if (!err.stack) {
+            err.stack = stack;
+            // match without the 2 top stack lines
+          } else if (stack && !String(err.stack).endsWith(stack.replace(/^.+\n.+\n/, ''))) {
+            err.stack += '\n' + stack;
+          }
+        } catch (e) {
+          // ignore the case where "stack" is an un-writable property
+        }
+      }
+
+      throw err;
+    }
+  }
+
+  _request(configOrUrl, config) {
     /*eslint no-param-reassign:0*/
     // Allow for axios('example/url'[, config]) a la fetch API
     if (typeof configOrUrl === 'string') {
@@ -46346,7 +56278,7 @@ class Axios {
     }
 
     if (paramsSerializer != null) {
-      if (utils.isFunction(paramsSerializer)) {
+      if (utils$1.isFunction(paramsSerializer)) {
         config.paramsSerializer = {
           serialize: paramsSerializer
         };
@@ -46362,12 +56294,12 @@ class Axios {
     config.method = (config.method || this.defaults.method || 'get').toLowerCase();
 
     // Flatten headers
-    let contextHeaders = headers && utils.merge(
+    let contextHeaders = headers && utils$1.merge(
       headers.common,
       headers[config.method]
     );
 
-    headers && utils.forEach(
+    headers && utils$1.forEach(
       ['delete', 'get', 'head', 'post', 'put', 'patch', 'common'],
       (method) => {
         delete headers[method];
@@ -46454,7 +56386,7 @@ class Axios {
 }
 
 // Provide aliases for supported request methods
-utils.forEach(['delete', 'get', 'head', 'options'], function forEachMethodNoData(method) {
+utils$1.forEach(['delete', 'get', 'head', 'options'], function forEachMethodNoData(method) {
   /*eslint func-names:0*/
   Axios.prototype[method] = function(url, config) {
     return this.request(mergeConfig(config || {}, {
@@ -46465,7 +56397,7 @@ utils.forEach(['delete', 'get', 'head', 'options'], function forEachMethodNoData
   };
 });
 
-utils.forEach(['post', 'put', 'patch'], function forEachMethodWithData(method) {
+utils$1.forEach(['post', 'put', 'patch'], function forEachMethodWithData(method) {
   /*eslint func-names:0*/
 
   function generateHTTPMethod(isForm) {
@@ -46641,7 +56573,7 @@ function spread(callback) {
  * @returns {boolean} True if the payload is an error thrown by Axios, otherwise false
  */
 function isAxiosError(payload) {
-  return utils.isObject(payload) && (payload.isAxiosError === true);
+  return utils$1.isObject(payload) && (payload.isAxiosError === true);
 }
 
 const HttpStatusCode = {
@@ -46728,10 +56660,10 @@ function createInstance(defaultConfig) {
   const instance = bind(Axios$1.prototype.request, context);
 
   // Copy axios.prototype to instance
-  utils.extend(instance, Axios$1.prototype, context, {allOwnKeys: true});
+  utils$1.extend(instance, Axios$1.prototype, context, {allOwnKeys: true});
 
   // Copy context to instance
-  utils.extend(instance, context, null, {allOwnKeys: true});
+  utils$1.extend(instance, context, null, {allOwnKeys: true});
 
   // Factory for creating new instances
   instance.create = function create(instanceConfig) {
@@ -46775,7 +56707,7 @@ axios.mergeConfig = mergeConfig;
 
 axios.AxiosHeaders = AxiosHeaders$1;
 
-axios.formToJSON = thing => formDataToJSON(utils.isHTMLForm(thing) ? new FormData(thing) : thing);
+axios.formToJSON = thing => formDataToJSON(utils$1.isHTMLForm(thing) ? new FormData(thing) : thing);
 
 axios.getAdapter = adapters.getAdapter;
 
@@ -46785,6 +56717,320 @@ axios.default = axios;
 
 module.exports = axios;
 //# sourceMappingURL=axios.cjs.map
+
+
+/***/ }),
+
+/***/ 4119:
+/***/ ((module) => {
+
+"use strict";
+
+
+function getDefaultExportFromCjs (x) {
+	return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
+}
+
+const CRC_TABLE = new Int32Array([
+  0,
+  1996959894,
+  3993919788,
+  2567524794,
+  124634137,
+  1886057615,
+  3915621685,
+  2657392035,
+  249268274,
+  2044508324,
+  3772115230,
+  2547177864,
+  162941995,
+  2125561021,
+  3887607047,
+  2428444049,
+  498536548,
+  1789927666,
+  4089016648,
+  2227061214,
+  450548861,
+  1843258603,
+  4107580753,
+  2211677639,
+  325883990,
+  1684777152,
+  4251122042,
+  2321926636,
+  335633487,
+  1661365465,
+  4195302755,
+  2366115317,
+  997073096,
+  1281953886,
+  3579855332,
+  2724688242,
+  1006888145,
+  1258607687,
+  3524101629,
+  2768942443,
+  901097722,
+  1119000684,
+  3686517206,
+  2898065728,
+  853044451,
+  1172266101,
+  3705015759,
+  2882616665,
+  651767980,
+  1373503546,
+  3369554304,
+  3218104598,
+  565507253,
+  1454621731,
+  3485111705,
+  3099436303,
+  671266974,
+  1594198024,
+  3322730930,
+  2970347812,
+  795835527,
+  1483230225,
+  3244367275,
+  3060149565,
+  1994146192,
+  31158534,
+  2563907772,
+  4023717930,
+  1907459465,
+  112637215,
+  2680153253,
+  3904427059,
+  2013776290,
+  251722036,
+  2517215374,
+  3775830040,
+  2137656763,
+  141376813,
+  2439277719,
+  3865271297,
+  1802195444,
+  476864866,
+  2238001368,
+  4066508878,
+  1812370925,
+  453092731,
+  2181625025,
+  4111451223,
+  1706088902,
+  314042704,
+  2344532202,
+  4240017532,
+  1658658271,
+  366619977,
+  2362670323,
+  4224994405,
+  1303535960,
+  984961486,
+  2747007092,
+  3569037538,
+  1256170817,
+  1037604311,
+  2765210733,
+  3554079995,
+  1131014506,
+  879679996,
+  2909243462,
+  3663771856,
+  1141124467,
+  855842277,
+  2852801631,
+  3708648649,
+  1342533948,
+  654459306,
+  3188396048,
+  3373015174,
+  1466479909,
+  544179635,
+  3110523913,
+  3462522015,
+  1591671054,
+  702138776,
+  2966460450,
+  3352799412,
+  1504918807,
+  783551873,
+  3082640443,
+  3233442989,
+  3988292384,
+  2596254646,
+  62317068,
+  1957810842,
+  3939845945,
+  2647816111,
+  81470997,
+  1943803523,
+  3814918930,
+  2489596804,
+  225274430,
+  2053790376,
+  3826175755,
+  2466906013,
+  167816743,
+  2097651377,
+  4027552580,
+  2265490386,
+  503444072,
+  1762050814,
+  4150417245,
+  2154129355,
+  426522225,
+  1852507879,
+  4275313526,
+  2312317920,
+  282753626,
+  1742555852,
+  4189708143,
+  2394877945,
+  397917763,
+  1622183637,
+  3604390888,
+  2714866558,
+  953729732,
+  1340076626,
+  3518719985,
+  2797360999,
+  1068828381,
+  1219638859,
+  3624741850,
+  2936675148,
+  906185462,
+  1090812512,
+  3747672003,
+  2825379669,
+  829329135,
+  1181335161,
+  3412177804,
+  3160834842,
+  628085408,
+  1382605366,
+  3423369109,
+  3138078467,
+  570562233,
+  1426400815,
+  3317316542,
+  2998733608,
+  733239954,
+  1555261956,
+  3268935591,
+  3050360625,
+  752459403,
+  1541320221,
+  2607071920,
+  3965973030,
+  1969922972,
+  40735498,
+  2617837225,
+  3943577151,
+  1913087877,
+  83908371,
+  2512341634,
+  3803740692,
+  2075208622,
+  213261112,
+  2463272603,
+  3855990285,
+  2094854071,
+  198958881,
+  2262029012,
+  4057260610,
+  1759359992,
+  534414190,
+  2176718541,
+  4139329115,
+  1873836001,
+  414664567,
+  2282248934,
+  4279200368,
+  1711684554,
+  285281116,
+  2405801727,
+  4167216745,
+  1634467795,
+  376229701,
+  2685067896,
+  3608007406,
+  1308918612,
+  956543938,
+  2808555105,
+  3495958263,
+  1231636301,
+  1047427035,
+  2932959818,
+  3654703836,
+  1088359270,
+  936918e3,
+  2847714899,
+  3736837829,
+  1202900863,
+  817233897,
+  3183342108,
+  3401237130,
+  1404277552,
+  615818150,
+  3134207493,
+  3453421203,
+  1423857449,
+  601450431,
+  3009837614,
+  3294710456,
+  1567103746,
+  711928724,
+  3020668471,
+  3272380065,
+  1510334235,
+  755167117
+]);
+function ensureBuffer(input) {
+  if (Buffer.isBuffer(input)) {
+    return input;
+  }
+  if (typeof input === "number") {
+    return Buffer.alloc(input);
+  } else if (typeof input === "string") {
+    return Buffer.from(input);
+  } else {
+    throw new Error("input must be buffer, number, or string, received " + typeof input);
+  }
+}
+function bufferizeInt(num) {
+  const tmp = ensureBuffer(4);
+  tmp.writeInt32BE(num, 0);
+  return tmp;
+}
+function _crc32(buf, previous) {
+  buf = ensureBuffer(buf);
+  if (Buffer.isBuffer(previous)) {
+    previous = previous.readUInt32BE(0);
+  }
+  let crc = ~~previous ^ -1;
+  for (var n = 0; n < buf.length; n++) {
+    crc = CRC_TABLE[(crc ^ buf[n]) & 255] ^ crc >>> 8;
+  }
+  return crc ^ -1;
+}
+function crc32() {
+  return bufferizeInt(_crc32.apply(null, arguments));
+}
+crc32.signed = function() {
+  return _crc32.apply(null, arguments);
+};
+crc32.unsigned = function() {
+  return _crc32.apply(null, arguments) >>> 0;
+};
+var bufferCrc32 = crc32;
+
+const index = /*@__PURE__*/getDefaultExportFromCjs(bufferCrc32);
+
+module.exports = index;
 
 
 /***/ }),
