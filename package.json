@@ -31,10 +31,10 @@
   "devDependencies": {
     "@types/adm-zip": "^0.5.7",
     "@types/archiver": "^6.0.3",
-    "@types/node": "^24.0.3",
+    "@types/node": "^24.0.7",
     "@vercel/ncc": "^0.38.3",
     "adm-zip": "^0.5.16",
-    "jest": "^30.0.2",
+    "jest": "^30.0.3",
     "ts-jest": "^29.4.0",
     "typescript": "^5.8.3"
   }
