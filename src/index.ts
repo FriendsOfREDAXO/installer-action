@@ -1,7 +1,7 @@
 import * as Core from '@actions/core';
 import {md5_file, readPackageYml, validatePackageVersion} from "./package";
 import {cacheFile, zip} from "./file";
-import {fetchAddonPackageYml, uploadArchive, versionExists} from "./myRedaxo";
+import {fetchAddonPackageData, uploadArchive, versionExists} from "./myRedaxo";
 
 const packageDir = Core.getInput('cwd');
 const archiveFilePath = cacheFile();
@@ -23,7 +23,7 @@ const archiveFilePath = cacheFile();
             return;
         }
 
-        const existingPackageYml = await fetchAddonPackageYml(packageName, myRedaxoUsername, myRedaxoApiKey);
+        const existingPackageYml = await fetchAddonPackageData(packageName, myRedaxoUsername, myRedaxoApiKey);
         if (!existingPackageYml) {
             Core.setFailed(`Could not fetch addon ${packageName}. Please check your addon key and your MyRedaxo credentials.`);
             return;
