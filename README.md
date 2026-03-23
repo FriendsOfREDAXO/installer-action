@@ -40,6 +40,9 @@ Create a new release workflow by creating a new file in your repository called `
 
 ### .github/workflows/publish-to-redaxo-org.yml
 
+```
+.github/workflows/publish-to-redaxo-org.yml
+```
 
 ```yaml
 # Instructions: https://github.com/FriendsOfREDAXO/installer-action/
