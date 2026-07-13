@@ -1,32 +1,32 @@
-  name: 'MyREDAXO Installer Action'
-  author: FriendsOfREDAXO
-  description: 'GitHub Action for MyREDAXO Installer'
-  branding:
+name: 'MyREDAXO Installer Action'
+author: FriendsOfREDAXO
+description: 'GitHub Action for MyREDAXO Installer'
+branding:
     icon: upload-cloud
     color: blue
-  inputs:
-      myredaxo-username:
-          description: 'MyREDAXO username.'
-          required: true
-      myredaxo-api-key:
-          description: 'MyREDAXO API Key.'
-          required: true
-      description:
-          description: 'Package release version description.'
-          default: ${{ github.event.release.body }}
-          required: false
-      cwd:
-          description: 'Working directory where the package is located.'
-          default: '.'
-          required: false
-      version:
-          description: 'Package release version.'
-          default: ${{ github.event.release.tag_name }}
-          required: false
-      enforce-redaxo-addon-validation:
-          description: 'When true, validates package.yml and addon structure before upload.'
-          default: 'true'
-          required: false
-  runs:
-        using: 'node24'
+inputs:
+    myredaxo-username:
+        description: 'MyREDAXO username.'
+        required: true
+    myredaxo-api-key:
+        description: 'MyREDAXO API Key.'
+        required: true
+    description:
+        description: 'Package release version description.'
+        default: ${{ github.event.release.body }}
+        required: false
+    cwd:
+        description: 'Working directory where the package is located.'
+        default: '.'
+        required: false
+    version:
+        description: 'Package release version.'
+        default: ${{ github.event.release.tag_name }}
+        required: false
+    enforce-redaxo-addon-validation:
+        description: 'When true, validates package.yml and addon structure before upload.'
+        default: 'true'
+        required: false
+runs:
+    using: 'node24'
     main: 'dist/index.js'
