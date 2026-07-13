@@ -46,6 +46,7 @@ Create a new release workflow by creating a new file in your repository called `
 
 ```yaml
 # Instructions: https://github.com/FriendsOfREDAXO/installer-action/
+# Recommended workflow template (up-to-date)
 
 name: Publish to REDAXO.org
 on:
@@ -57,7 +58,7 @@ jobs:
   redaxo_publish:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - if: hashFiles('composer.json') != ''
         uses: shivammathur/setup-php@v2
         with:
@@ -75,6 +76,9 @@ jobs:
           enforce-redaxo-addon-validation: true
 
 ```
+
+Existing workflows that still use older `actions/checkout` versions usually continue to work.
+For new workflows, prefer the template above so future repositories start with the current recommended setup.
 
 ## 3. Create a new release with a nice description
 
