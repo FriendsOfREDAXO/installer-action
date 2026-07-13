@@ -1,5 +1,5 @@
 import * as Core from '@actions/core';
-import {md5_file, readPackageYml, validatePackageVersion} from "./package";
+import {md5_file, readPackageYml, validatePackageVersion, validateRedaxoAddon} from "./package";
 import {cacheFile, zip} from "./file";
 import {fetchAddonPackageYml, uploadArchive, versionExists} from "./myRedaxo";
 
@@ -16,6 +16,13 @@ const archiveFilePath = cacheFile();
         const packageVersion = packageYml.version;
         const packageName = packageYml.package;
         const packageInstallerIgnore = packageYml.installer_ignore || [];
+
+        const enforceAddonValidation = Core.getInput('enforce-redaxo-addon-validation') !== 'false';
+        if (enforceAddonValidation) {
+            validateRedaxoAddon(packageYml, packageDir);
+        } else {
+            Core.warning('REDAXO addon validation is disabled (enforce-redaxo-addon-validation=false).');
+        }
 
         const releaseVersion = Core.getInput('version');
         if (!validatePackageVersion(packageVersion, releaseVersion)) {

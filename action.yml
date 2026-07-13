@@ -23,6 +23,10 @@
           description: 'Package release version.'
           default: ${{ github.event.release.tag_name }}
           required: false
+      enforce-redaxo-addon-validation:
+          description: 'When true, validates package.yml and addon structure before upload.'
+          default: 'true'
+          required: false
   runs:
-    using: 'node20'
+        using: 'node24'
     main: 'dist/index.js'
