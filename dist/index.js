@@ -60624,19 +60624,6 @@ async function zip(cacheFile, addonDir, addonName, ignoreList) {
     const archive = (0, archiver_1.default)('zip', {
         zlib: { level: 9 },
     });
-    archive.on('warning', function (err) {
-        if (err.code === 'ENOENT') {
-            Core.warning(err);
-        }
-        else {
-            Core.setFailed(err);
-            throw err;
-        }
-    });
-    archive.on('error', function (err) {
-        Core.setFailed(err);
-        throw err;
-    });
     archive.pipe(output);
     Core.info(`Creating archive in ${cacheFile}`);
     Core.info(`Using installer_ignore ${JSON.stringify(ignoreList)}`);
@@ -60647,7 +60634,23 @@ async function zip(cacheFile, addonDir, addonName, ignoreList) {
         Core.info(`Adding to zip: ${entry.name}`);
     });
     archive.glob('**', { cwd: addonDir, ignore: combinedIgnoreList, dot: true }, { prefix: addonName });
-    return await new Promise(async (resolve) => {
+    return await new Promise(async (resolve, reject) => {
+        output.on('error', (err) => {
+            Core.setFailed(err.message);
+            reject(err);
+        });
+        archive.on('warning', function (err) {
+            if (err.code === 'ENOENT') {
+                Core.warning(err);
+                return;
+            }
+            Core.setFailed(err.message);
+            reject(err);
+        });
+        archive.on('error', function (err) {
+            Core.setFailed(err.message);
+            reject(err);
+        });
         await archive.finalize();
         output.on('close', function () {
             Core.info(`Archive created with ${archive.pointer()} total bytes`);
