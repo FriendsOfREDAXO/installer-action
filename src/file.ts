@@ -8,21 +8,6 @@ export async function zip(cacheFile: string, addonDir: string, addonName: string
     const archive = archiver('zip', {
         zlib: { level: 9 },
     });
-
-    archive.on('warning', function (err: ArchiverError) {
-        if (err.code === 'ENOENT') {
-            Core.warning(err);
-        } else {
-            Core.setFailed(err);
-            throw err;
-        }
-    });
-
-    archive.on('error', function (err: ArchiverError) {
-        Core.setFailed(err);
-        throw err;
-    });
-
     archive.pipe(output);
 
     Core.info(`Creating archive in ${cacheFile}`);
@@ -41,7 +26,26 @@ export async function zip(cacheFile: string, addonDir: string, addonName: string
 
     // we need to manually check if the zip archive is finalized
     // see https://github.com/archiverjs/node-archiver/blob/b5cc14cc97cc64bdca32c0cbe9d660b5b979be7c/lib/core.js#L760-L769
-    return await new Promise(async (resolve) => {
+    return await new Promise(async (resolve, reject) => {
+        output.on('error', (err) => {
+            Core.setFailed(err.message);
+            reject(err);
+        });
+
+        archive.on('warning', function (err: ArchiverError) {
+            if (err.code === 'ENOENT') {
+                Core.warning(err);
+                return;
+            }
+
+            Core.setFailed(err.message);
+            reject(err);
+        });
+
+        archive.on('error', function (err: ArchiverError) {
+            Core.setFailed(err.message);
+            reject(err);
+        });
         await archive.finalize();
         output.on('close', function () {
             Core.info(`Archive created with ${archive.pointer()} total bytes`);
