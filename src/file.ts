@@ -8,7 +8,6 @@ export async function zip(cacheFile: string, addonDir: string, addonName: string
     const archive = archiver('zip', {
         zlib: { level: 9 },
     });
-
     archive.pipe(output);
 
     Core.info(`Creating archive in ${cacheFile}`);
@@ -47,7 +46,6 @@ export async function zip(cacheFile: string, addonDir: string, addonName: string
             Core.setFailed(err.message);
             reject(err);
         });
-
         await archive.finalize();
         output.on('close', function () {
             Core.info(`Archive created with ${archive.pointer()} total bytes`);
