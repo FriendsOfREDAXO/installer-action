@@ -9,6 +9,9 @@ interface PackageYml {
     package: string;
     version: string;
     installer_ignore: string[]|null;
+    requires?: {
+        redaxo?: string;
+    };
 }
 
 export async function readPackageYml(addonDir: string): Promise<PackageYml> {
@@ -57,4 +60,43 @@ export function md5_file(file: string): Promise<string> {
 
 export function validatePackageVersion(packageYmlVersion: string, releaseVersion: string): boolean {
     return packageYmlVersion === releaseVersion;
+}
+
+export function validateRedaxoAddon(packageYml: PackageYml, addonDir: string): void {
+    if (!packageYml || 'object' !== typeof packageYml) {
+        throw new Error('Invalid package.yml content.');
+    }
+
+    if (!packageYml.package || !/^[a-z][a-z0-9_]*$/.test(packageYml.package)) {
+        throw new Error('Invalid package key in package.yml. Expected format: lowercase letters, digits and underscores, starting with a letter.');
+    }
+
+    if (!packageYml.version || 'string' !== typeof packageYml.version) {
+        throw new Error('Invalid or missing version in package.yml.');
+    }
+
+    const redaxoConstraint = packageYml.requires?.redaxo;
+    if (!redaxoConstraint || 'string' !== typeof redaxoConstraint) {
+        throw new Error('Missing requires.redaxo in package.yml. This does not look like a valid REDAXO addon package definition.');
+    }
+
+    const ignoreList = packageYml.installer_ignore || [];
+    if (ignoreList.some((pattern) => /(^|\/)package\.yml$/.test(pattern))) {
+        throw new Error('installer_ignore must not exclude package.yml.');
+    }
+
+    const indicators = ['boot.php', 'install.php', 'update.php', 'uninstall.php', 'lib', 'pages', 'lang', 'fragments', 'assets'];
+    const hasIndicator = indicators.some((fileOrDir) => fs.existsSync(path.join(addonDir, fileOrDir)));
+    const rootEntries = fs.readdirSync(addonDir, { withFileTypes: true })
+        .map((entry) => entry.name)
+        .filter((name) => !name.startsWith('.'));
+    const relevantEntries = rootEntries.filter((name) => !['package.yml', 'README.md'].includes(name));
+
+    if (!hasIndicator && 0 === relevantEntries.length) {
+        throw new Error('Addon directory does not contain typical REDAXO addon files/folders (e.g. boot.php, install.php, lib, pages, lang).');
+    }
+
+    if (!hasIndicator) {
+        Core.warning('Addon structure looks unusual (no typical REDAXO addon indicators found). Upload continues because package.yml validation passed.');
+    }
 }

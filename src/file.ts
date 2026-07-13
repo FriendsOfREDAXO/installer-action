@@ -1,5 +1,5 @@
 import fs from "fs";
-import archiver from "archiver";
+import archiver, { EntryData, type ArchiverError } from "archiver";
 import path from "path";
 import * as Core from "@actions/core";
 
@@ -9,7 +9,7 @@ export async function zip(cacheFile: string, addonDir: string, addonName: string
         zlib: { level: 9 },
     });
 
-    archive.on('warning', function(err) {
+    archive.on('warning', function (err: ArchiverError) {
         if (err.code === 'ENOENT') {
             Core.warning(err);
         } else {
@@ -18,7 +18,7 @@ export async function zip(cacheFile: string, addonDir: string, addonName: string
         }
     });
 
-    archive.on('error', function(err) {
+    archive.on('error', function (err: ArchiverError) {
         Core.setFailed(err);
         throw err;
     });
@@ -33,18 +33,17 @@ export async function zip(cacheFile: string, addonDir: string, addonName: string
 
     const combinedIgnoreList = [...ignoreList, ...rexIgnoreList];
 
-    archive.on('entry', entry => {
+    archive.on('entry', (entry: EntryData) => {
         Core.info(`Adding to zip: ${entry.name}`);
     });
 
-    // @ts-ignore
-    archive.glob('**', {cwd: addonDir, skip: combinedIgnoreList, ignore: combinedIgnoreList, dot: true}, {prefix: addonName})
+    archive.glob('**', { cwd: addonDir, ignore: combinedIgnoreList, dot: true }, { prefix: addonName });
 
     // we need to manually check if the zip archive is finalized
     // see https://github.com/archiverjs/node-archiver/blob/b5cc14cc97cc64bdca32c0cbe9d660b5b979be7c/lib/core.js#L760-L769
-    return await new Promise(async (resolve, reject) => {
+    return await new Promise(async (resolve) => {
         await archive.finalize();
-        output.on('close', function() {
+        output.on('close', function () {
             Core.info(`Archive created with ${archive.pointer()} total bytes`);
             resolve();
         });

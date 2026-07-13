@@ -3,6 +3,7 @@ name: Build
 on:
   push:
     branches:
+      - main
       - master
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
@@ -16,12 +17,12 @@ jobs:
     timeout-minutes: 10
     if: github.event.pull_request.draft == false
 
-    name: Build for node 20
+    name: Build for node 24
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           cache: 'npm'
           cache-dependency-path: 'package-lock.json'
       - run: npm ci
@@ -32,12 +33,12 @@ jobs:
     timeout-minutes: 10
     if: github.event.pull_request.draft == false
 
-    name: Release Build for node 20
+    name: Release Build for node 24
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           cache: 'npm'
           cache-dependency-path: 'package-lock.json'
       - run: npm ci

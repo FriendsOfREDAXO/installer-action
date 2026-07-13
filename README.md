@@ -57,7 +57,7 @@ jobs:
   redaxo_publish:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
       - if: hashFiles('composer.json') != ''
         uses: shivammathur/setup-php@v2
         with:
@@ -72,6 +72,7 @@ jobs:
           myredaxo-api-key: ${{ secrets.MYREDAXO_API_KEY }}
           description: ${{ github.event.release.body }}
           version: ${{ github.event.release.tag_name }}
+          enforce-redaxo-addon-validation: true
 
 ```
 
@@ -109,3 +110,21 @@ Changelog: https://www.example.org/
 You can monitor the status of the workflow under https://github.com/YOUR_GITHUB_NAME/YOUR_REPOSITORY/actions. Once completed, the result is your REDAXO AddOn published through MyREDAXO and live in ever REDAXO 5 installer.
 
 ![image](https://user-images.githubusercontent.com/3855487/161302304-176fa2d0-5101-45cb-aabe-328aef2f10c7.png)
+
+## Security checks
+
+By default, this action validates that the configured folder looks like a REDAXO addon before upload.
+
+The validation checks:
+
+* `package.yml` contains a valid addon key (`package`) and `version`
+* `package.yml` contains `requires.redaxo`
+* `installer_ignore` does not exclude `package.yml`
+* the addon directory contains common REDAXO addon files/folders (`boot.php`, `install.php`, `lib`, `pages`, `lang`, ...)
+
+You can disable this check (not recommended) via:
+
+```yaml
+with:
+  enforce-redaxo-addon-validation: false
+```
