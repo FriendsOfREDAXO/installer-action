@@ -34,11 +34,11 @@
     "@types/adm-zip": "^0.5.7",
     "@types/archiver": "^6.0.4",
     "@types/jest": "^30.0.0",
-    "@types/node": "^24.9.1",
+    "@types/node": "^26.1.1",
     "@vercel/ncc": "^0.44.1",
-    "adm-zip": "^0.5.16",
+    "adm-zip": "^0.6.0",
     "jest": "^30.2.0",
     "ts-jest": "^29.4.5",
-    "typescript": "^5.9.3"
+    "typescript": "^7.0.2"
   }
 }
