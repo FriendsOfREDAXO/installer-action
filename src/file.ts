@@ -22,7 +22,7 @@ export async function zip(cacheFile: string, addonDir: string, addonName: string
         Core.info(`Adding to zip: ${entry.name}`);
     });
 
-    archive.glob('**', { cwd: addonDir, ignore: combinedIgnoreList, dot: true }, { prefix: addonName });
+    archive.glob('**', { cwd: addonDir, skip: combinedIgnoreList, ignore: combinedIgnoreList, dot: true }, { prefix: addonName });
 
     // we need to manually check if the zip archive is finalized
     // see https://github.com/archiverjs/node-archiver/blob/b5cc14cc97cc64bdca32c0cbe9d660b5b979be7c/lib/core.js#L760-L769
