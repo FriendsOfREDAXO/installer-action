@@ -1,0 +1,7 @@
+name: Publish release
+
+# Fixture only: this file must never end up in the generated archive.
+on:
+    release:
+        types:
+            - published

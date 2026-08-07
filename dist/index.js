@@ -60633,7 +60633,7 @@ async function zip(cacheFile, addonDir, addonName, ignoreList) {
     archive.on('entry', (entry) => {
         Core.info(`Adding to zip: ${entry.name}`);
     });
-    archive.glob('**', { cwd: addonDir, ignore: combinedIgnoreList, dot: true }, { prefix: addonName });
+    archive.glob('**', { cwd: addonDir, skip: combinedIgnoreList, ignore: combinedIgnoreList, dot: true }, { prefix: addonName });
     return await new Promise(async (resolve, reject) => {
         output.on('error', (err) => {
             Core.setFailed(err.message);
