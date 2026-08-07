@@ -17,12 +17,13 @@ export async function zip(cacheFile: string, addonDir: string, addonName: string
     Core.info(`Using REDAXOs default ignore list ${JSON.stringify(rexIgnoreList)}`);
 
     const combinedIgnoreList = [...ignoreList, ...rexIgnoreList];
+    const globIgnoreList = expandIgnorePatternsForGlob(combinedIgnoreList);
 
     archive.on('entry', (entry: EntryData) => {
         Core.info(`Adding to zip: ${entry.name}`);
     });
 
-    archive.glob('**', { cwd: addonDir, skip: combinedIgnoreList, ignore: combinedIgnoreList, dot: true }, { prefix: addonName });
+    archive.glob('**', { cwd: addonDir, skip: combinedIgnoreList, ignore: globIgnoreList, dot: true }, { prefix: addonName });
 
     // we need to manually check if the zip archive is finalized
     // see https://github.com/archiverjs/node-archiver/blob/b5cc14cc97cc64bdca32c0cbe9d660b5b979be7c/lib/core.js#L760-L769
@@ -81,6 +82,42 @@ function getDefaultRedaxoIgnoreList(): Array<string> {
     ];
 
     return [...rexFinderIgnoreList, ...rexInstallIgnoreList];
+}
+
+function expandIgnorePatternsForGlob(patterns: string[]): string[] {
+    const expanded: string[] = [];
+    const seen = new Set<string>();
+    const hasGlobSyntax = (pattern: string): boolean => {
+        // Standard glob tokens plus extglob operators like @(...), !(...), +(…), ?(...), *(...).
+        return /[*?{}\[\]]/.test(pattern) || /[@!?+*]\(/.test(pattern);
+    };
+
+    const add = (value: string): void => {
+        if (!value || seen.has(value)) {
+            return;
+        }
+        seen.add(value);
+        expanded.push(value);
+    };
+
+    for (const rawPattern of patterns) {
+        const pattern = rawPattern.trim();
+        if (!pattern) {
+            continue;
+        }
+
+        add(pattern);
+
+        // Plain directory/file names like ".git" do not reliably match with `ignore`.
+        // Expand them to path-aware glob variants while still passing the original list via `skip`.
+        if (!hasGlobSyntax(pattern) && !pattern.includes('/')) {
+            add(`**/${pattern}`);
+            add(`**/${pattern}/**`);
+            add(`${pattern}/**`);
+        }
+    }
+
+    return expanded;
 }
 
 export function cacheFile(): string {

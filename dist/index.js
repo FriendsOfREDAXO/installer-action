@@ -60630,10 +60630,11 @@ async function zip(cacheFile, addonDir, addonName, ignoreList) {
     const rexIgnoreList = getDefaultRedaxoIgnoreList();
     Core.info(`Using REDAXOs default ignore list ${JSON.stringify(rexIgnoreList)}`);
     const combinedIgnoreList = [...ignoreList, ...rexIgnoreList];
+    const globIgnoreList = expandIgnorePatternsForGlob(combinedIgnoreList);
     archive.on('entry', (entry) => {
         Core.info(`Adding to zip: ${entry.name}`);
     });
-    archive.glob('**', { cwd: addonDir, skip: combinedIgnoreList, ignore: combinedIgnoreList, dot: true }, { prefix: addonName });
+    archive.glob('**', { cwd: addonDir, skip: combinedIgnoreList, ignore: globIgnoreList, dot: true }, { prefix: addonName });
     return await new Promise(async (resolve, reject) => {
         output.on('error', (err) => {
             Core.setFailed(err.message);
@@ -60681,6 +60682,33 @@ function getDefaultRedaxoIgnoreList() {
         '.vscode',
     ];
     return [...rexFinderIgnoreList, ...rexInstallIgnoreList];
+}
+function expandIgnorePatternsForGlob(patterns) {
+    const expanded = [];
+    const seen = new Set();
+    const hasGlobSyntax = (pattern) => {
+        return /[*?{}\[\]]/.test(pattern) || /[@!?+*]\(/.test(pattern);
+    };
+    const add = (value) => {
+        if (!value || seen.has(value)) {
+            return;
+        }
+        seen.add(value);
+        expanded.push(value);
+    };
+    for (const rawPattern of patterns) {
+        const pattern = rawPattern.trim();
+        if (!pattern) {
+            continue;
+        }
+        add(pattern);
+        if (!hasGlobSyntax(pattern) && !pattern.includes('/')) {
+            add(`**/${pattern}`);
+            add(`**/${pattern}/**`);
+            add(`${pattern}/**`);
+        }
+    }
+    return expanded;
 }
 function cacheFile() {
     const TMP_DIR = process.env['RUNNER_TEMP'];

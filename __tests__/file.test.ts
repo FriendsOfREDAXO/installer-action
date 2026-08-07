@@ -2,21 +2,45 @@ import {zip} from "../src/file";
 import * as fs from "fs";
 import {readPackageYml} from "../src/package";
 import AdmZip, {IZipEntry} from "adm-zip";
+import path from "path";
+import os from "os";
 
 const TEST_PACKAGE_PATH = '__tests__/data/test-addon/';
 
 describe('file', () => {
 
     const cacheFileForTest = '/tmp/test.zip';
+    let tempAddonRoot = '';
+    let tempAddonPath = '';
+
     beforeAll(() => {
         if (fs.existsSync(cacheFileForTest)) {
             fs.unlinkSync(cacheFileForTest);
         }
+
+        tempAddonRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'installer-action-test-addon-'));
+        tempAddonPath = path.join(tempAddonRoot, 'test-addon');
+        fs.cpSync(TEST_PACKAGE_PATH, tempAddonPath, {recursive: true});
+
+        fs.mkdirSync(path.join(tempAddonPath, '.git'), {recursive: true});
+        fs.writeFileSync(path.join(tempAddonPath, '.git', 'HEAD'), 'ref: refs/heads/master\n');
+        fs.mkdirSync(path.join(tempAddonPath, '.github'), {recursive: true});
+        fs.writeFileSync(path.join(tempAddonPath, '.github', 'workflow.yml'), 'name: test\n');
+    });
+
+    afterAll(() => {
+        if (fs.existsSync(cacheFileForTest)) {
+            fs.unlinkSync(cacheFileForTest);
+        }
+
+        if (tempAddonRoot) {
+            fs.rmSync(tempAddonRoot, {recursive: true, force: true});
+        }
     });
 
     test('create test zip archive', async () => {
-        const packageYml = await readPackageYml(TEST_PACKAGE_PATH);
-        await zip(cacheFileForTest, TEST_PACKAGE_PATH, packageYml.package, packageYml.installer_ignore || []);
+        const packageYml = await readPackageYml(tempAddonPath);
+        await zip(cacheFileForTest, tempAddonPath, packageYml.package, packageYml.installer_ignore || []);
 
         expect(fs.existsSync(cacheFileForTest)).toBe(true);
     });
@@ -44,5 +68,8 @@ describe('file', () => {
             'test_addon/package.json',
             'test_addon/package.yml',
         ]);
+
+        const hasGitMetadata = filesList.some((entryName) => entryName.includes('/.git/') || entryName.includes('/.github/'));
+        expect(hasGitMetadata).toBe(false);
     });
 });
