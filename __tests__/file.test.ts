@@ -29,6 +29,10 @@ describe('file', () => {
     });
 
     afterAll(() => {
+        if (fs.existsSync(cacheFileForTest)) {
+            fs.unlinkSync(cacheFileForTest);
+        }
+
         if (tempAddonRoot) {
             fs.rmSync(tempAddonRoot, {recursive: true, force: true});
         }

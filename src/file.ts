@@ -87,7 +87,10 @@ function getDefaultRedaxoIgnoreList(): Array<string> {
 function expandIgnorePatternsForGlob(patterns: string[]): string[] {
     const expanded: string[] = [];
     const seen = new Set<string>();
-    const globChars = /[*?{}()!+@\[\]]/;
+    const hasGlobSyntax = (pattern: string): boolean => {
+        // Standard glob tokens plus extglob operators like @(...), !(...), +(…), ?(...), *(...).
+        return /[*?{}\[\]]/.test(pattern) || /[@!?+*]\(/.test(pattern);
+    };
 
     const add = (value: string): void => {
         if (!value || seen.has(value)) {
@@ -107,7 +110,7 @@ function expandIgnorePatternsForGlob(patterns: string[]): string[] {
 
         // Plain directory/file names like ".git" do not reliably match with `ignore`.
         // Expand them to path-aware glob variants while still passing the original list via `skip`.
-        if (!globChars.test(pattern) && !pattern.includes('/')) {
+        if (!hasGlobSyntax(pattern) && !pattern.includes('/')) {
             add(`**/${pattern}`);
             add(`**/${pattern}/**`);
             add(`${pattern}/**`);

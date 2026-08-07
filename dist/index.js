@@ -60686,7 +60686,9 @@ function getDefaultRedaxoIgnoreList() {
 function expandIgnorePatternsForGlob(patterns) {
     const expanded = [];
     const seen = new Set();
-    const globChars = /[*?{}()!+@\[\]]/;
+    const hasGlobSyntax = (pattern) => {
+        return /[*?{}\[\]]/.test(pattern) || /[@!?+*]\(/.test(pattern);
+    };
     const add = (value) => {
         if (!value || seen.has(value)) {
             return;
@@ -60700,7 +60702,7 @@ function expandIgnorePatternsForGlob(patterns) {
             continue;
         }
         add(pattern);
-        if (!globChars.test(pattern) && !pattern.includes('/')) {
+        if (!hasGlobSyntax(pattern) && !pattern.includes('/')) {
             add(`**/${pattern}`);
             add(`**/${pattern}/**`);
             add(`${pattern}/**`);
