@@ -32,6 +32,22 @@ describe('package', () => {
             expect(() => validateRedaxoAddon(packageYml, TEST_PACKAGE_PATH)).not.toThrow();
         });
 
+        test('should accept a package key starting with a digit or an underscore', () => {
+            const packageYml = {
+                package: 'valid_addon',
+                version: '1.0.0',
+                installer_ignore: null,
+                requires: {
+                    redaxo: '^5.0.0',
+                },
+            };
+
+            expect(() => validateRedaxoAddon({...packageYml, package: '2nd_addon'}, TEST_PACKAGE_PATH)).not.toThrow();
+            expect(() => validateRedaxoAddon({...packageYml, package: '_addon'}, TEST_PACKAGE_PATH)).not.toThrow();
+            expect(() => validateRedaxoAddon({...packageYml, package: '404'}, TEST_PACKAGE_PATH)).not.toThrow();
+            expect(() => validateRedaxoAddon({...packageYml, package: '_'}, TEST_PACKAGE_PATH)).not.toThrow();
+        });
+
         test('should fail for invalid package key', () => {
             const packageYml = {
                 package: 'Invalid-Key',
@@ -42,6 +58,11 @@ describe('package', () => {
                 },
             };
             expect(() => validateRedaxoAddon(packageYml, TEST_PACKAGE_PATH)).toThrow('Invalid package key');
+
+            expect(() => validateRedaxoAddon({...packageYml, package: 'UpperCase'}, TEST_PACKAGE_PATH)).toThrow('Invalid package key');
+            expect(() => validateRedaxoAddon({...packageYml, package: 'with space'}, TEST_PACKAGE_PATH)).toThrow('Invalid package key');
+            expect(() => validateRedaxoAddon({...packageYml, package: 'with.dot'}, TEST_PACKAGE_PATH)).toThrow('Invalid package key');
+            expect(() => validateRedaxoAddon({...packageYml, package: ''}, TEST_PACKAGE_PATH)).toThrow('Invalid package key');
         });
 
         test('should fail if requires.redaxo is missing', () => {
