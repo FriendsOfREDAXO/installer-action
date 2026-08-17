@@ -67,8 +67,8 @@ export function validateRedaxoAddon(packageYml: PackageYml, addonDir: string): v
         throw new Error('Invalid package.yml content.');
     }
 
-    if (!packageYml.package || !/^[a-z][a-z0-9_]*$/.test(packageYml.package)) {
-        throw new Error('Invalid package key in package.yml. Expected format: lowercase letters, digits and underscores, starting with a letter.');
+    if (!packageYml.package || !/^[a-z0-9_]+$/.test(packageYml.package)) {
+        throw new Error('Invalid package key in package.yml. Expected format: lowercase letters, digits and underscores.');
     }
 
     if (!packageYml.version || 'string' !== typeof packageYml.version) {
