@@ -1,6 +1,6 @@
 {
   "name": "@friendsofredaxo/installer-action",
-  "version": "1.3.1",
+  "version": "1.3.2",
   "description": "MyREDAXO for GitHub Actions",
   "main": "lib/index.js",
   "scripts": {
